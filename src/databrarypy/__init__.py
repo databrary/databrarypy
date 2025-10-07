@@ -4,11 +4,11 @@ A Python client library for interacting with the Databrary API.
 """
 
 from .client import DatabraryClient
-from .resources import LibraryResource
+from .resources import SystemResource
 
 __all__ = [
     "DatabraryClient",
-    "LibraryResource",
+    "SystemResource",
 ]
 
 __version__ = "0.0.1"

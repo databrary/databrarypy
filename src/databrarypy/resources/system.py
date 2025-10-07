@@ -1,4 +1,4 @@
-"""Library resource for Databrary statistics and metadata."""
+"""System resource for Databrary statistics and metadata."""
 
 from __future__ import annotations
 
@@ -7,17 +7,17 @@ from typing import Any
 
 import httpx
 
-from ..models import GroupedFormats, LibraryStats
+from ..models import GroupedFormats, Stats
 
 
-class LibraryResource:
-    """Resource for library-wide operations and metadata.
+class SystemResource:
+    """Resource for system-wide operations and metadata.
 
-    Provides access to Databrary library statistics and asset format information.
+    Provides access to Databrary system statistics and asset format information.
     """
 
     def __init__(self, http: httpx.Client, headers_fn: Callable[[], dict[str, str]]) -> None:
-        """Initialize the library resource.
+        """Initialize the system resource.
 
         Args:
             http: HTTP client for making requests.
@@ -26,11 +26,11 @@ class LibraryResource:
         self._http = http
         self._headers = headers_fn
 
-    def get_db_stats(self) -> LibraryStats:
-        """Get Databrary library statistics.
+    def get_db_stats(self) -> Stats:
+        """Get Databrary system statistics.
 
         Returns:
-            LibraryStats containing institution, affiliate, and investigator counts.
+            Stats containing institution, affiliate, and investigator counts.
 
         Raises:
             httpx.HTTPStatusError: If the request fails.
@@ -38,7 +38,7 @@ class LibraryResource:
         resp = self._http.get("/statistics/summary/", headers=self._headers())
         resp.raise_for_status()
         data: Any = resp.json()
-        return LibraryStats.model_validate(data)
+        return Stats.model_validate(data)
 
     def list_asset_formats(self) -> GroupedFormats:
         """Get available asset formats grouped by category.

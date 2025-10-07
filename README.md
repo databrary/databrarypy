@@ -95,14 +95,14 @@ client = DatabraryClient(
     base_url="https://nyu.databrary.org",
     client_id="your_client_id",
     client_secret="your_client_secret",
-    user_agent="your_app_name/1.0"
+    user_agent="your_user_agent"
 )
 
 # Authenticate
 client.auth.login_with_password("user@example.com", "password")
 
 # Use the API
-stats = client.library.get_db_stats()
+stats = client.system.get_db_stats()
 print(f"Institutions: {stats.institutions}")
 ```
 

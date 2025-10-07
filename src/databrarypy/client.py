@@ -5,7 +5,7 @@ from typing import Any
 import httpx
 
 from .auth import OAuth2Client
-from .resources import LibraryResource
+from .resources import SystemResource
 
 
 class DatabraryClient:
@@ -16,7 +16,7 @@ class DatabraryClient:
 
     Attributes:
         auth: OAuth2Client for authentication management.
-        library: LibraryResource for library-related operations.
+        system: SystemResource for system-wide operations.
     """
 
     def __init__(
@@ -40,7 +40,7 @@ class DatabraryClient:
             transport=transport,
         )
         self._http = httpx.Client(base_url=self.base_url, timeout=timeout, transport=transport)
-        self.library = LibraryResource(self._http, self._headers)
+        self.system = SystemResource(self._http, self._headers)
 
     def _headers(self) -> dict[str, str]:
         """Generate headers for API requests with valid authentication.

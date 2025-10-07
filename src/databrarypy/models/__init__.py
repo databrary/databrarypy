@@ -1,10 +1,10 @@
 """Data models for Databrary API responses."""
 
 from .formats import Format, GroupedFormats
-from .library import LibraryStats
+from .stats import Stats
 
 __all__ = [
     "Format",
     "GroupedFormats",
-    "LibraryStats",
+    "Stats",
 ]

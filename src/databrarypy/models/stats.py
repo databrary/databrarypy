@@ -1,12 +1,12 @@
-"""Models for library-related data."""
+"""Models for system statistics data."""
 
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
 
-class LibraryStats(BaseModel):
-    """Statistics about the Databrary library.
+class Stats(BaseModel):
+    """Statistics about the Databrary system.
 
     Attributes:
         institutions: Number of institutions.

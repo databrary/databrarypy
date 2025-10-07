@@ -46,7 +46,7 @@ def test_whoami_and_get_db_stats():
     who = client.whoami()
     assert who["authMethod"] == "OAuth2"
 
-    stats = client.library.get_db_stats()
+    stats = client.system.get_db_stats()
     assert stats.institutions == 5
     assert stats.affiliates == 10
     assert stats.investigators == 20

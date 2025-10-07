@@ -1,7 +1,7 @@
 """API resource classes for Databrary operations."""
 
-from .library import LibraryResource
+from .system import SystemResource
 
 __all__ = [
-    "LibraryResource",
+    "SystemResource",
 ]
