@@ -55,5 +55,18 @@ jobs:
       - name: Run Mypy type checking
         run: poetry run mypy src/
 
-      - name: Run tests
-        run: poetry run pytest tests/ -v
+      - name: Run tests with coverage
+        run: poetry run pytest tests/ -v --cov=databrarypy --cov-report=term-missing --cov-report=json --cov-fail-under=80
+
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(poetry run python -c "import json; print(json.load(open('coverage.json'))['totals']['percent_covered'])")
+          echo "Coverage: ${COVERAGE}%"
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "❌ Coverage is below 80% (${COVERAGE}%)"
+            exit 1
+          elif (( $(echo "$COVERAGE < 90" | bc -l) )); then
+            echo "⚠️  Warning: Coverage is below 90% (${COVERAGE}%)"
+          else
+            echo "✅ Coverage is above 90% (${COVERAGE}%)"
+          fi

@@ -1,0 +1,71 @@
+"""Tests for SystemResource."""
+
+from databrarypy.client import DatabraryClient
+
+from .fixtures import MOCK_SYSTEM_RESPONSES, build_system_transport
+
+
+def test_get_db_stats():
+    """Test system statistics retrieval."""
+    transport = build_system_transport()
+
+    client = DatabraryClient(
+        base_url="https://api.example.org",
+        client_id="cid",
+        client_secret="secret",
+        user_agent="test",
+        transport=transport,
+    )
+
+    client.auth.login_with_password("user@example.org", "pw")
+
+    # Test stats
+    stats = client.system.get_db_stats()
+    expected_stats = MOCK_SYSTEM_RESPONSES["stats"]
+    assert stats.institutions == expected_stats["institutions"]
+    assert stats.affiliates == expected_stats["affiliates"]
+    assert stats.investigators == expected_stats["investigators"]
+    assert stats.hours_of_recordings == expected_stats["hours_of_recordings"]
+
+
+def test_list_asset_formats():
+    """Test listing asset formats grouped by category."""
+    transport = build_system_transport()
+
+    client = DatabraryClient(
+        base_url="https://api.example.org",
+        client_id="cid",
+        client_secret="secret",
+        user_agent="test",
+        transport=transport,
+    )
+
+    client.auth.login_with_password("user@example.org", "pw")
+
+    # Get grouped formats
+    grouped = client.system.list_asset_formats()
+    data = grouped.root
+
+    # Verify structure
+    expected_formats = MOCK_SYSTEM_RESPONSES["formats"]
+    assert "Video" in data
+    assert "Audio" in data
+    assert "Image" in data
+
+    # Verify Video formats
+    assert len(data["Video"]) == len(expected_formats["Video"])
+    assert data["Video"][0].mimetype == expected_formats["Video"][0]["mimetype"]
+    assert data["Video"][0].name == expected_formats["Video"][0]["name"]
+    assert data["Video"][0].extensions == expected_formats["Video"][0]["extensions"]
+    assert data["Video"][1].mimetype == expected_formats["Video"][1]["mimetype"]
+
+    # Verify Audio formats
+    assert len(data["Audio"]) == len(expected_formats["Audio"])
+    assert data["Audio"][0].mimetype == expected_formats["Audio"][0]["mimetype"]
+    assert data["Audio"][0].name == expected_formats["Audio"][0]["name"]
+    assert data["Audio"][1].mimetype == expected_formats["Audio"][1]["mimetype"]
+
+    # Verify Image formats
+    assert len(data["Image"]) == len(expected_formats["Image"])
+    assert data["Image"][0].mimetype == expected_formats["Image"][0]["mimetype"]
+    assert data["Image"][0].extensions == expected_formats["Image"][0]["extensions"]

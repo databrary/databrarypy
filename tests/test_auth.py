@@ -1,56 +1,138 @@
 import time
 
-import httpx
+import pytest
 
 from databrarypy.auth import OAuth2Client
 
-
-def make_transport(assertions):
-    def handler(request: httpx.Request) -> httpx.Response:
-        for fn in assertions:
-            fn(request)
-        if request.url.path == "/o/token/" and request.method == "POST":
-            data = request.content.decode()
-            if "grant_type=password" in data:
-                payload = {
-                    "access_token": "ACCESS1",
-                    "refresh_token": "REFRESH1",
-                    "expires_in": 3600,
-                }
-                return httpx.Response(200, json=payload)
-            if "grant_type=refresh_token" in data:
-                payload = {
-                    "access_token": "ACCESS2",
-                    "refresh_token": "REFRESH2",
-                    "expires_in": 3600,
-                }
-                return httpx.Response(200, json=payload)
-        return httpx.Response(404)
-
-    return httpx.MockTransport(handler)
+from .fixtures import (
+    MOCK_AUTH_RESPONSES,
+    build_auth_transport,
+    handle_token_error,
+)
 
 
 def test_oauth2_password_and_refresh_flow():
-    assertions = [
-        lambda req: req.headers.get("User-Agent") == "ua-test",
-        lambda req: req.headers.get("Accept") == "application/json",
-        lambda req: req.headers.get("Content-Type") == "application/x-www-form-urlencoded",
-    ]
-    transport = make_transport(assertions)
+    """Test successful OAuth2 password grant and token refresh flow."""
+    transport = build_auth_transport()
 
     oauth = OAuth2Client(
         base_url="https://api.example.org",
         client_id="cid",
         client_secret="secret",
-        user_agent="ua-test",
+        user_agent="test",
         transport=transport,
     )
 
+    # Test password grant
     tok1 = oauth.login_with_password("user@example.org", "pw")
-    assert tok1.access_token == "ACCESS1"
-    assert tok1.refresh_token == "REFRESH1"
+    assert tok1.access_token == MOCK_AUTH_RESPONSES["token_success"]["access_token"]
+    assert tok1.refresh_token == MOCK_AUTH_RESPONSES["token_success"]["refresh_token"]
     assert tok1.expires_at > time.time()
 
+    # Test token refresh
     tok2 = oauth.refresh()
-    assert tok2.access_token == "ACCESS2"
-    assert tok2.refresh_token == "REFRESH2"
+    assert tok2.access_token == MOCK_AUTH_RESPONSES["token_refreshed"]["access_token"]
+    assert tok2.refresh_token == MOCK_AUTH_RESPONSES["token_refreshed"]["refresh_token"]
+
+
+def test_token_request_failure():
+    """Test that token request failures raise RuntimeError."""
+    transport = build_auth_transport(token_handler=handle_token_error)
+
+    oauth = OAuth2Client(
+        base_url="https://api.example.org",
+        client_id="bad_client",
+        client_secret="bad_secret",
+        user_agent="test",
+        transport=transport,
+    )
+
+    with pytest.raises(RuntimeError, match="Token request failed 401"):
+        oauth.login_with_password("user@example.org", "password")
+
+
+def test_refresh_without_token():
+    """Test that calling refresh without a token raises RuntimeError."""
+    transport = build_auth_transport()
+
+    oauth = OAuth2Client(
+        base_url="https://api.example.org",
+        client_id="cid",
+        client_secret="secret",
+        user_agent="test",
+        transport=transport,
+    )
+
+    with pytest.raises(RuntimeError, match="No refresh token available"):
+        oauth.refresh()
+
+
+def test_get_valid_token_without_authentication():
+    """Test that getting a token without authentication raises RuntimeError."""
+    transport = build_auth_transport()
+
+    oauth = OAuth2Client(
+        base_url="https://api.example.org",
+        client_id="cid",
+        client_secret="secret",
+        user_agent="test",
+        transport=transport,
+    )
+
+    with pytest.raises(RuntimeError, match="Not authenticated"):
+        oauth.get_valid_access_token()
+
+
+def test_expired_token_without_refresh_token():
+    """Test that expired token without refresh token raises RuntimeError."""
+    import httpx
+
+    def handle_token_no_refresh(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=MOCK_AUTH_RESPONSES["token_no_refresh"])
+
+    transport = build_auth_transport(token_handler=handle_token_no_refresh)
+
+    oauth = OAuth2Client(
+        base_url="https://api.example.org",
+        client_id="cid",
+        client_secret="secret",
+        user_agent="test",
+        transport=transport,
+    )
+
+    # Login with a token that has no refresh token
+    oauth.login_with_password("user@example.org", "password")
+
+    # Force the token to be expired
+    oauth._token.expires_at = time.time() - 100
+
+    with pytest.raises(RuntimeError, match="Access token expired and no refresh token"):
+        oauth.get_valid_access_token()
+
+
+def test_automatic_token_refresh():
+    """Test that get_valid_access_token automatically refreshes expired tokens."""
+    transport = build_auth_transport()
+
+    oauth = OAuth2Client(
+        base_url="https://api.example.org",
+        client_id="cid",
+        client_secret="secret",
+        user_agent="test",
+        transport=transport,
+    )
+
+    # Login
+    oauth.login_with_password("user@example.org", "password")
+    initial_token = MOCK_AUTH_RESPONSES["token_success"]["access_token"]
+    assert oauth._token.access_token == initial_token
+
+    # Force token to be expired
+    oauth._token.expires_at = time.time() - 100
+
+    # get_valid_access_token should automatically refresh
+    token = oauth.get_valid_access_token()
+    refreshed_token = MOCK_AUTH_RESPONSES["token_refreshed"]["access_token"]
+    assert token == refreshed_token
+    assert oauth._token.access_token == refreshed_token
+    assert oauth._token.refresh_token == MOCK_AUTH_RESPONSES["token_refreshed"]["refresh_token"]
