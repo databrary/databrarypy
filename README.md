@@ -1,6 +1,6 @@
 # databrarypy
 
-Python client library for the Databrary API
+Python client for the [Databrary](https://databrary.org) API with OAuth2 authentication.
 
 ## Installation
 
@@ -8,89 +8,12 @@ Python client library for the Databrary API
 pip install databrarypy
 ```
 
-## Development
-
-This project uses Poetry for dependency management.
-
-### Quick Start
-
-```bash
-# Install dependencies
-poetry install
-
-# Install pre-commit hooks (optional but recommended)
-poetry run pre-commit install
-
-# Run all checks (format, lint, type-check, test)
-make all
-```
-
-### Available Commands
-
-```bash
-# Run tests with coverage
-make test
-# or: poetry run pytest tests/ -v --cov=databrarypy
-
-# Format code (ruff + black)
-make format
-# or: poetry run ruff format src/ tests/
-
-# Lint code (ruff + mypy)
-make lint
-# or: poetry run ruff check src/ tests/
-
-# Type checking (mypy)
-make type-check
-# or: poetry run mypy src/
-
-# Clean cache files
-make clean
-```
-
-### Linting & Code Quality
-
-This project uses:
-- **Ruff** - Fast Python linter (replaces flake8, isort, and more)
-- **Black** - Code formatter
-- **Mypy** - Static type checker
-- **Commitizen** - Standardized commit messages and versioning
-- **Pre-commit** - Git hooks for automatic checks
-
-Pre-commit hooks will automatically run formatters and linters before each commit.
-
-### Commit Message Format
-
-This project uses [Conventional Commits](https://www.conventionalcommits.org/). Use Commitizen to create properly formatted commits:
-
-```bash
-# Instead of 'git commit -m "message"', use:
-cz commit
-# or
-git cz
-
-# Bump version and generate changelog
-cz bump
-
-# Generate changelog
-cz changelog
-```
-
-**Commit types:**
-- `feat:` - New feature
-- `fix:` - Bug fix
-- `docs:` - Documentation changes
-- `style:` - Code style changes (formatting, etc.)
-- `refactor:` - Code refactoring
-- `test:` - Adding or updating tests
-- `chore:` - Maintenance tasks
-
-## Usage
+## Quick Start
 
 ```python
 from databrarypy import DatabraryClient
 
-# Initialize the client
+# Create client
 client = DatabraryClient(
     base_url="https://nyu.databrary.org",
     client_id="your_client_id",
@@ -101,11 +24,58 @@ client = DatabraryClient(
 # Authenticate
 client.auth.login_with_password("user@example.com", "password")
 
-# Use the API
+# Get authenticated user info
+user_info = client.whoami()
+print(user_info)
+
+# Get system statistics
 stats = client.system.get_db_stats()
 print(f"Institutions: {stats.institutions}")
+print(f"Hours of recordings: {stats.hours_of_recordings}")
+
+# List available asset formats
+formats = client.system.list_asset_formats()
 ```
 
-## License
+## API Overview
 
-MIT
+### Client
+
+- `DatabraryClient(base_url, client_id, client_secret, user_agent)` - Main API client
+- `client.whoami()` - Get authenticated user information
+
+### Authentication
+
+- `client.auth.login_with_password(username, password)` - Authenticate with credentials
+- `client.auth.refresh()` - Manually refresh access token
+- `client.auth.get_valid_access_token()` - Get valid token (auto-refreshes if expired)
+
+### System Resources
+
+- `client.system.get_db_stats()` - Get Databrary statistics
+- `client.system.list_asset_formats()` - Get available asset formats
+
+## Development
+
+```bash
+# Install dependencies
+poetry install
+
+# Run tests
+make test
+
+# Format and lint
+make format
+make lint
+
+# All checks (format, lint, type-check, test)
+make all
+```
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/) - use `cz commit` instead of `git commit`.
+
+## Requirements
+
+- Python 3.12+
+- httpx >= 0.27
+- pydantic >= 2.7
