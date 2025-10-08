@@ -35,7 +35,6 @@ __all__ = [
     "UserPublic",
     "UserSelf",
     "UserSlim",
-    "VolumeCoauthor",
     "VolumeCollaborator",
     "VolumeDetail",
     "VolumeFundingRead",
