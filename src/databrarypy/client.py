@@ -5,7 +5,7 @@ from typing import Any
 import httpx
 
 from .auth import OAuth2Client
-from .resources import SystemResource
+from .resources import InstitutionsResource, SystemResource, UsersResource
 
 
 class DatabraryClient:
@@ -45,6 +45,8 @@ class DatabraryClient:
         )
         self._http = httpx.Client(base_url=self.base_url, timeout=timeout, transport=transport)
         self.system = SystemResource(self._http, self._headers)
+        self.users = UsersResource(self._http, self._headers)
+        self.institutions = InstitutionsResource(self._http, self._headers)
 
     def _headers(self) -> dict[str, str]:
         """Generate headers for API requests with valid authentication.
