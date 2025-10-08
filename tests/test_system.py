@@ -69,3 +69,56 @@ def test_list_asset_formats():
     assert len(data["Image"]) == len(expected_formats["Image"])
     assert data["Image"][0].mimetype == expected_formats["Image"][0]["mimetype"]
     assert data["Image"][0].extensions == expected_formats["Image"][0]["extensions"]
+
+
+def test_get_supported_file_types():
+    """Test flattening of supported file types from grouped formats."""
+    transport = build_system_transport()
+
+    client = DatabraryClient(
+        base_url="https://api.example.org",
+        client_id="cid",
+        client_secret="secret",
+        user_agent="test",
+        transport=transport,
+    )
+
+    client.auth.login_with_password("user@example.org", "pw")
+
+    supported = client.system.get_supported_file_types()
+    items = supported.items
+
+    # Verify count equals sum of all grouped entries
+    total = sum(len(v) for v in MOCK_SYSTEM_RESPONSES["formats"].values())
+    assert len(items) == total
+
+    # Verify first few items map correctly
+    first = items[0]
+    expected_first = MOCK_SYSTEM_RESPONSES["formats"]["Video"][0]
+    assert first.asset_type_id == expected_first["id"]
+    assert first.asset_type == expected_first["name"]
+    assert first.mimetype == expected_first["mimetype"]
+    assert first.extensions == expected_first["extensions"]
+
+
+def test_get_permission_and_release_levels():
+    """Test client-side constants for permission and release levels."""
+    transport = build_system_transport()
+
+    client = DatabraryClient(
+        base_url="https://api.example.org",
+        client_id="cid",
+        client_secret="secret",
+        user_agent="test",
+        transport=transport,
+    )
+
+    client.auth.login_with_password("user@example.org", "pw")
+
+    perms = client.system.get_permission_levels()
+    assert "owner" in perms.volume_access_levels
+    assert "read write" in perms.volume_collaborator_access_levels
+
+    releases = client.system.get_release_levels()
+    codes = [lvl.code for lvl in releases.levels]
+    assert codes == ["private", "authorized_users", "learning_audiences", "public"]
