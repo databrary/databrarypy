@@ -2,20 +2,22 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel
 
+T = TypeVar("T")
 
-class Page(BaseModel):
+
+class Page(BaseModel, Generic[T]):
     """Generic page wrapper for list endpoints using DatabraryPagination."""
 
     count: int
     next: str | None
     previous: str | None
-    results: list[Any]
-    total_pages: int
-    current_page: int
+    results: list[T]
+    total_pages: int | None = None
+    current_page: int | None = None
     sort_by: str | None = None
     sort_order: str | None = None
 

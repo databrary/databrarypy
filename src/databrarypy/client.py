@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 import httpx
 
 from .auth import OAuth2Client
 from .resources import InstitutionsResource, SystemResource, UsersResource
+from .utils.case import snake_keys
 
 
 class DatabraryClient:
@@ -30,6 +32,7 @@ class DatabraryClient:
         *,
         timeout: float = 30.0,
         transport: httpx.BaseTransport | None = None,
+        snake_case: bool = True,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.user_agent = user_agent
@@ -44,9 +47,13 @@ class DatabraryClient:
             transport=transport,
         )
         self._http = httpx.Client(base_url=self.base_url, timeout=timeout, transport=transport)
-        self.system = SystemResource(self._http, self._headers)
-        self.users = UsersResource(self._http, self._headers)
-        self.institutions = InstitutionsResource(self._http, self._headers)
+
+        self._normalize: Callable[[Any], Any] = (
+            (lambda d: snake_keys(d)) if snake_case else (lambda d: d)
+        )
+        self.system = SystemResource(self._http, self._headers, self._normalize)
+        self.users = UsersResource(self._http, self._headers, self._normalize)
+        self.institutions = InstitutionsResource(self._http, self._headers, self._normalize)
 
     def _headers(self) -> dict[str, str]:
         """Generate headers for API requests with valid authentication.

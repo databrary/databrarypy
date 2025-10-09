@@ -24,3 +24,12 @@ def build_transport(*handlers):
         return handle_not_found(request)
 
     return httpx.MockTransport(router)
+
+
+# Reusable page skeleton
+PAGE_BASE = {
+    "count": 0,
+    "next": None,
+    "previous": None,
+    "results": [],
+}

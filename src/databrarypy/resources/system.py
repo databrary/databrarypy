@@ -15,23 +15,29 @@ from ..models import (
     SupportedFileType,
     SupportedFileTypes,
 )
+from ._base import BaseResource
 
 
-class SystemResource:
+class SystemResource(BaseResource):
     """Resource for system-wide operations and metadata.
 
     Provides access to Databrary system statistics and asset format information.
     """
 
-    def __init__(self, http: httpx.Client, headers_fn: Callable[[], dict[str, str]]) -> None:
+    def __init__(
+        self,
+        http: httpx.Client,
+        headers_fn: Callable[[], dict[str, str]],
+        normalize_json: Callable[[Any], Any],
+    ) -> None:
         """Initialize the system resource.
 
         Args:
             http: HTTP client for making requests.
             headers_fn: Callable that returns authentication headers.
+            normalize_json: Callable to normalize JSON keys (e.g., camelCase->snake_case).
         """
-        self._http = http
-        self._headers = headers_fn
+        super().__init__(http, headers_fn, normalize_json)
 
     def get_db_stats(self) -> Stats:
         """Get Databrary system statistics.
@@ -42,9 +48,7 @@ class SystemResource:
         Raises:
             httpx.HTTPStatusError: If the request fails.
         """
-        resp = self._http.get("/statistics/summary/", headers=self._headers())
-        resp.raise_for_status()
-        data: Any = resp.json()
+        data: Any = self._get_json("/statistics/summary/")
         return Stats.model_validate(data)
 
     def list_asset_formats(self) -> GroupedFormats:
@@ -56,9 +60,9 @@ class SystemResource:
         Raises:
             httpx.HTTPStatusError: If the request fails.
         """
-        resp = self._http.get("/grouped-formats/", headers=self._headers())
-        resp.raise_for_status()
-        return GroupedFormats.model_validate(resp.json())
+        # Keep category keys as-is (e.g., 'Video', 'Audio'), so bypass normalization.
+        data = self._raw_get_json("/grouped-formats/")
+        return GroupedFormats.model_validate(data)
 
     def get_supported_file_types(self) -> SupportedFileTypes:
         """Return supported file types flattened from grouped formats.
