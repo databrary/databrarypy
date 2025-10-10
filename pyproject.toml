@@ -2,8 +2,6 @@
 name = "databrarypy"
 version = "0.0.1"
 description = "Python client library for the Databrary API"
-authors = ["Databrary Team <dev@databrary.org>"]
-license = "MIT"
 readme = "README.md"
 packages = [{ include = "databrarypy", from = "src" }]
 homepage = "https://databrary.org"
