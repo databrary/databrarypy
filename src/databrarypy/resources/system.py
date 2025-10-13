@@ -97,3 +97,12 @@ class SystemResource(BaseResource):
         Mirrors backend FileSharingLevel enum.
         """
         return ReleaseLevels()
+
+    def is_healthy(self) -> bool:
+        """Return True if /health/ responds with 200 OK, else False (no exception)."""
+        try:
+            # Use binary GET to avoid JSON parsing; only status matters
+            resp = self._http.get("/health/", headers=self._headers())
+            return resp.status_code == 200
+        except Exception:
+            return False

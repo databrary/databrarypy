@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import httpx
 
+from .client import build_client_transport
 from .common import build_transport
 from .factory import make_page
 
@@ -59,3 +60,16 @@ def build_funders_transport():
         ("GET", "/funders/", handle_funders_list),
         ("GET", "/funders/1/", handle_funder_retrieve),
     )
+
+
+def build_composite_transport():
+    client_transport = build_client_transport()
+    funders_transport = build_funders_transport()
+
+    def router(request: httpx.Request) -> httpx.Response:
+        key = (request.method, request.url.path)
+        if key in {("POST", "/o/token/"), ("GET", "/oauth2/test/")}:
+            return client_transport.handle_request(request)
+        return funders_transport.handle_request(request)
+
+    return httpx.MockTransport(router)

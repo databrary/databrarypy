@@ -1,5 +1,6 @@
 """Data models for Databrary API responses."""
 
+from .categories import Category, Metric
 from .files import File
 from .folders import Folder
 from .formats import Format, GroupedFormats
@@ -14,6 +15,7 @@ from .sessions import Session
 from .sponsorships import Sponsorship
 from .stats import Stats
 from .supported_types import SupportedFileType, SupportedFileTypes
+from .tags import Tag
 from .users import SuspendedBy, UserPublic, UserSelf, UserSlim
 from .volume_shared import VolumeFundingRead, VolumeLink
 from .volumes import (
@@ -24,33 +26,36 @@ from .volumes import (
 )
 
 __all__ = [
+    "Category",
+    "File",
+    "Folder",
     "Format",
     "Funder",
     "GroupedFormats",
+    "HistoryUser",
     "Institution",
     "InstitutionSponsorship",
+    "Metric",
     "Page",
     "PermissionLevels",
+    "Record",
     "ReleaseLevels",
+    "Session",
     "Sponsorship",
     "Stats",
     "SupportedFileType",
     "SupportedFileTypes",
     "SuspendedBy",
+    "Tag",
+    "UserActivityItem",
     "UserPublic",
     "UserSelf",
     "UserSlim",
+    "VolumeActivityItem",
     "VolumeCollaborator",
     "VolumeDetail",
     "VolumeFundingRead",
     "VolumeLink",
     "VolumeListItem",
     "VolumePreview",
-    "Session",
-    "Folder",
-    "File",
-    "Record",
-    "HistoryUser",
-    "VolumeActivityItem",
-    "UserActivityItem",
 ]
