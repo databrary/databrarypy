@@ -54,3 +54,6 @@ dmypy.json
 
 # Commitizen
 .cz.toml
+
+# Local temp data for tests
+.pytest_tmp/

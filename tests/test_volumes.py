@@ -34,6 +34,10 @@ def build_transport():
             return volumes_transport.handle_request(request)
         if key == ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/history/"):
             return handle_volume_history(request)
+        if key == ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/download-link/"):
+            return volumes_transport.handle_request(request)
+        if key == ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/csv-download-link/"):
+            return volumes_transport.handle_request(request)
         # Route other volume endpoints manually
         if key == ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/tags/"):
             return handle_volume_tags_1(request)
@@ -96,3 +100,9 @@ def test_volumes_read_endpoints() -> None:
     # activity/history
     hist = client.volumes.activity(1)
     assert hist.count >= 1 and hist.results[0].timestamp
+
+    # download tasks
+    zip_task = client.volumes.request_zip_download(VOLUME_ID_PRIMARY)
+    assert zip_task.status == "processing" and zip_task.task_id
+    csv_task = client.volumes.request_csv_download(VOLUME_ID_PRIMARY)
+    assert csv_task.status == "processing" and csv_task.task_id

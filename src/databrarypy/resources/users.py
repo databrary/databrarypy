@@ -92,10 +92,17 @@ class UsersResource(BaseResource):
             parser=VolumePreview.model_validate,
         )
 
-    def avatar_bytes(self, user_id: int) -> bytes:
-        """Download avatar bytes for a user (empty if missing)."""
-        # The backend returns a redirect to nginx; httpx follows redirects by default.
-        return self._get_bytes_or_empty(f"/users/{user_id}/avatar/")
+    def avatar(self, user_id: int, *, dest_path: str | None = None) -> bytes | str:
+        """Download a user's avatar; return bytes or save to disk.
+
+        If dest_path is provided, stream to file and return the full path; otherwise returns bytes.
+        """
+        url = f"/users/{user_id}/avatar/"
+        if dest_path is None:
+            # Keep empty-bytes behavior for missing avatars
+            return self._download_bytes(url)
+        # When saving, still succeed with 404? Be strict and raise for status; use streaming helper
+        return self._download_to_path(url, dest_path)
 
     def activity(
         self,

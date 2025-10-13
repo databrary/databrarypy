@@ -93,6 +93,35 @@ def handle_session_file_detail(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, json=_get_mock_session_1_file())
 
 
+# ---- Downloads ----
+def handle_session_file_download_link(request: httpx.Request) -> httpx.Response:
+    payload = {
+        "download_url": "/dl/session-file.bin?token=abc",
+        "expires_at": "2030-01-01T00:00:00Z",
+        "file_name": "Video 1.mp4",
+        "file_size": 123456,
+    }
+    return httpx.Response(200, json=payload)
+
+
+def handle_session_file_binary(request: httpx.Request) -> httpx.Response:
+    # Respond with Content-Disposition to exercise header-based filename
+    headers = {"content-disposition": 'attachment; filename="Video 1.mp4"'}
+    return httpx.Response(200, content=b"SESSION_FILE_CONTENT", headers=headers)
+
+
+def handle_session_zip_download_link(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(
+        200, json={"status": "processing", "message": None, "task_id": "zip-session-1"}
+    )
+
+
+def handle_session_csv_download_link(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(
+        200, json={"status": "processing", "message": None, "task_id": "csv-session-1"}
+    )
+
+
 def build_sessions_transport():
     return build_transport(
         ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/sessions/", handle_sessions_list),
@@ -110,6 +139,22 @@ def build_sessions_transport():
             "GET",
             f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/files/{SESSION_FILE_ID_1}/",
             handle_session_file_detail,
+        ),
+        (
+            "GET",
+            f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/files/{SESSION_FILE_ID_1}/download-link/",
+            handle_session_file_download_link,
+        ),
+        ("GET", "/dl/session-file.bin", handle_session_file_binary),
+        (
+            "GET",
+            f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/download-link/",
+            handle_session_zip_download_link,
+        ),
+        (
+            "GET",
+            f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/csv-download-link/",
+            handle_session_csv_download_link,
         ),
     )
 

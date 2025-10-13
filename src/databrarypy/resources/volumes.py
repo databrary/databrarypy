@@ -13,6 +13,7 @@ from ..models import (
     VolumeLink,
     VolumeListItem,
 )
+from ..models.downloads import ProcessingTask
 from ._base import BaseResource
 
 
@@ -77,3 +78,16 @@ class VolumesResource(BaseResource):
             params=params,
             parser=VolumeActivityItem.model_validate,
         )
+
+    # ---------------------------
+    # Downloads (ZIP/CSV)
+    # ---------------------------
+    def request_zip_download(self, volume_id: int) -> ProcessingTask:
+        """Request async ZIP generation for a volume."""
+        payload = self._get_json(f"/volumes/{volume_id}/download-link/")
+        return ProcessingTask.model_validate(payload)
+
+    def request_csv_download(self, volume_id: int) -> ProcessingTask:
+        """Request async CSV generation for a volume."""
+        payload = self._get_json(f"/volumes/{volume_id}/csv-download-link/")
+        return ProcessingTask.model_validate(payload)

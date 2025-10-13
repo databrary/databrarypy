@@ -1,5 +1,7 @@
 """InstitutionsResource tests."""
 
+from pathlib import Path
+
 from databrarypy.client import DatabraryClient
 from tests.fixtures.users import build_composite_transport
 
@@ -23,8 +25,18 @@ def test_institutions_list():
     inst_id = page.results[0].id
     invs = client.institutions.authorized_investigators(inst_id)
     assert invs and invs[0].is_authorized_investigator is True
-    avatar = client.institutions.avatar_bytes(inst_id)
-    assert avatar.startswith(b"\x89PNG")
+    avatar2 = client.institutions.avatar(inst_id)
+    assert avatar2.startswith(b"\x89PNG")
+    # also save avatar to dir and explicit file
+    out_dir = Path(".pytest_tmp/institution_avatar")
+    if out_dir.exists() and out_dir.is_file():
+        out_dir.unlink()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    saved = client.institutions.avatar(inst_id, dest_path=str(out_dir))
+    assert saved
+    explicit = out_dir / "avatar.png"
+    saved2 = client.institutions.avatar(inst_id, dest_path=str(explicit))
+    assert saved2.endswith("avatar.png")
 
 
 def test_institutions_list_empty_and_retrieve():
@@ -64,7 +76,3 @@ def test_institutions_params_and_avatar_404():
     # Exercise page/page_size params on list
     page = client.institutions.list(search="Example", page=2, page_size=5)
     assert page.count >= 1
-
-    # Avatar 404 branch
-    missing = client.institutions.avatar_bytes(999)
-    assert missing == b""

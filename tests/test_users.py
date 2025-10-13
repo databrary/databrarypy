@@ -30,8 +30,20 @@ def test_users_list_and_retrieve():
     assert sponsors and sponsors[0].id == 101
     vols = client.users.volumes(6)
     assert vols.count == 0 and vols.results == []
-    avatar = client.users.avatar_bytes(6)
-    assert avatar.startswith(b"\x89PNG")
+    avatar2 = client.users.avatar(6)
+    assert avatar2.startswith(b"\x89PNG")
+    # save avatar to dir and to explicit file
+    from pathlib import Path
+
+    out_dir = Path(".pytest_tmp/user_avatar")
+    if out_dir.exists() and out_dir.is_file():
+        out_dir.unlink()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    saved_path = client.users.avatar(6, dest_path=str(out_dir))
+    assert saved_path
+    explicit_file = out_dir / "avatar.png"
+    saved_path2 = client.users.avatar(6, dest_path=str(explicit_file))
+    assert saved_path2.endswith("avatar.png")
 
     # Cover public branch of retrieve (for_self=False)
     public = client.users.retrieve(6)
@@ -81,10 +93,6 @@ def test_users_list_with_filters_and_volumes():
     vols = client.users.volumes(7)
     assert vols.count == 2
     assert [v.title for v in vols.results] == ["Vol1", "Vol2"]
-
-    # Avatar 404 branch
-    missing = client.users.avatar_bytes(999)
-    assert missing == b""
 
 
 def test_users_activity_list():

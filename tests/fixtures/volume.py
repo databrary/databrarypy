@@ -113,9 +113,28 @@ def handle_volume_history(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, json=_get_mock_volume_history_page())
 
 
+def handle_volume_zip_download_link(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, json={"status": "processing", "message": None, "task_id": "zip-1"})
+
+
+def handle_volume_csv_download_link(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, json={"status": "processing", "message": None, "task_id": "csv-1"})
+
+
 def build_volumes_transport():
     return build_transport(
         ("GET", "/volumes/", handle_volumes_list),
         ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/", handle_volume_detail),
         ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/history/", handle_volume_history),
+        # Downloads
+        (
+            "GET",
+            f"/volumes/{VOLUME_ID_PRIMARY}/download-link/",
+            handle_volume_zip_download_link,
+        ),
+        (
+            "GET",
+            f"/volumes/{VOLUME_ID_PRIMARY}/csv-download-link/",
+            handle_volume_csv_download_link,
+        ),
     )

@@ -87,6 +87,30 @@ def handle_folder_file_detail(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, json=_get_mock_folder_1_file())
 
 
+# ---- Downloads ----
+def handle_folder_file_download_link(request: httpx.Request) -> httpx.Response:
+    # Signed link payload for folder file download
+    payload = {
+        "download_url": "/dl/folder-file.bin?token=abc",
+        "expires_at": "2030-01-01T00:00:00Z",
+        "file_name": "Image 1.jpg",
+        "file_size": 654321,
+    }
+    return httpx.Response(200, json=payload)
+
+
+def handle_folder_file_binary(request: httpx.Request) -> httpx.Response:
+    # No content-disposition header on purpose to exercise URL basename fallback
+    return httpx.Response(200, content=b"FOLDER_FILE_CONTENT")
+
+
+def handle_folder_zip_download_link(request: httpx.Request) -> httpx.Response:
+    # Folder-level zip generation task
+    return httpx.Response(
+        200, json={"status": "processing", "message": None, "task_id": "zip-folder-1"}
+    )
+
+
 def build_folders_transport():
     return build_transport(
         ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/folders/", handle_folders_list),
@@ -100,6 +124,17 @@ def build_folders_transport():
             "GET",
             f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/files/{FOLDER_FILE_ID_1}/",
             handle_folder_file_detail,
+        ),
+        (
+            "GET",
+            f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/files/{FOLDER_FILE_ID_1}/download-link/",
+            handle_folder_file_download_link,
+        ),
+        ("GET", "/dl/folder-file.bin", handle_folder_file_binary),
+        (
+            "GET",
+            f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/download-link/",
+            handle_folder_zip_download_link,
         ),
     )
 
