@@ -11,4 +11,4 @@ class Tag(BaseModel):
     id: int
     name: str
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
