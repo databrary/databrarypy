@@ -1,11 +1,15 @@
 """Data models for Databrary API responses."""
 
+from .files import File
+from .folders import Folder
 from .formats import Format, GroupedFormats
 from .funders import Funder
 from .institution_sponsorship import InstitutionSponsorship
 from .institutions import Institution
 from .levels import PermissionLevels, ReleaseLevels
 from .paginated import Page
+from .records import Record
+from .sessions import Session
 from .sponsorships import Sponsorship
 from .stats import Stats
 from .supported_types import SupportedFileType, SupportedFileTypes
@@ -41,4 +45,8 @@ __all__ = [
     "VolumeLink",
     "VolumeListItem",
     "VolumePreview",
+    "Session",
+    "Folder",
+    "File",
+    "Record",
 ]
