@@ -4,6 +4,7 @@ from .files import File
 from .folders import Folder
 from .formats import Format, GroupedFormats
 from .funders import Funder
+from .history import HistoryUser, UserActivityItem, VolumeActivityItem
 from .institution_sponsorship import InstitutionSponsorship
 from .institutions import Institution
 from .levels import PermissionLevels, ReleaseLevels
@@ -49,4 +50,7 @@ __all__ = [
     "Folder",
     "File",
     "Record",
+    "HistoryUser",
+    "VolumeActivityItem",
+    "UserActivityItem",
 ]

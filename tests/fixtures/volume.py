@@ -64,6 +64,31 @@ def _get_mock_volume_detailed():
 MOCK_VOLUME_DETAILED = _get_mock_volume_detailed()
 
 
+def _get_mock_volume_history_page():
+    items = [
+        {
+            "type": "volume_change",
+            "timestamp": "2025-06-03T09:00:00Z",
+            "field": "title",
+            "old_value": "Old Title",
+            "new_value": "Sample Research Dataset Collection",
+        },
+        {
+            "type": "session_change",
+            "timestamp": "2025-06-03T10:00:00Z",
+            "session": {"id": 101, "name": "Session A"},
+            "action": "created",
+        },
+        {
+            "type": "folder_change",
+            "timestamp": "2025-06-03T11:00:00Z",
+            "folder": {"id": 301, "name": "Folder A"},
+            "action": "updated",
+        },
+    ]
+    return make_page(results=items, count=len(items))
+
+
 # ---- Paged payloads ----
 def _get_mock_volumes_page():
     return make_page(results=[_get_mock_volume_base()], count=208)
@@ -81,8 +106,14 @@ def handle_volume_detail(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, json=_get_mock_volume_detailed())
 
 
+def handle_volume_history_1(request: httpx.Request) -> httpx.Response:
+    assert request.url.path == f"/volumes/{VOLUME_ID_PRIMARY}/history/"
+    return httpx.Response(200, json=_get_mock_volume_history_page())
+
+
 def build_volumes_transport():
     return build_transport(
         ("GET", "/volumes/", handle_volumes_list),
         ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/", handle_volume_detail),
+        ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/history/", handle_volume_history_1),
     )

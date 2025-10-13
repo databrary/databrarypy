@@ -4,7 +4,15 @@ from __future__ import annotations
 
 import builtins
 
-from ..models import Page, Sponsorship, UserPublic, UserSelf, UserSlim, VolumePreview
+from ..models import (
+    Page,
+    Sponsorship,
+    UserActivityItem,
+    UserPublic,
+    UserSelf,
+    UserSlim,
+    VolumePreview,
+)
 from ._base import BaseResource
 
 
@@ -88,3 +96,18 @@ class UsersResource(BaseResource):
         """Download avatar bytes for a user (empty if missing)."""
         # The backend returns a redirect to nginx; httpx follows redirects by default.
         return self._get_bytes_or_empty(f"/users/{user_id}/avatar/")
+
+    def activity(
+        self,
+        user_id: int,
+        *,
+        page: int | None = None,
+        page_size: int | None = None,
+    ) -> Page[UserActivityItem]:
+        """List user activity (profile changes, logins, sponsorships)."""
+        params = self.build_params(page=page, page_size=page_size)
+        return self._get_page(
+            f"/users/{user_id}/history/",
+            params=params,
+            parser=UserActivityItem.model_validate,
+        )

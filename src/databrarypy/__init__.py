@@ -4,7 +4,12 @@ A Python client library for interacting with the Databrary API.
 """
 
 from .client import DatabraryClient
-from .resources import FoldersResource, RecordsResource, SessionsResource, SystemResource
+from .resources import (
+    FoldersResource,
+    RecordsResource,
+    SessionsResource,
+    SystemResource,
+)
 
 __all__ = [
     "DatabraryClient",

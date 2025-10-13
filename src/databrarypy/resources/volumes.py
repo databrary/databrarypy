@@ -7,6 +7,7 @@ from typing import Any
 
 from ..models import (
     Page,
+    VolumeActivityItem,
     VolumeCollaborator,
     VolumeDetail,
     VolumeLink,
@@ -60,3 +61,19 @@ class VolumesResource(BaseResource):
         """Retrieve a specific collaborator by id."""
         data = self._get_json(f"/volumes/{volume_id}/collaborators/{collaborator_id}/")
         return VolumeCollaborator.model_validate(data)
+
+    # Activity/history
+    def activity(
+        self,
+        volume_id: int,
+        *,
+        page: int | None = None,
+        page_size: int | None = None,
+    ) -> Page[VolumeActivityItem]:
+        """List combined activity for a volume (sessions, folders, links, etc.)."""
+        params = self.build_params(page=page, page_size=page_size)
+        return self._get_page(
+            f"/volumes/{volume_id}/history/",
+            params=params,
+            parser=VolumeActivityItem.model_validate,
+        )

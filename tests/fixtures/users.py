@@ -101,6 +101,30 @@ MOCK_USER_OWNER = {
 MOCK_USER_6_INSTITUTION_SPONSORS = []
 
 
+def _get_mock_user_history_page():
+    items = [
+        {
+            "type": "login",
+            "timestamp": "2025-06-02T08:00:00Z",
+            "ip": "192.0.2.1",
+        },
+        {
+            "type": "sponsorship_change",
+            "timestamp": "2025-06-02T09:00:00Z",
+            "sponsorship": {"id": 101, "access_level": "investigator"},
+            "action": "granted",
+        },
+        {
+            "type": "profile_change",
+            "timestamp": "2025-06-02T10:00:00Z",
+            "field": "last_name",
+            "old_value": "Doe",
+            "new_value": "Doe-Smith",
+        },
+    ]
+    return make_page(results=items, count=len(items))
+
+
 def handle_users_list(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, json=MOCK_USERS_PAGE)
 
@@ -139,6 +163,11 @@ def handle_user_avatar_999(request: httpx.Request) -> httpx.Response:
     return httpx.Response(404, json={"detail": "No avatar"})
 
 
+def handle_user_history_6(request: httpx.Request) -> httpx.Response:
+    assert request.url.path == f"/users/{USER_ID_1}/history/"
+    return httpx.Response(200, json=_get_mock_user_history_page())
+
+
 def build_users_transport():
     return build_transport(
         ("GET", "/users/", handle_users_list),
@@ -154,6 +183,7 @@ def build_users_transport():
         ("GET", f"/users/{USER_ID_2}/volumes/", handle_user_volumes_7),
         ("GET", f"/users/{USER_ID_1}/affiliates/", handle_user_affiliates_6),
         ("GET", f"/users/{USER_ID_NOT_FOUND}/avatar/", handle_user_avatar_999),
+        ("GET", f"/users/{USER_ID_1}/history/", handle_user_history_6),
     )
 
 
