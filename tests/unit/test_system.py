@@ -2,7 +2,7 @@
 
 from databrarypy.client import DatabraryClient
 
-from .fixtures import MOCK_SYSTEM_RESPONSES, build_system_transport
+from ..fixtures import MOCK_SYSTEM_RESPONSES, build_system_transport
 
 
 def test_get_db_stats():
@@ -148,8 +148,8 @@ def test_is_healthy_true_and_false():
     client.auth.login()
 
     # True case is covered separately; here simulate non-200 using explicit handler to cover branch
-    from .fixtures.auth import handle_token_success
-    from .fixtures.common import build_transport, handle_not_found
+    from ..fixtures.auth import handle_token_success
+    from ..fixtures.common import build_transport, handle_not_found
 
     def handle_health(_request):
         return handle_not_found(_request)

@@ -84,7 +84,7 @@ MOCK_INSTITUTIONS_PAGE = make_page(
 
 
 def _get_institution_12_affiliates_page():
-    from tests.fixtures.sponsorships import _get_mock_institution_12_affiliate_investigator
+    from .sponsorships import _get_mock_institution_12_affiliate_investigator
 
     return make_page(
         results=[_get_mock_institution_12_affiliate_investigator()],

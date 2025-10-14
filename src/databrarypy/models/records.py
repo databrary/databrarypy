@@ -18,7 +18,7 @@ class Age(BaseModel):
     # The age in days. Example: 365 days.
     total_days: int | None = None
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
 
 class Record(BaseModel):
@@ -31,4 +31,4 @@ class Record(BaseModel):
     birthday: dict[str, Any] | str | None = None
     age: Age | None = None
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}

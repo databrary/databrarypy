@@ -17,7 +17,7 @@ class SlimFile(BaseModel):
     format: dict[str, Any]
     sha1: str | None = None
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
 
 class File(BaseModel):
@@ -44,4 +44,4 @@ class File(BaseModel):
     has_full_access: bool | None = None
     thumbnail_url: str | None = None
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}

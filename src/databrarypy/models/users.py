@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-
 from pydantic import BaseModel, Field
 
 from .institutions import Institution
@@ -21,10 +19,16 @@ class UserSlim(BaseModel):
     orcid: str | None = None
     url: str | None = None
     has_avatar: bool = Field(default=False)
+    # Some list responses include these public fields as well
+    institution_sponsorships: list[dict[str, object]] | None = None
+    current_affiliates: list["UserSlim"] = Field(default_factory=list)
+    current_sponsors: list["UserSlim"] = Field(default_factory=list)
+    is_suspended: bool | None = None
+    suspended_by: SuspendedBy | None = None
 
     model_config = {
         "populate_by_name": True,
-        "extra": "ignore",
+        "extra": "forbid",
     }
 
 
@@ -44,6 +48,18 @@ class UserPublic(UserSlim):
     current_sponsors: list[UserSlim] = Field(default_factory=list)
     is_suspended: bool = Field(default=False)
     suspended_by: SuspendedBy | None = None
+    # Some detail responses include self-only fields; accept as optional
+    pending_institution_requests: list[dict[str, object]] | None = None
+    pending_affiliate_requests: list[dict[str, object]] | None = None
+    phone: str | None = None
+    two_fa: str | None = None
+    finished_registration: bool | None = None
+    has_api_access: bool | None = None
+
+    model_config = {
+        "populate_by_name": True,
+        "extra": "forbid",
+    }
 
 
 class UserSelf(UserPublic):
@@ -52,6 +68,10 @@ class UserSelf(UserPublic):
     pending_institution_requests: list[dict[str, object]] = Field(default_factory=list)
     pending_affiliate_requests: list[dict[str, object]] = Field(default_factory=list)
     phone: str | None = None
-    totp_enrolled_at: datetime | None = None
     finished_registration: bool | None = None
     has_api_access: bool = Field(default=False)
+
+    model_config = {
+        "populate_by_name": True,
+        "extra": "forbid",
+    }

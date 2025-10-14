@@ -41,7 +41,7 @@ def _get_mock_user_volumes_page_empty():
 
 
 def _get_mock_user_volumes_page():
-    from tests.fixtures.volume import _get_mock_volume_base
+    from .volume import _get_mock_volume_base
 
     # Create first volume with title "Vol1"
     volume_1 = _get_mock_volume_base().copy()
@@ -62,7 +62,6 @@ MOCK_USER_SELF = {
     "pending_institution_requests": [],
     "pending_affiliate_requests": [],
     "phone": None,
-    "totp_enrolled_at": None,
     "finished_registration": True,
     "has_api_access": True,
     "current_affiliates": [],

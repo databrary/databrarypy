@@ -10,6 +10,8 @@ MOCK_CLIENT_RESPONSES = {
     "whoami": {
         "authMethod": "OAuth2",
         "user": "test@example.org",
+        "message": "Test message",
+        "path": "Test path",
     },
 }
 

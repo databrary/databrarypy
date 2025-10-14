@@ -4,7 +4,7 @@ import pytest
 
 from databrarypy.auth import OAuth2Client
 
-from .fixtures import (
+from ..fixtures import (
     MOCK_AUTH_RESPONSES,
     build_auth_transport,
     handle_token_error,

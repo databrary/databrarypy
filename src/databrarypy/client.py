@@ -6,6 +6,7 @@ from typing import Any
 import httpx
 
 from .auth import OAuth2Client
+from .models import WhoAmI
 from .resources import (
     CategoriesResource,
     FoldersResource,
@@ -88,7 +89,7 @@ class DatabraryClient:
             "Accept": "application/json",
         }
 
-    def whoami(self) -> dict[str, Any]:
+    def whoami(self) -> WhoAmI:
         """Get information about the authenticated user.
 
         Returns:
@@ -99,5 +100,5 @@ class DatabraryClient:
         """
         resp = self._http.get("/oauth2/test/", headers=self._headers())
         resp.raise_for_status()
-        data: dict[str, Any] = resp.json()
-        return data
+        raw = resp.json()
+        return WhoAmI.model_validate(raw)

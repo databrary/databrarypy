@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ..models import Category, Page
+from ..models import Category
 from ._base import BaseResource
 
 
@@ -11,14 +11,11 @@ class CategoriesResource(BaseResource):
 
     def list(
         self,
-        *,
-        page: int | None = None,
-        page_size: int | None = None,
-        ordering: str | None = None,
-    ) -> Page[Category]:
-        """List categories with optional pagination and ordering."""
-        params = self.build_params(page=page, page_size=page_size, ordering=ordering)
-        return self._get_page("/categories/", params=params, parser=Category.model_validate)
+    ) -> list[Category]:
+        """List categories."""
+        data = self._get_json("/categories/")
+        items = data if isinstance(data, list) else data.get("results", [])
+        return [Category.model_validate(item) for item in items]
 
     def retrieve(self, category_id: int) -> Category:
         """Retrieve a single category by id (includes nested metrics)."""

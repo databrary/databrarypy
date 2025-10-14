@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from .records import Record
 
 
 class Session(BaseModel):
@@ -32,5 +34,8 @@ class Session(BaseModel):
 
     # Whether the session contains files with different release levels than the session itself.
     contains_different_release_levels: bool | None = None
+    # Additional aggregates
+    default_records: list[Record] = Field(default_factory=list)
+    file_records: list[Record] = Field(default_factory=list)
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}

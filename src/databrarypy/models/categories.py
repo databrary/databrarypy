@@ -22,7 +22,7 @@ class Metric(BaseModel):
     description: str | None = None
     required: bool | None = None
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
 
 class Category(BaseModel):
@@ -33,4 +33,4 @@ class Category(BaseModel):
     description: str | None = None
     metrics: list[Metric] = Field(default_factory=list)
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}

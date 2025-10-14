@@ -21,4 +21,4 @@ class Folder(BaseModel):
     has_full_access: bool | None = None
     contains_different_release_levels: bool | None = None
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}

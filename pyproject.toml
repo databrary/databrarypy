@@ -77,6 +77,9 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+markers = [
+    'staging: marks tests as staging-only (deselect with -m "not staging")',
+]
 
 [tool.commitizen]
 name = "cz_conventional_commits"

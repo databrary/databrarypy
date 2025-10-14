@@ -5,25 +5,26 @@ from __future__ import annotations
 import httpx
 
 from databrarypy.client import DatabraryClient
+from tests.fixtures.funders import MOCK_FUNDINGS_LIST
 
-from .fixtures.client import build_client_transport
-from .fixtures.data_constants import (
+from ..fixtures.client import build_client_transport
+from ..fixtures.data_constants import (
     TASK_STATUS_PROCESSING,
     VOLUME_COLLABORATOR_ID_1,
     VOLUME_ID_PRIMARY,
 )
-from .fixtures.volume import (
+from ..fixtures.volume import (
     MOCK_VOLUME_DETAILED,
     MOCK_VOLUMES_PAGE,
     build_volumes_transport,
     handle_volume_history,
 )
-from .fixtures.volume_collaborators import (
+from ..fixtures.volume_collaborators import (
     MOCK_COLLABORATORS_1,
     handle_volume_collaborator_1,
     handle_volume_collaborators_1,
 )
-from .fixtures.volume_tags_links_fundings import (
+from ..fixtures.volume_tags_links_fundings import (
     MOCK_VOLUME_LINKS_1,
     MOCK_VOLUME_TAGS_1,
     handle_volume_fundings_1,
@@ -100,7 +101,6 @@ def test_volumes_read_endpoints() -> None:
 
     # fundings
     fundings = client.volumes.fundings(VOLUME_ID_PRIMARY)
-    from .fixtures.funders import MOCK_FUNDINGS_LIST
 
     assert fundings == MOCK_FUNDINGS_LIST
 

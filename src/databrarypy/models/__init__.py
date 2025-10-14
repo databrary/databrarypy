@@ -24,6 +24,7 @@ from .volumes import (
     VolumeListItem,
     VolumePreview,
 )
+from .whoami import WhoAmI
 
 __all__ = [
     "Category",
@@ -58,4 +59,5 @@ __all__ = [
     "VolumeLink",
     "VolumeListItem",
     "VolumePreview",
+    "WhoAmI",
 ]

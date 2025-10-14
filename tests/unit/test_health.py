@@ -4,8 +4,8 @@ import httpx
 
 from databrarypy.client import DatabraryClient
 
-from .fixtures.client import build_client_transport
-from .fixtures.common import build_transport
+from ..fixtures.client import build_client_transport
+from ..fixtures.common import build_transport
 
 
 def handle_health_ok(request: httpx.Request) -> httpx.Response:

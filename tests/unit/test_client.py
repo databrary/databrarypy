@@ -2,7 +2,7 @@
 
 from databrarypy.client import DatabraryClient
 
-from .fixtures import MOCK_CLIENT_RESPONSES, build_client_transport
+from ..fixtures import MOCK_CLIENT_RESPONSES, build_client_transport
 
 
 def test_client_initialization_and_whoami():
@@ -24,5 +24,5 @@ def test_client_initialization_and_whoami():
 
     # Test whoami
     who = client.whoami()
-    assert who["authMethod"] == MOCK_CLIENT_RESPONSES["whoami"]["authMethod"]
-    assert who["user"] == MOCK_CLIENT_RESPONSES["whoami"]["user"]
+    assert who.auth_method == MOCK_CLIENT_RESPONSES["whoami"]["authMethod"]
+    assert who.user == MOCK_CLIENT_RESPONSES["whoami"]["user"]

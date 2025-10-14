@@ -2,7 +2,7 @@
 
 from databrarypy.client import DatabraryClient
 
-from .fixtures.tags import _get_mock_tag, build_composite_transport
+from ..fixtures.tags import _get_mock_tag, build_composite_transport
 
 
 def test_tags_list_and_retrieve():

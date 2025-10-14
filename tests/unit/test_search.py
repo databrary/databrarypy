@@ -2,7 +2,7 @@
 
 from databrarypy.client import DatabraryClient
 
-from .fixtures.search import (
+from ..fixtures.search import (
     _get_mock_institution_hit,
     _get_mock_user_hit,
     _get_mock_volume_hit,

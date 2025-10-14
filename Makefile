@@ -1,10 +1,12 @@
-.PHONY: help install test coverage lint format type-check clean all commit bump pre-commit
+.PHONY: help install test coverage lint format type-check clean all commit bump pre-commit test-integration integration-coverage
 
 help:
 	@echo "Available commands:"
 	@echo "  make install      - Install dependencies"
-	@echo "  make test         - Run tests with coverage"
-	@echo "  make coverage     - Run tests with coverage and check thresholds"
+	@echo "  make test         - Run tests (excludes 'staging' by default; set RUN_STAGING_TESTS=1 to include)"
+	@echo "  make coverage     - Run tests with coverage (respects RUN_STAGING_TESTS)"
+	@echo "  make test-integration      - Run only staging integration tests"
+	@echo "  make integration-coverage - Run staging tests with coverage"
 	@echo "  make lint         - Run ruff checks"
 	@echo "  make format       - Format code with ruff and black"
 	@echo "  make type-check   - Run mypy type checking"
@@ -18,10 +20,10 @@ install:
 	poetry install
 
 test:
-	poetry run pytest tests/ -v --cov=databrarypy --cov-report=term-missing
+	poetry run pytest tests/unit/ -v --cov=databrarypy --cov-report=term-missing
 
 coverage:
-	poetry run pytest tests/ -v --cov=databrarypy --cov-report=term-missing --cov-report=json --cov-fail-under=80
+	poetry run pytest tests/unit/ -v --cov=databrarypy --cov-report=term-missing --cov-report=json --cov-fail-under=80
 	@COVERAGE=$$(poetry run python -c "import json; print(json.load(open('coverage.json'))['totals']['percent_covered'])"); \
 	echo "Coverage: $${COVERAGE}%"; \
 	if [ $$(echo "$${COVERAGE} < 80" | bc -l) -eq 1 ]; then \
@@ -32,6 +34,12 @@ coverage:
 	else \
 		echo "✅ Coverage is above 90% ($${COVERAGE}%)"; \
 	fi
+
+test-integration:
+	poetry run pytest -s tests/integration
+
+integration-coverage:
+	poetry run pytest -s tests/integration --cov=databrarypy --cov-report=term-missing
 
 lint:
 	poetry run ruff check src/ tests/

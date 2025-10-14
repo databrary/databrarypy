@@ -2,7 +2,7 @@
 
 from databrarypy.client import DatabraryClient
 
-from .fixtures.funders import build_composite_transport
+from ..fixtures.funders import build_composite_transport
 
 
 def test_funders_list_and_retrieve():
@@ -18,20 +18,20 @@ def test_funders_list_and_retrieve():
     )
     client.auth.login()
 
-    page = client.funders.list(is_approved=True, page=1, page_size=50)
-    assert page.count == 2
-    assert page.results[0].name
+    items = client.funders.list(is_approved=True)
+    assert len(items) == 2
+    assert items[0].name
 
-    funder = client.funders.retrieve(page.results[0].id)
-    assert funder.id == page.results[0].id
+    funder = client.funders.retrieve(items[0].id)
+    assert funder.id == items[0].id
 
 
 def test_funders_list_include_all_param_only_when_true():
     # Build a transport that captures the request URL for the funders list call
     import httpx
 
-    from .fixtures.auth import handle_token_success
-    from .fixtures.common import build_transport
+    from ..fixtures.auth import handle_token_success
+    from ..fixtures.common import build_transport
 
     captured = {"url": None}
 
