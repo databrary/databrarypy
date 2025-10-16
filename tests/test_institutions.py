@@ -17,9 +17,9 @@ def test_institutions_list():
     )
     client.auth.login()
 
-    page = client.institutions.list(search="Penn")
+    page = client.institutions.list(search="Example")
     assert page.count == 1
-    assert page.results[0].name == "Penn State"
+    assert page.results[0].name == "Example University"
     inst_id = page.results[0].id
     invs = client.institutions.authorized_investigators(inst_id)
     assert invs and invs[0].is_authorized_investigator is True
@@ -62,7 +62,7 @@ def test_institutions_params_and_avatar_404():
     client.auth.login()
 
     # Exercise page/page_size params on list
-    page = client.institutions.list(search="Penn", page=2, page_size=5)
+    page = client.institutions.list(search="Example", page=2, page_size=5)
     assert page.count >= 1
 
     # Avatar 404 branch

@@ -69,7 +69,7 @@ def test_users_list_with_filters_and_volumes():
     client.auth.login()
 
     page = client.users.list(
-        search="rick",
+        search="john",
         include_suspended=True,
         exclude_self=True,
         is_authorized_investigator=True,
