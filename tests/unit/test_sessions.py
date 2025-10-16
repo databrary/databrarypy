@@ -38,8 +38,8 @@ def test_sessions_list_retrieve_and_files() -> None:
     client.auth.login()
 
     # list
-    page = client.sessions.list(VOLUME_ID_PRIMARY, page=1, page_size=10)
-    assert page.count == MOCK_SESSIONS_PAGE["count"]
+    page = client.sessions.page(VOLUME_ID_PRIMARY, page=1, page_size=10)
+    assert page.count == 1
     assert page.results and page.results[0].id == SESSION_ID_1
 
     # retrieve
@@ -48,8 +48,8 @@ def test_sessions_list_retrieve_and_files() -> None:
     assert detail.release_level == MOCK_SESSION_1["release_level"]
 
     # files list
-    files_page = client.sessions.files(VOLUME_ID_PRIMARY, SESSION_ID_1)
-    assert files_page.count == MOCK_SESSION_1_FILES_PAGE["count"]
+    files_page = client.sessions.files_page(VOLUME_ID_PRIMARY, SESSION_ID_1)
+    assert files_page.count == 1
     f0 = files_page.results[0]
     assert f0.format and f0.format.mimetype.startswith("video/")
 
@@ -78,3 +78,22 @@ def test_sessions_list_retrieve_and_files() -> None:
     assert zip_task.status == TASK_STATUS_PROCESSING
     csv_task = client.sessions.request_csv_download(VOLUME_ID_PRIMARY, SESSION_ID_1)
     assert csv_task.status == TASK_STATUS_PROCESSING
+
+
+def test_sessions_iterators() -> None:
+    transport = build_composite_transport()
+    client = DatabraryClient(
+        base_url="https://api.example",
+        client_id="cid",
+        client_secret="sec",
+        username="user@example.org",
+        password="pw",
+        user_agent="dbpy-tests",
+        transport=transport,
+    )
+    client.auth.login()
+
+    first_session = next(client.sessions.list(VOLUME_ID_PRIMARY))
+    assert first_session.id == SESSION_ID_1
+    first_sfile = next(client.sessions.files_list(VOLUME_ID_PRIMARY, SESSION_ID_1))
+    assert first_sfile.id is not None

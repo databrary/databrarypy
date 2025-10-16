@@ -11,7 +11,7 @@ def _first_id(page) -> int | None:
 
 
 def test_institutions_list_and_retrieve(client: DatabraryClient):
-    page = client.institutions.list(page=1)
+    page = client.institutions.page(page=1)
     assert page.count >= 0
     iid = _first_id(page)
     if iid is not None:
@@ -20,7 +20,7 @@ def test_institutions_list_and_retrieve(client: DatabraryClient):
 
 
 def test_institutions_avatar_and_investigators(client: DatabraryClient):
-    page = client.institutions.list(page=1)
+    page = client.institutions.page(page=1)
     if not page.results:
         return
     iid = page.results[0].id
@@ -30,5 +30,5 @@ def test_institutions_avatar_and_investigators(client: DatabraryClient):
     assert isinstance(data, (bytes, str))
 
     # Investigators derived client-side from affiliates
-    investigators = client.institutions.authorized_investigators(iid, page=1)
+    investigators = list(client.institutions.authorized_investigators_list(iid, page=1))
     assert isinstance(investigators, list)

@@ -14,7 +14,6 @@ from ..fixtures.data_constants import (
 )
 from ..fixtures.volume import (
     MOCK_VOLUME_DETAILED,
-    MOCK_VOLUMES_PAGE,
     build_volumes_transport,
     handle_volume_history,
 )
@@ -80,9 +79,9 @@ def test_volumes_read_endpoints() -> None:
     client.auth.login()
 
     # list
-    page = client.volumes.list(page=1, page_size=10)
-    assert page.count == MOCK_VOLUMES_PAGE["count"]
-    assert page.results and page.results[0].id == VOLUME_ID_PRIMARY
+    page = client.volumes.page(page=1, page_size=10)
+    assert page.count == 208
+    assert page.results and page.results[0].id == 1
 
     # retrieve
     detail = client.volumes.retrieve(VOLUME_ID_PRIMARY)
@@ -111,7 +110,7 @@ def test_volumes_read_endpoints() -> None:
     assert c0.user.id == collabs[0].user.id
 
     # activity/history
-    hist = client.volumes.activity(VOLUME_ID_PRIMARY)
+    hist = client.volumes.activity_page(1)
     assert hist.count >= 1 and hist.results[0].timestamp
 
     # download tasks
@@ -119,3 +118,22 @@ def test_volumes_read_endpoints() -> None:
     assert zip_task.status == TASK_STATUS_PROCESSING and zip_task.task_id
     csv_task = client.volumes.request_csv_download(VOLUME_ID_PRIMARY)
     assert csv_task.status == TASK_STATUS_PROCESSING and csv_task.task_id
+
+
+def test_volumes_list_iterators() -> None:
+    transport = build_transport()
+    client = DatabraryClient(
+        base_url="https://example.org",
+        client_id="id",
+        client_secret="secret",
+        username="user@example.org",
+        password="pw",
+        user_agent="tests",
+        transport=transport,
+    )
+    client.auth.login()
+
+    # iterate list variant
+    _ = list(client.volumes.list(page=1, page_size=2))
+    # activity list variant
+    _ = list(client.volumes.activity_list(1))

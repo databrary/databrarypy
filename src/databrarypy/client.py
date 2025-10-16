@@ -46,6 +46,10 @@ class DatabraryClient:
         timeout: float = 30.0,
         transport: httpx.BaseTransport | None = None,
         snake_case: bool = True,
+        max_retries: int = 5,
+        respect_retry_after: bool = True,
+        backoff_base: float = 0.5,
+        backoff_jitter: float = 0.25,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.user_agent = user_agent
@@ -75,6 +79,25 @@ class DatabraryClient:
         self.funders = FundersResource(self._http, self._headers, self._normalize)
         self.tags = TagsResource(self._http, self._headers, self._normalize)
         self.categories = CategoriesResource(self._http, self._headers, self._normalize)
+
+        # Apply retry configuration to all resources (attributes exist on BaseResource)
+        for res in (
+            self.system,
+            self.search,
+            self.users,
+            self.institutions,
+            self.volumes,
+            self.sessions,
+            self.folders,
+            self.records,
+            self.funders,
+            self.tags,
+            self.categories,
+        ):
+            res._max_retries = max(0, int(max_retries))
+            res._respect_retry_after = bool(respect_retry_after)
+            res._backoff_base = float(backoff_base)
+            res._backoff_jitter = float(backoff_jitter)
 
     def _headers(self) -> dict[str, str]:
         """Generate headers for API requests with valid authentication.

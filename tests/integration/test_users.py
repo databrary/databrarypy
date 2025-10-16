@@ -11,7 +11,7 @@ def _first_id(page) -> int | None:
 
 
 def test_users_list_and_retrieve(client: DatabraryClient):
-    page = client.users.list(page=1)
+    page = client.users.page(page=1)
     assert page.count >= 0
     uid = _first_id(page)
     if uid is not None:
@@ -24,7 +24,7 @@ def test_users_self(client: DatabraryClient):
     email = who.user
     assert email
     # Find user by email from the first page(s)
-    page = client.users.list(search=email, page=1)
+    page = client.users.page(search=email, page=1)
     assert page.count >= 0
     # If direct search didn't resolve id, fall back to first result match
     uid = None
@@ -43,7 +43,7 @@ def test_users_sponsorships_and_affiliates(client: DatabraryClient):
     who = client.whoami()
     email = who.user
     assert email
-    page = client.users.list(search=email, page=1)
+    page = client.users.page(search=email, page=1)
     uid = None
     for u in page.results:
         if getattr(u, "email", None) == email:
@@ -65,13 +65,13 @@ def test_users_volumes_and_avatar(client: DatabraryClient):
     if isinstance(who, dict):
         uid = who.get("id")
     if uid is None:
-        page = client.users.list(page=1)
+        page = client.users.page(page=1)
         if page.results:
             uid = page.results[0].id
     if uid is None:
         return
 
-    volumes = client.users.volumes(uid, page=1)
+    volumes = client.users.volumes_page(uid, page=1)
     assert volumes.count >= 0
 
     # Avatar can be empty bytes if 404; call to ensure path works

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Iterator
+
 from ..models import Page
 from ..models.records import Record
 from ._base import BaseResource
@@ -10,7 +12,7 @@ from ._base import BaseResource
 class RecordsResource(BaseResource):
     """List and retrieve records (measures included)."""
 
-    def list(
+    def page(
         self,
         volume_id: int,
         *,
@@ -25,6 +27,26 @@ class RecordsResource(BaseResource):
             page_size=page_size,
         )
         return self._get_page(
+            f"/volumes/{volume_id}/records/",
+            params=params,
+            parser=Record.model_validate,
+        )
+
+    def list(
+        self,
+        volume_id: int,
+        *,
+        category_id: int | None = None,
+        page: int | None = None,
+        page_size: int | None = None,
+    ) -> Iterator[Record]:
+        """Iterate records in a volume across pages yielding `Record` objects."""
+        params = self.build_params(
+            category_id=category_id,
+            page=page,
+            page_size=page_size,
+        )
+        return self.paginate_items(
             f"/volumes/{volume_id}/records/",
             params=params,
             parser=Record.model_validate,

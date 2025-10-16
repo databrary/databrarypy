@@ -11,7 +11,7 @@ def _first_id(page) -> int | None:
 
 
 def test_volumes_list_and_detail(client: DatabraryClient):
-    page = client.volumes.list(page=1)
+    page = client.volumes.page(page=1)
     assert page.count >= 0
     vid = _first_id(page)
     if vid is not None:
@@ -20,7 +20,7 @@ def test_volumes_list_and_detail(client: DatabraryClient):
 
 
 def test_volumes_tags_links_fundings(client: DatabraryClient):
-    page = client.volumes.list(page=1)
+    page = client.volumes.page(page=1)
     if not page.results:
         return
     vid = page.results[0].id
@@ -35,7 +35,7 @@ def test_volumes_tags_links_fundings(client: DatabraryClient):
 
 
 def test_volumes_collaborators(client: DatabraryClient):
-    page = client.volumes.list(page=1)
+    page = client.volumes.page(page=1)
     if not page.results:
         return
     vid = page.results[0].id

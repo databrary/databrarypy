@@ -21,7 +21,7 @@ def test_users_list_and_retrieve():
     )
     client.auth.login()
 
-    page = client.users.list(search="alex")
+    page = client.users.page(search="alex")
     assert page.count == 1
 
     assert page.results[0].first_name == MOCK_USER_1["first_name"]
@@ -32,7 +32,7 @@ def test_users_list_and_retrieve():
 
     sponsors = client.users.sponsors(6)
     assert sponsors and sponsors[0].id == 101
-    vols = client.users.volumes(6)
+    vols = client.users.volumes_page(6)
     assert vols.count == 0 and vols.results == []
     avatar2 = client.users.avatar(6)
     assert avatar2.startswith(b"\x89PNG")
@@ -85,7 +85,7 @@ def test_users_list_with_filters_and_volumes():
     )
     client.auth.login()
 
-    page = client.users.list(
+    page = client.users.page(
         search="john",
         include_suspended=True,
         exclude_self=True,
@@ -94,7 +94,7 @@ def test_users_list_with_filters_and_volumes():
     )
     assert page.count >= 0
 
-    vols = client.users.volumes(7)
+    vols = client.users.volumes_page(7)
     assert vols.count == 2
     assert [v.title for v in vols.results] == ["Vol1", "Vol2"]
 
@@ -112,8 +112,28 @@ def test_users_activity_list():
     )
     client.auth.login()
 
-    page = client.users.activity(USER_ID_PRIMARY, page=1, page_size=5)
+    page = client.users.activity_page(USER_ID_PRIMARY, page=1, page_size=5)
     assert page.count >= 1
     item = page.results[0]
     # ActivityItem allows extras; only assert required fields
     assert item.type and item.timestamp
+
+
+def test_users_iterators():
+    transport = build_composite_transport()
+    client = DatabraryClient(
+        base_url="https://api.example",
+        client_id="cid",
+        client_secret="sec",
+        username="user@example.org",
+        password="pw",
+        user_agent="dbpy-tests",
+        transport=transport,
+    )
+    client.auth.login()
+
+    first_user = next(client.users.list(search="alex"))
+    assert first_user.id is not None
+    # Iterate generators to cover code paths
+    _ = list(client.users.volumes_list(6))
+    _ = list(client.users.activity_list(6))

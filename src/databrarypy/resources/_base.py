@@ -2,14 +2,24 @@
 
 from __future__ import annotations
 
+import random
+import time
 from collections.abc import Callable
 from collections.abc import Callable as TypingCallable
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any, Iterator, TypeVar
 
 import httpx
 
+from ..errors import (
+    ApiError,
+    ForbiddenError,
+    NotFoundError,
+    RateLimitError,
+    ServerError,
+    UnauthorizedError,
+)
 from ..models import Page
 
 T = TypeVar("T")
@@ -23,10 +33,19 @@ class BaseResource:
         http: httpx.Client,
         headers_fn: Callable[[], dict[str, str]],
         normalize_json: Callable[[object], object] | None,
+        *,
+        max_retries: int = 0,
+        respect_retry_after: bool = True,
+        backoff_base: float = 0.5,
+        backoff_jitter: float = 0.25,
     ) -> None:
         self._normalize = normalize_json
         self._http = http
         self._headers = headers_fn
+        self._max_retries = max(0, int(max_retries))
+        self._respect_retry_after = bool(respect_retry_after)
+        self._backoff_base = float(backoff_base)
+        self._backoff_jitter = float(backoff_jitter)
 
     @staticmethod
     def build_params(**kwargs: Any) -> dict[str, Any]:
@@ -41,11 +60,107 @@ class BaseResource:
                 params[key] = value
         return params
 
+    def _request_json(
+        self,
+        *,
+        path: str | None = None,
+        url: str | None = None,
+        params: dict[str, Any] | None = None,
+    ) -> Any:
+        """GET JSON with retries/backoff and rich error mapping.
+
+        Exactly one of path or url should be provided.
+        """
+        assert (path is None) ^ (url is None)
+        attempt = 0
+        while True:
+            try:
+                if path is not None:
+                    path_s: str = path
+                    resp = self._http.get(path_s, params=params, headers=self._headers())
+                else:
+                    assert url is not None
+                    url_s: str = url
+                    resp = self._http.get(url_s, headers=self._headers())
+            except (
+                httpx.HTTPError
+            ) as exc:  # network-level errors, treat as retriable if attempts remain
+                if attempt < self._max_retries:
+                    delay = self._compute_delay(attempt)
+                    time.sleep(delay)
+                    attempt += 1
+                    continue
+                raise ServerError(str(exc), status_code=None) from exc
+
+            # Fast-path success
+            if resp.status_code < 400:
+                try:
+                    return resp.json()
+                except Exception:
+                    # Some endpoints may return 204/empty body; normalize to empty dict
+                    return {}
+
+            # Handle 401/403/404 explicitly (non-retriable)
+            if resp.status_code == 401:
+                raise UnauthorizedError("Unauthorized", status_code=401)
+            if resp.status_code == 403:
+                raise ForbiddenError("Forbidden", status_code=403)
+            if resp.status_code == 404:
+                raise NotFoundError("Not Found", status_code=404)
+
+            # 429 / transient 5xx: retry with backoff
+            if resp.status_code in (429, 502, 503, 504):
+                retry_after_seconds: float | None = None
+                if self._respect_retry_after:
+                    ra = resp.headers.get("Retry-After") or resp.headers.get("retry-after")
+                    if ra:
+                        try:
+                            retry_after_seconds = float(int(ra))
+                        except Exception:
+                            # Ignore non-numeric values for simplicity
+                            retry_after_seconds = None
+
+                if attempt < self._max_retries:
+                    wait = (
+                        retry_after_seconds
+                        if retry_after_seconds is not None
+                        else self._compute_delay(attempt)
+                    )
+                    if wait and wait > 0:
+                        time.sleep(wait)
+                    attempt += 1
+                    continue
+
+                if resp.status_code == 429:
+                    raise RateLimitError(
+                        f"Rate limited: {resp.text}",
+                        status_code=429,
+                        retry_after=retry_after_seconds,
+                    )
+                raise ServerError(f"Server error {resp.status_code}: {resp.text}")
+
+            # Other 4xx: raise ApiError
+            if 400 <= resp.status_code < 500:
+                raise ApiError(
+                    f"Client error {resp.status_code}: {resp.text}", status_code=resp.status_code
+                )
+
+            # Other 5xx: retry until exhausted
+            if attempt < self._max_retries:
+                delay = self._compute_delay(attempt)
+                time.sleep(delay)
+                attempt += 1
+                continue
+            raise ServerError(f"Server error {resp.status_code}: {resp.text}")
+
+    def _compute_delay(self, attempt: int) -> float:
+        base = self._backoff_base * (2**attempt)
+        jitter = random.random() * self._backoff_jitter if self._backoff_jitter > 0 else 0.0
+        return float(base + jitter)
+
     def _raw_get_json(self, path: str, *, params: dict[str, Any] | None = None) -> Any:
-        """Perform GET and return parsed JSON with status validation (no normalization)."""
-        resp = self._http.get(path, params=params, headers=self._headers())
-        resp.raise_for_status()
-        return resp.json()
+        """Perform GET and return parsed JSON with retries and status validation (no normalization)."""
+        return self._request_json(path=path, params=params)
 
     def _get_json(self, path: str, *, params: dict[str, Any] | None = None) -> Any:
         data: Any = self._raw_get_json(path, params=params)
@@ -59,9 +174,60 @@ class BaseResource:
         parser: TypingCallable[[Any], T] | None = None,
     ) -> Page[T]:
         data = self._get_json(path, params=params)
+        if not isinstance(data, dict) or "count" not in data:
+            # Normalize to an empty page structure if server returns empty body
+            results = [] if not isinstance(data, dict) else data.get("results", [])
+            data = {"count": len(results), "next": None, "previous": None, "results": results}
         if parser is not None:
             data["results"] = [parser(item) for item in data.get("results", [])]
         return Page[T].model_validate(data)
+
+    def _get_page_url(
+        self,
+        url: str,
+        *,
+        parser: TypingCallable[[Any], T] | None = None,
+    ) -> Page[T]:
+        data = self._request_json(url=url)
+        if not isinstance(data, dict) or "count" not in data:
+            results = [] if not isinstance(data, dict) else data.get("results", [])
+            data = {"count": len(results), "next": None, "previous": None, "results": results}
+        if parser is not None:
+            data["results"] = [parser(item) for item in data.get("results", [])]
+        return Page[T].model_validate(data)
+
+    # ---------------------------
+    # Pagination helpers
+    # ---------------------------
+    def paginate_pages(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+        parser: TypingCallable[[Any], T] | None = None,
+    ) -> Iterator[Page[T]]:
+        page = self._get_page(path, params=params, parser=parser)
+        yield page
+        next_url = page.next
+        while next_url:
+            # If next is absolute, use URL variant; otherwise, treat as path
+            if next_url.startswith("http://") or next_url.startswith("https://"):
+                page = self._get_page_url(next_url, parser=parser)
+            else:
+                page = self._get_page(next_url, parser=parser)
+            yield page
+            next_url = page.next
+
+    def paginate_items(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+        parser: TypingCallable[[Any], T] | None = None,
+    ) -> Iterator[T]:
+        for page in self.paginate_pages(path, params=params, parser=parser):
+            for item in page.results:
+                yield item
 
     # ---------------------------
     # Binary download helpers

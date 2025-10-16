@@ -20,7 +20,7 @@ def test_institutions_list():
     )
     client.auth.login()
 
-    page = client.institutions.list(search="Example")
+    page = client.institutions.page(search="Example")
     assert page.count == 1
 
     assert page.results[0].name == MOCK_INSTITUTION_1["name"]
@@ -55,8 +55,8 @@ def test_institutions_list_empty_and_retrieve():
     )
     client.auth.login()
 
-    page = client.institutions.list(search="test")
-    # Mock returns static data regardless of search params; tests client-side code path
+    page = client.institutions.page(search="Nonexistent")
+    # Our fixture returns static list; still covers the call path
     inst = page.results[0]
     retrieved = client.institutions.retrieve(inst.id)
     assert retrieved.id == inst.id
@@ -76,5 +76,22 @@ def test_institutions_params_and_avatar_404():
     client.auth.login()
 
     # Exercise page/page_size params on list
-    page = client.institutions.list(search="Example", page=2, page_size=5)
+    page = client.institutions.page(search="Example", page=2, page_size=5)
     assert page.count >= 1
+
+
+def test_institutions_list_iterator():
+    transport = build_composite_transport()
+    client = DatabraryClient(
+        base_url="https://api.example",
+        client_id="cid",
+        client_secret="sec",
+        username="user@example.org",
+        password="pw",
+        user_agent="dbpy-tests",
+        transport=transport,
+    )
+    client.auth.login()
+
+    first_inst = next(client.institutions.list(search="Example"))
+    assert first_inst.id is not None

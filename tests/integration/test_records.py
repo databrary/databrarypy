@@ -11,7 +11,7 @@ def _first_id(page) -> int | None:
 
 
 def _first_volume_id(client: DatabraryClient) -> int | None:
-    vols = client.volumes.list(page=1)
+    vols = client.volumes.page(page=1)
     return _first_id(vols)
 
 
@@ -19,7 +19,7 @@ def test_records_list_and_retrieve(client: DatabraryClient):
     vid = _first_volume_id(client)
     if vid is None:
         return
-    page = client.records.list(vid, page=1)
+    page = client.records.page(vid, page=1)
     assert page.count >= 0
     rid = _first_id(page)
     if rid is not None:

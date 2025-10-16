@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import builtins
+from typing import Iterator
 
 from ..models import Institution, Page, UserSlim
 from ._base import BaseResource
@@ -11,7 +12,7 @@ from ._base import BaseResource
 class InstitutionsResource(BaseResource):
     """Resource for institution endpoints."""
 
-    def list(
+    def page(
         self,
         *,
         search: str | None = None,
@@ -21,6 +22,21 @@ class InstitutionsResource(BaseResource):
         """List institutions with optional search and pagination."""
         params = self.build_params(search=search, page=page, page_size=page_size)
         return self._get_page(
+            "/institutions/",
+            params=params,
+            parser=Institution.model_validate,
+        )
+
+    def list(
+        self,
+        *,
+        search: str | None = None,
+        page: int | None = None,
+        page_size: int | None = None,
+    ) -> Iterator[Institution]:
+        """Iterate institutions across pages yielding `Institution` objects."""
+        params = self.build_params(search=search, page=page, page_size=page_size)
+        return self.paginate_items(
             "/institutions/",
             params=params,
             parser=Institution.model_validate,

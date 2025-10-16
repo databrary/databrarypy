@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Iterator
+
 from ..models import Page
 from ..models.downloads import FileDownloadLink, ProcessingTask
 from ..models.files import File as FileModel
@@ -12,7 +14,7 @@ from ._base import BaseResource
 class FoldersResource(BaseResource):
     """Read-only operations for folders and their files."""
 
-    def list(
+    def page(
         self,
         volume_id: int,
         *,
@@ -38,13 +40,39 @@ class FoldersResource(BaseResource):
             parser=Folder.model_validate,
         )
 
+    def list(
+        self,
+        volume_id: int,
+        *,
+        search: str | None = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
+        release_level: str | None = None,
+        page: int | None = None,
+        page_size: int | None = None,
+    ) -> Iterator[Folder]:
+        """Iterate folders within a volume across pages yielding `Folder` objects."""
+        params = self.build_params(
+            search=search,
+            date_from=date_from,
+            date_to=date_to,
+            release_level=release_level,
+            page=page,
+            page_size=page_size,
+        )
+        return self.paginate_items(
+            f"/volumes/{volume_id}/folders/",
+            params=params,
+            parser=Folder.model_validate,
+        )
+
     def retrieve(self, volume_id: int, folder_id: int) -> Folder:
         """Retrieve a single folder by id within a volume."""
         data = self._get_json(f"/volumes/{volume_id}/folders/{folder_id}/")
         return Folder.model_validate(data)
 
     # Files under a folder (read-only)
-    def files(
+    def files_page(
         self,
         volume_id: int,
         folder_id: int,
@@ -66,6 +94,33 @@ class FoldersResource(BaseResource):
             page_size=page_size,
         )
         return self._get_page(
+            f"/volumes/{volume_id}/folders/{folder_id}/files/",
+            params=params,
+            parser=FileModel.model_validate,
+        )
+
+    def files_list(
+        self,
+        volume_id: int,
+        folder_id: int,
+        *,
+        search: str | None = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
+        release_level: str | None = None,
+        page: int | None = None,
+        page_size: int | None = None,
+    ) -> Iterator[FileModel]:
+        """Iterate files within a folder across pages yielding `FileModel` objects."""
+        params = self.build_params(
+            search=search,
+            date_from=date_from,
+            date_to=date_to,
+            release_level=release_level,
+            page=page,
+            page_size=page_size,
+        )
+        return self.paginate_items(
             f"/volumes/{volume_id}/folders/{folder_id}/files/",
             params=params,
             parser=FileModel.model_validate,
