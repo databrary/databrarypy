@@ -11,7 +11,7 @@ from ..models import (
     UserPublic,
     UserSelf,
     UserSlim,
-    VolumePreview,
+    VolumeListItem,
 )
 from ._base import BaseResource
 
@@ -83,13 +83,13 @@ class UsersResource(BaseResource):
 
     def volumes(
         self, user_id: int, *, page: int | None = None, page_size: int | None = None
-    ) -> Page[VolumePreview]:
-        """List volumes related to the user; respects viewer access; paginated."""
+    ) -> Page[VolumeListItem]:
+        """List volumes related to the user; returns volume list items; paginated."""
         params = self.build_params(page=page, page_size=page_size)
         return self._get_page(
             f"/users/{user_id}/volumes/",
             params=params,
-            parser=VolumePreview.model_validate,
+            parser=VolumeListItem.model_validate,
         )
 
     def avatar(self, user_id: int, *, dest_path: str | None = None) -> bytes | str:

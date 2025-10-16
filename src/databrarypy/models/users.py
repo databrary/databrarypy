@@ -20,10 +20,10 @@ class UserSlim(BaseModel):
     url: str | None = None
     has_avatar: bool = Field(default=False)
     # Some list responses include these public fields as well
-    institution_sponsorships: list[dict[str, object]] | None = None
+    institution_sponsorships: list[dict[str, object]] = Field(default_factory=list)
     current_affiliates: list["UserSlim"] = Field(default_factory=list)
     current_sponsors: list["UserSlim"] = Field(default_factory=list)
-    is_suspended: bool | None = None
+    is_suspended: bool = Field(default=False)
     suspended_by: SuspendedBy | None = None
 
     model_config = {
@@ -43,18 +43,18 @@ class UserPublic(UserSlim):
     """Fields of UserRetrievePublicSerializer."""
 
     # institution_sponsorships: filled via separate endpoints; keep optional list placeholder
-    institution_sponsorships: list[dict[str, object]] | None = None
+    institution_sponsorships: list[dict[str, object]] = Field(default_factory=list)
     current_affiliates: list[UserSlim] = Field(default_factory=list)
     current_sponsors: list[UserSlim] = Field(default_factory=list)
     is_suspended: bool = Field(default=False)
     suspended_by: SuspendedBy | None = None
     # Some detail responses include self-only fields; accept as optional
-    pending_institution_requests: list[dict[str, object]] | None = None
-    pending_affiliate_requests: list[dict[str, object]] | None = None
+    pending_institution_requests: list[dict[str, object]] = Field(default_factory=list)
+    pending_affiliate_requests: list[dict[str, object]] = Field(default_factory=list)
     phone: str | None = None
     two_fa: str | None = None
-    finished_registration: bool | None = None
-    has_api_access: bool | None = None
+    finished_registration: bool = Field(default=False)
+    has_api_access: bool = Field(default=False)
 
     model_config = {
         "populate_by_name": True,
@@ -68,7 +68,7 @@ class UserSelf(UserPublic):
     pending_institution_requests: list[dict[str, object]] = Field(default_factory=list)
     pending_affiliate_requests: list[dict[str, object]] = Field(default_factory=list)
     phone: str | None = None
-    finished_registration: bool | None = None
+    finished_registration: bool = Field(default=False)
     has_api_access: bool = Field(default=False)
 
     model_config = {

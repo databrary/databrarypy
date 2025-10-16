@@ -16,10 +16,11 @@ class VolumeCoauthor(BaseModel):
     """
 
     id: int
-    user: UserSlim | None = None
-    sort_order: int | None = None
-    volume: int | None = None
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
+    user: UserSlim
+    user_id: int | None = None
+    sort_order: int
+    volume: int
+    created_at: datetime
+    updated_at: datetime
 
     model_config = {"populate_by_name": True, "extra": "ignore"}

@@ -10,7 +10,7 @@ from .funders import Funder
 class VolumeLink(BaseModel):
     """External link attached to a volume."""
 
-    id: int | None = None
+    id: int
     title: str
     url: str
 

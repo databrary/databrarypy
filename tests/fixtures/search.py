@@ -43,6 +43,7 @@ def _get_mock_volume_hit() -> dict:
             "user_id": 6,
             "full_name": "Alex Doe",
             "institution_name": "Example University",
+            "institution_id": 101,
         },
         "tags": ["language", "development"],
         "file_types": ["audio", "video"],

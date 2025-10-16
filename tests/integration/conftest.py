@@ -47,7 +47,12 @@ def client() -> DatabraryClient:
         )
 
     c = DatabraryClient(
-        base_url=base_url, client_id=client_id, client_secret=client_secret, user_agent=user_agent
+        base_url=base_url,
+        client_id=client_id,
+        client_secret=client_secret,
+        username=username,
+        password=password,
+        user_agent=user_agent,
     )
-    c.auth.login_with_password(username, password)
+    c.auth.login()
     return c

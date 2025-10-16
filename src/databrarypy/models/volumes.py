@@ -39,8 +39,8 @@ class VolumeListItem(BaseModel):
     short_name: str | None = None
     sharing_level: str
     owner_connection: InstitutionSponsorship | None = None
-    owner_institution: Institution | None = None
-    access_level: str | None = None
+    owner_institution: Institution
+    access_level: str
 
     model_config = {"populate_by_name": True, "extra": "forbid"}
 
@@ -49,7 +49,7 @@ class VolumeDetail(VolumePreview):
     """Full VolumeSerializer subset used by client."""
 
     owner_connection: InstitutionSponsorship | None = None
-    owner_institution: Institution | None = None
+    owner_institution: Institution
     sharing_level: str
     fundings: list[VolumeFundingRead] = Field(default_factory=list)
     links: list[VolumeLink] = Field(default_factory=list)

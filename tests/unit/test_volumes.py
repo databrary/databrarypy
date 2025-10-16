@@ -5,7 +5,6 @@ from __future__ import annotations
 import httpx
 
 from databrarypy.client import DatabraryClient
-from tests.fixtures.funders import MOCK_FUNDINGS_LIST
 
 from ..fixtures.client import build_client_transport
 from ..fixtures.data_constants import (
@@ -101,8 +100,7 @@ def test_volumes_read_endpoints() -> None:
 
     # fundings
     fundings = client.volumes.fundings(VOLUME_ID_PRIMARY)
-
-    assert fundings == MOCK_FUNDINGS_LIST
+    assert fundings and fundings[0].funder.is_approved is True
 
     # collaborators
     collabs = client.volumes.collaborators(VOLUME_ID_PRIMARY)

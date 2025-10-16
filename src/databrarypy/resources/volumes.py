@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import builtins
-from typing import Any
 
 from ..models import (
     Page,
     VolumeActivityItem,
     VolumeCollaborator,
     VolumeDetail,
+    VolumeFundingRead,
     VolumeLink,
     VolumeListItem,
 )
@@ -47,11 +47,11 @@ class VolumesResource(BaseResource):
         data = self._get_json(f"/volumes/{volume_id}/links/")
         return [VolumeLink.model_validate(item) for item in data]
 
-    def fundings(self, volume_id: int) -> builtins.list[dict[str, Any]]:
-        """List volume fundings (nested funder objects)."""
-        # Backend returns list of VolumeFundingSerializer; we parse nested on VolumeDetail
+    # Fundings
+    def fundings(self, volume_id: int) -> builtins.list[VolumeFundingRead]:
+        """List volume fundings (typed objects)."""
         data = self._get_json(f"/volumes/{volume_id}/fundings/")
-        return list(data)
+        return [VolumeFundingRead.model_validate(item) for item in data]
 
     def collaborators(self, volume_id: int) -> builtins.list[VolumeCollaborator]:
         """List collaborators visible to the current user for the volume."""

@@ -9,16 +9,16 @@ class Folder(BaseModel):
     """Folder list/detail fields (FolderSerializer)."""
 
     id: int
-    name: str | None = None
-    volume: int | None = None
-    release_level: str | None = None
-    created_at: object | None = None
-    updated_at: object | None = None
+    name: str
+    volume: int
+    release_level: str
+    created_at: object
+    updated_at: object
     source_date: str | None = None
 
-    file_count: int | None = None
-    accessible_file_count: int | None = None
-    has_full_access: bool | None = None
-    contains_different_release_levels: bool | None = None
+    file_count: int
+    accessible_file_count: int
+    has_full_access: bool
+    contains_different_release_levels: bool
 
     model_config = {"populate_by_name": True, "extra": "forbid"}
