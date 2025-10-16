@@ -21,12 +21,8 @@ class OAuth2Token:
     expires_at: float
 
     @property
-    def is_expired(self) -> bool:
-        """Check if the token is expired or about to expire.
-
-        Returns:
-            True if the token is expired or will expire within 30 seconds.
-        """
+    def should_refresh(self) -> bool:
+        """Return True if the token is expired or within the 30s refresh window."""
         return time.time() >= (self.expires_at - 30)
 
 
@@ -42,6 +38,8 @@ class OAuth2Client:
         base_url: str,
         client_id: str,
         client_secret: str,
+        username: str,
+        password: str,
         user_agent: str,
         *,
         timeout: float = 30.0,
@@ -50,6 +48,8 @@ class OAuth2Client:
         self.base_url = base_url.rstrip("/")
         self.client_id = client_id
         self.client_secret = client_secret
+        self.username = username
+        self.password = password
         self.user_agent = user_agent
         self._http = httpx.Client(base_url=self.base_url, timeout=timeout, transport=transport)
         self._token: OAuth2Token | None = None
@@ -84,12 +84,8 @@ class OAuth2Client:
             expires_at=time.time() + float(expires_in),
         )
 
-    def login_with_password(self, username: str, password: str) -> OAuth2Token:
-        """Authenticate using username and password.
-
-        Args:
-            username: User's email or username.
-            password: User's password.
+    def login(self) -> OAuth2Token:
+        """Authenticate using the credentials provided at initialization.
 
         Returns:
             OAuth2Token containing the access and refresh tokens.
@@ -100,8 +96,8 @@ class OAuth2Client:
         self._token = self._request_token(
             {
                 "grant_type": "password",
-                "username": username,
-                "password": password,
+                "username": self.username,
+                "password": self.password,
                 "client_id": self.client_id,
                 "client_secret": self.client_secret,
             }
@@ -140,7 +136,7 @@ class OAuth2Client:
         """
         if not self._token:
             raise RuntimeError("Not authenticated. Call login_with_password() first.")
-        if self._token.is_expired:
+        if self._token.should_refresh:
             if self._token.refresh_token:
                 self.refresh()
             else:

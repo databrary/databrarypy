@@ -13,11 +13,13 @@ def test_get_db_stats():
         base_url="https://api.example.org",
         client_id="cid",
         client_secret="secret",
+        username="user@example.org",
+        password="pw",
         user_agent="test",
         transport=transport,
     )
 
-    client.auth.login_with_password("user@example.org", "pw")
+    client.auth.login()
 
     # Test stats
     stats = client.system.get_db_stats()
@@ -36,11 +38,13 @@ def test_list_asset_formats():
         base_url="https://api.example.org",
         client_id="cid",
         client_secret="secret",
+        username="user@example.org",
+        password="pw",
         user_agent="test",
         transport=transport,
     )
 
-    client.auth.login_with_password("user@example.org", "pw")
+    client.auth.login()
 
     # Get grouped formats
     grouped = client.system.list_asset_formats()
@@ -79,11 +83,13 @@ def test_get_supported_file_types():
         base_url="https://api.example.org",
         client_id="cid",
         client_secret="secret",
+        username="user@example.org",
+        password="pw",
         user_agent="test",
         transport=transport,
     )
 
-    client.auth.login_with_password("user@example.org", "pw")
+    client.auth.login()
 
     supported = client.system.get_supported_file_types()
     items = supported.items
@@ -109,11 +115,13 @@ def test_get_permission_and_release_levels():
         base_url="https://api.example.org",
         client_id="cid",
         client_secret="secret",
+        username="user@example.org",
+        password="pw",
         user_agent="test",
         transport=transport,
     )
 
-    client.auth.login_with_password("user@example.org", "pw")
+    client.auth.login()
 
     perms = client.system.get_permission_levels()
     assert "owner" in perms.volume_access_levels

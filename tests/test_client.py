@@ -13,12 +13,14 @@ def test_client_initialization_and_whoami():
         base_url="https://api.example.org",
         client_id="cid",
         client_secret="secret",
+        username="user@example.org",
+        password="pw",
         user_agent="test",
         transport=transport,
     )
 
     # Login
-    client.auth.login_with_password("user@example.org", "pw")
+    client.auth.login()
 
     # Test whoami
     who = client.whoami()

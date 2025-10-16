@@ -19,12 +19,14 @@ def test_oauth2_password_and_refresh_flow():
         base_url="https://api.example.org",
         client_id="cid",
         client_secret="secret",
+        username="user@example.org",
+        password="pw",
         user_agent="test",
         transport=transport,
     )
 
     # Test password grant
-    tok1 = oauth.login_with_password("user@example.org", "pw")
+    tok1 = oauth.login()
     assert tok1.access_token == MOCK_AUTH_RESPONSES["token_success"]["access_token"]
     assert tok1.refresh_token == MOCK_AUTH_RESPONSES["token_success"]["refresh_token"]
     assert tok1.expires_at > time.time()
@@ -43,12 +45,14 @@ def test_token_request_failure():
         base_url="https://api.example.org",
         client_id="bad_client",
         client_secret="bad_secret",
+        username="user@example.org",
+        password="password",
         user_agent="test",
         transport=transport,
     )
 
     with pytest.raises(RuntimeError, match="Token request failed 401"):
-        oauth.login_with_password("user@example.org", "password")
+        oauth.login()
 
 
 def test_refresh_without_token():
@@ -59,6 +63,8 @@ def test_refresh_without_token():
         base_url="https://api.example.org",
         client_id="cid",
         client_secret="secret",
+        username="user@example.org",
+        password="password",
         user_agent="test",
         transport=transport,
     )
@@ -75,6 +81,8 @@ def test_get_valid_token_without_authentication():
         base_url="https://api.example.org",
         client_id="cid",
         client_secret="secret",
+        username="user@example.org",
+        password="password",
         user_agent="test",
         transport=transport,
     )
@@ -96,12 +104,14 @@ def test_expired_token_without_refresh_token():
         base_url="https://api.example.org",
         client_id="cid",
         client_secret="secret",
+        username="user@example.org",
+        password="password",
         user_agent="test",
         transport=transport,
     )
 
     # Login with a token that has no refresh token
-    oauth.login_with_password("user@example.org", "password")
+    oauth.login()
 
     # Force the token to be expired
     oauth._token.expires_at = time.time() - 100
@@ -118,12 +128,14 @@ def test_automatic_token_refresh():
         base_url="https://api.example.org",
         client_id="cid",
         client_secret="secret",
+        username="user@example.org",
+        password="password",
         user_agent="test",
         transport=transport,
     )
 
     # Login
-    oauth.login_with_password("user@example.org", "password")
+    oauth.login()
     initial_token = MOCK_AUTH_RESPONSES["token_success"]["access_token"]
     assert oauth._token.access_token == initial_token
 

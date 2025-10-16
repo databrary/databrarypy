@@ -17,19 +17,30 @@ class PermissionLevels(BaseModel):
     - VolumeCollaboratorAccessLevel
     """
 
+    # For clarity, we use more detailed access levels for volumes
     volume_access_levels: list[str] = Field(
         default_factory=lambda: [
+            # Platform superuser with full access; overrides all other checks
             "superuser",
+            # Volume owner (or institution admin for adminless institution)
             "owner",
+            # A collaborator with investigator role
             "investigator",
+            # Collaborator with read/write content access
             "read write",
+            # Collaborator with read-only content access
             "read only",
+            # Authenticated Databrary user that is not a collaborator
             "read only shared",
+            # Non-collaborator on a public volume
             "read only public",
+            # Non-collaborator on an overview-only public volume
             "read only overview",
+            # No access
             "none",
         ]
     )
+
     volume_collaborator_access_levels: list[str] = Field(
         default_factory=lambda: [
             "investigator",

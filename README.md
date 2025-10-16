@@ -18,11 +18,13 @@ client = DatabraryClient(
     base_url="https://nyu.databrary.org",
     client_id="your_client_id",
     client_secret="your_client_secret",
+    username="user@example.com",
+    password="password",
     user_agent="your_user_agent"
 )
 
 # Authenticate
-client.auth.login_with_password("user@example.com", "password")
+client.auth.login()
 
 # Get authenticated user info
 user_info = client.whoami()
@@ -41,12 +43,12 @@ formats = client.system.list_asset_formats()
 
 ### Client
 
-- `DatabraryClient(base_url, client_id, client_secret, user_agent)` - Main API client
+- `DatabraryClient(base_url, client_id, client_secret, username, password, user_agent)` - Main API client
 - `client.whoami()` - Get authenticated user information
 
 ### Authentication
 
-- `client.auth.login_with_password(username, password)` - Authenticate with credentials
+- `client.auth.login()` - Authenticate using credentials provided at initialization
 - `client.auth.refresh()` - Manually refresh access token
 - `client.auth.get_valid_access_token()` - Get valid token (auto-refreshes if expired)
 
