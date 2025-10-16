@@ -13,6 +13,8 @@ from .factory import make_page
 FOLDER_ID_1 = 301
 FOLDER_FILE_ID_1 = 3001
 JPEG_MIMETYPE = "image/jpeg"
+FOLDER_FILE_BINARY_CONTENT = b"FOLDER_FILE_CONTENT"
+FOLDER_FILE_DEFAULT_NAME = "Image 1.jpg"
 
 
 def _get_mock_folder_1():
@@ -93,7 +95,7 @@ def handle_folder_file_download_link(request: httpx.Request) -> httpx.Response:
     payload = {
         "download_url": "/dl/folder-file.bin?token=abc",
         "expires_at": "2030-01-01T00:00:00Z",
-        "file_name": "Image 1.jpg",
+        "file_name": FOLDER_FILE_DEFAULT_NAME,
         "file_size": 654321,
     }
     return httpx.Response(200, json=payload)
@@ -101,7 +103,7 @@ def handle_folder_file_download_link(request: httpx.Request) -> httpx.Response:
 
 def handle_folder_file_binary(request: httpx.Request) -> httpx.Response:
     # No content-disposition header on purpose to exercise URL basename fallback
-    return httpx.Response(200, content=b"FOLDER_FILE_CONTENT")
+    return httpx.Response(200, content=FOLDER_FILE_BINARY_CONTENT)
 
 
 def handle_folder_zip_download_link(request: httpx.Request) -> httpx.Response:

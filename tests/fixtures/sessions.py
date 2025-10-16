@@ -6,7 +6,7 @@ import httpx
 
 from .client import build_client_transport
 from .common import build_transport
-from .data_constants import VOLUME_ID_PRIMARY
+from .data_constants import TASK_STATUS_PROCESSING, VOLUME_ID_PRIMARY
 from .factory import make_page
 
 # ---- IDs ----
@@ -104,21 +104,25 @@ def handle_session_file_download_link(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, json=payload)
 
 
+SESSION_FILE_BINARY_CONTENT = b"SESSION_FILE_CONTENT"
+SESSION_FILE_DEFAULT_NAME = "Video 1.mp4"
+
+
 def handle_session_file_binary(request: httpx.Request) -> httpx.Response:
     # Respond with Content-Disposition to exercise header-based filename
-    headers = {"content-disposition": 'attachment; filename="Video 1.mp4"'}
-    return httpx.Response(200, content=b"SESSION_FILE_CONTENT", headers=headers)
+    headers = {"content-disposition": f'attachment; filename="{SESSION_FILE_DEFAULT_NAME}"'}
+    return httpx.Response(200, content=SESSION_FILE_BINARY_CONTENT, headers=headers)
 
 
 def handle_session_zip_download_link(request: httpx.Request) -> httpx.Response:
     return httpx.Response(
-        200, json={"status": "processing", "message": None, "task_id": "zip-session-1"}
+        200, json={"status": TASK_STATUS_PROCESSING, "message": None, "task_id": "zip-session-1"}
     )
 
 
 def handle_session_csv_download_link(request: httpx.Request) -> httpx.Response:
     return httpx.Response(
-        200, json={"status": "processing", "message": None, "task_id": "csv-session-1"}
+        200, json={"status": TASK_STATUS_PROCESSING, "message": None, "task_id": "csv-session-1"}
     )
 
 

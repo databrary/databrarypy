@@ -5,7 +5,7 @@ from __future__ import annotations
 import httpx
 
 from .common import build_transport
-from .data_constants import VOLUME_ID_PRIMARY
+from .data_constants import TASK_STATUS_PROCESSING, VOLUME_ID_PRIMARY
 from .factory import make_page
 from .folders import FOLDER_ID_1
 from .funders import MOCK_FUNDINGS_LIST
@@ -114,11 +114,15 @@ def handle_volume_history(request: httpx.Request) -> httpx.Response:
 
 
 def handle_volume_zip_download_link(request: httpx.Request) -> httpx.Response:
-    return httpx.Response(200, json={"status": "processing", "message": None, "task_id": "zip-1"})
+    return httpx.Response(
+        200, json={"status": TASK_STATUS_PROCESSING, "message": None, "task_id": "zip-1"}
+    )
 
 
 def handle_volume_csv_download_link(request: httpx.Request) -> httpx.Response:
-    return httpx.Response(200, json={"status": "processing", "message": None, "task_id": "csv-1"})
+    return httpx.Response(
+        200, json={"status": TASK_STATUS_PROCESSING, "message": None, "task_id": "csv-1"}
+    )
 
 
 def build_volumes_transport():

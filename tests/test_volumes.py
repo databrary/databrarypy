@@ -7,7 +7,7 @@ import httpx
 from databrarypy.client import DatabraryClient
 
 from .fixtures.client import build_client_transport
-from .fixtures.data_constants import VOLUME_ID_PRIMARY
+from .fixtures.data_constants import TASK_STATUS_PROCESSING, VOLUME_ID_PRIMARY
 from .fixtures.volume import build_volumes_transport, handle_volume_history
 from .fixtures.volume_collaborators import (
     handle_volume_collaborator_1,
@@ -103,6 +103,6 @@ def test_volumes_read_endpoints() -> None:
 
     # download tasks
     zip_task = client.volumes.request_zip_download(VOLUME_ID_PRIMARY)
-    assert zip_task.status == "processing" and zip_task.task_id
+    assert zip_task.status == TASK_STATUS_PROCESSING and zip_task.task_id
     csv_task = client.volumes.request_csv_download(VOLUME_ID_PRIMARY)
-    assert csv_task.status == "processing" and csv_task.task_id
+    assert csv_task.status == TASK_STATUS_PROCESSING and csv_task.task_id

@@ -5,8 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from databrarypy.client import DatabraryClient
-from tests.fixtures.data_constants import VOLUME_ID_PRIMARY
+from tests.fixtures.data_constants import TASK_STATUS_PROCESSING, VOLUME_ID_PRIMARY
 from tests.fixtures.sessions import (
+    SESSION_FILE_BINARY_CONTENT,
+    SESSION_FILE_DEFAULT_NAME,
     SESSION_FILE_ID_1,
     SESSION_ID_1,
     build_composite_transport,
@@ -52,7 +54,7 @@ def test_sessions_list_retrieve_and_files() -> None:
 
     # download bytes
     content = client.sessions.download_file(VOLUME_ID_PRIMARY, SESSION_ID_1, SESSION_FILE_ID_1)
-    assert content == b"SESSION_FILE_CONTENT"
+    assert content == SESSION_FILE_BINARY_CONTENT
 
     # download to dir should use header-provided filename
     out_dir = Path(".pytest_tmp/session_dl")
@@ -62,10 +64,10 @@ def test_sessions_list_retrieve_and_files() -> None:
     saved = client.sessions.download_file(
         VOLUME_ID_PRIMARY, SESSION_ID_1, SESSION_FILE_ID_1, dest_path=str(out_dir)
     )
-    assert saved.endswith("Video 1.mp4")
+    assert saved.endswith(SESSION_FILE_DEFAULT_NAME)
 
     # request session tasks (zip, csv)
     zip_task = client.sessions.request_zip_download(VOLUME_ID_PRIMARY, SESSION_ID_1)
-    assert zip_task.status == "processing"
+    assert zip_task.status == TASK_STATUS_PROCESSING
     csv_task = client.sessions.request_csv_download(VOLUME_ID_PRIMARY, SESSION_ID_1)
-    assert csv_task.status == "processing"
+    assert csv_task.status == TASK_STATUS_PROCESSING
