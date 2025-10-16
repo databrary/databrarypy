@@ -48,10 +48,12 @@ def test_funders_list_include_all_param_only_when_true():
         base_url="https://api.example",
         client_id="cid",
         client_secret="sec",
+        username="user@example.org",
+        password="pw",
         user_agent="dbpy-tests",
         transport=transport,
     )
-    client.auth.login_with_password("user", "pass")
+    client.auth.login()
 
     # include_all=False should NOT include all=true
     client.funders.list(include_all=False)

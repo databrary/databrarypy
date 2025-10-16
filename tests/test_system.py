@@ -139,11 +139,13 @@ def test_is_healthy_true_and_false():
         base_url="https://api.example.org",
         client_id="cid",
         client_secret="secret",
+        username="user@example.org",
+        password="pw",
         user_agent="test",
         transport=transport,
     )
 
-    client.auth.login_with_password("user@example.org", "pw")
+    client.auth.login()
 
     # True case is covered separately; here simulate non-200 using explicit handler to cover branch
     from .fixtures.auth import handle_token_success
@@ -160,10 +162,12 @@ def test_is_healthy_true_and_false():
         base_url="https://api.example.org",
         client_id="cid",
         client_secret="secret",
+        username="user@example.org",
+        password="pw",
         user_agent="test",
         transport=failing_transport,
     )
-    client_fail.auth.login_with_password("user@example.org", "pw")
+    client_fail.auth.login()
     assert client_fail.system.is_healthy() is False
 
     # Now simulate an exception during the request to cover except path
@@ -177,8 +181,10 @@ def test_is_healthy_true_and_false():
         base_url="https://api.example.org",
         client_id="cid",
         client_secret="secret",
+        username="user@example.org",
+        password="pw",
         user_agent="test",
         transport=exc_transport,
     )
-    client_exc.auth.login_with_password("user@example.org", "pw")
+    client_exc.auth.login()
     assert client_exc.system.is_healthy() is False
