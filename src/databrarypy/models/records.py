@@ -10,9 +10,12 @@ from pydantic import BaseModel, Field
 class Age(BaseModel):
     """Age structure from AgeSerializer."""
 
+    # The age in years, months, and days. Example: 1 year, 2 months, 3 days.
     years: int | None = None
     months: int | None = None
     days: int | None = None
+
+    # The age in days. Example: 365 days.
     total_days: int | None = None
 
     model_config = {"populate_by_name": True, "extra": "ignore"}

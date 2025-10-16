@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from databrarypy.client import DatabraryClient
 from tests.fixtures.data_constants import VOLUME_ID_PRIMARY
-from tests.fixtures.folders import FOLDER_FILE_ID_1, FOLDER_ID_1, build_composite_transport
+from tests.fixtures.folders import (
+    FOLDER_FILE_ID_1,
+    FOLDER_ID_1,
+    JPEG_MIMETYPE,
+    build_composite_transport,
+)
 
 
 def test_folders_list_retrieve_and_files() -> None:
@@ -34,7 +39,7 @@ def test_folders_list_retrieve_and_files() -> None:
     files_page = client.folders.files(VOLUME_ID_PRIMARY, FOLDER_ID_1)
     assert files_page.count == 1
     f0 = files_page.results[0]
-    assert f0.format and f0.format.mimetype == "image/jpeg"
+    assert f0.format and f0.format.mimetype == JPEG_MIMETYPE
 
     # file detail
     fdetail = client.folders.get_file(VOLUME_ID_PRIMARY, FOLDER_ID_1, FOLDER_FILE_ID_1)

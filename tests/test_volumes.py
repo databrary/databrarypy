@@ -8,7 +8,7 @@ from databrarypy.client import DatabraryClient
 
 from .fixtures.client import build_client_transport
 from .fixtures.data_constants import VOLUME_ID_PRIMARY
-from .fixtures.volume import build_volumes_transport, handle_volume_history_1
+from .fixtures.volume import build_volumes_transport, handle_volume_history
 from .fixtures.volume_collaborators import (
     handle_volume_collaborator_1,
     handle_volume_collaborators_1,
@@ -33,7 +33,7 @@ def build_transport():
         if key in {("GET", "/volumes/"), ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/")}:
             return volumes_transport.handle_request(request)
         if key == ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/history/"):
-            return handle_volume_history_1(request)
+            return handle_volume_history(request)
         # Route other volume endpoints manually
         if key == ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/tags/"):
             return handle_volume_tags_1(request)

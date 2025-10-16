@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from databrarypy.client import DatabraryClient
 from tests.fixtures.data_constants import VOLUME_ID_PRIMARY
-from tests.fixtures.records import RECORD_ID_1, build_composite_transport
+from tests.fixtures.records import (
+    RECORD_1_AGE,
+    RECORD_1_MEASURES,
+    RECORD_CATEGORY_ID_1,
+    RECORD_ID_1,
+    build_composite_transport,
+)
 
 
 def test_records_list_and_retrieve() -> None:
@@ -21,12 +27,14 @@ def test_records_list_and_retrieve() -> None:
     client.auth.login()
 
     # list
-    page = client.records.list(VOLUME_ID_PRIMARY, category_id=10, page=1, page_size=10)
+    page = client.records.list(
+        VOLUME_ID_PRIMARY, category_id=RECORD_CATEGORY_ID_1, page=1, page_size=10
+    )
     assert page.count == 1
     assert page.results and page.results[0].id == RECORD_ID_1
-    assert page.results[0].age and page.results[0].age.total_days == 1972
+    assert page.results[0].age and page.results[0].age.total_days == RECORD_1_AGE["total_days"]
 
     # retrieve
     detail = client.records.retrieve(VOLUME_ID_PRIMARY, RECORD_ID_1)
     assert detail.id == RECORD_ID_1
-    assert detail.measures["height_cm"] == 120
+    assert detail.measures == RECORD_1_MEASURES

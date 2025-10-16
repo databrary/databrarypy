@@ -12,6 +12,7 @@ from .factory import make_page
 # ---- IDs ----
 FOLDER_ID_1 = 301
 FOLDER_FILE_ID_1 = 3001
+JPEG_MIMETYPE = "image/jpeg"
 
 
 def _get_mock_folder_1():
@@ -42,7 +43,7 @@ def _get_mock_folder_1_file():
         "release_level": "public",
         "format": {
             "id": 10,
-            "mimetype": "image/jpeg",
+            "mimetype": JPEG_MIMETYPE,
             "name": "JPEG",
             "extensions": [".jpg", ".jpeg"],
         },
@@ -53,7 +54,7 @@ def _get_mock_folder_1_file():
         "volume": VOLUME_ID_PRIMARY,
         "folder": FOLDER_ID_1,
         "session": None,
-        "mime_type": "image/jpeg",
+        "mime_type": JPEG_MIMETYPE,
         "transcoded_file": None,
         "has_full_access": True,
         "thumbnail_url": "https://cdn.example/thumb2.jpg",

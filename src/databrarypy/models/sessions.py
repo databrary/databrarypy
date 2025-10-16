@@ -17,13 +17,20 @@ class Session(BaseModel):
     created_at: object | None = None
     updated_at: object | None = None
     source_date: str | None = None
-    # Backend may return a structured dict or a blurred string constant
+
+    # The date of the session. Backend may return a structured dict or a blurred string constant.
     date: dict[str, Any] | str | None = None
 
-    # Aggregates/flags
+    # The total number of files directly in this session.
     file_count: int | None = None
+
+    # The number of files the current user can access.
     accessible_file_count: int | None = None
+
+    # Whether the current user has full access to the session. (some can have blurred names and metadata)
     has_full_access: bool | None = None
+
+    # Whether the session contains files with different release levels than the session itself.
     contains_different_release_levels: bool | None = None
 
     model_config = {"populate_by_name": True, "extra": "ignore"}

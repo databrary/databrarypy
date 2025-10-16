@@ -11,16 +11,19 @@ from .factory import make_page
 
 # ---- IDs ----
 RECORD_ID_1 = 501
+RECORD_CATEGORY_ID_1 = 10
+RECORD_1_AGE = {"years": 5, "months": 4, "days": 12, "total_days": 1972}
+RECORD_1_MEASURES = {"height_cm": 120, "weight_kg": 25.5}
 
 
 def _get_mock_record_1():
     return {
         "id": RECORD_ID_1,
         "volume": VOLUME_ID_PRIMARY,
-        "category_id": 10,
-        "measures": {"height_cm": 120, "weight_kg": 25.5},
+        "category_id": RECORD_CATEGORY_ID_1,
+        "measures": RECORD_1_MEASURES,
         "birthday": "2020-01-01",
-        "age": {"years": 5, "months": 4, "days": 12, "total_days": 1972},
+        "age": RECORD_1_AGE,
     }
 
 
