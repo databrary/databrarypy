@@ -51,8 +51,8 @@ def test_users_affiliates_with_params():
     client.auth.login()
 
     # Exercise include_expired, page, page_size path
-    affs = client.users.affiliates(6, include_expired=True)
-    assert isinstance(affs, list)
+    page = client.users.affiliates(6, include_expired=True, page=1, page_size=10)
+    assert page.count >= 0
 
 
 def test_users_list_with_filters_and_volumes():

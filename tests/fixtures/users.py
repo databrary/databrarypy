@@ -53,6 +53,7 @@ MOCK_USERS_PAGE = make_page(
 
 MOCK_USER_6_VOLUMES_PAGE_EMPTY = make_page(results=[], count=0)
 MOCK_USER_7_VOLUMES_PAGE = make_page(results=[MOCK_VOLUME_VOL1, MOCK_VOLUME_VOL2], count=2)
+MOCK_USER_6_AFFILIATES_PAGE_EMPTY = make_page(results=[], count=0)
 
 
 MOCK_USER_SELF = {
@@ -109,7 +110,7 @@ def handle_user_volumes_7(request: httpx.Request) -> httpx.Response:
 
 
 def handle_user_affiliates_6(request: httpx.Request) -> httpx.Response:
-    return httpx.Response(200, json=[])
+    return httpx.Response(200, json=MOCK_USER_6_AFFILIATES_PAGE_EMPTY)
 
 
 def handle_user_avatar_6(request: httpx.Request) -> httpx.Response:
