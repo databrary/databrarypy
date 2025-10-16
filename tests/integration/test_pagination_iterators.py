@@ -8,7 +8,7 @@ def test_iterate_volumes_users_and_records(client: DatabraryClient):
     first_page = client.volumes.page(page=1, page_size=5)
     first_ids = [v.id for v in first_page.results]
     seen = []
-    for idx, v in enumerate(client.volumes.iter_list(page=1, page_size=5)):
+    for idx, v in enumerate(client.volumes.list(page=1, page_size=5)):
         seen.append(v.id)
         if idx >= 9:  # limit traversal for runtime
             break
@@ -17,7 +17,7 @@ def test_iterate_volumes_users_and_records(client: DatabraryClient):
     # Users iterator basic smoke
     u_first = client.users.page(page=1, page_size=5)
     u_seen = []
-    for idx, u in enumerate(client.users.iter_list(page=1, page_size=5)):
+    for idx, u in enumerate(client.users.list(page=1, page_size=5)):
         u_seen.append(u.id)
         if idx >= 9:
             break
@@ -28,7 +28,7 @@ def test_iterate_volumes_users_and_records(client: DatabraryClient):
         vid = first_page.results[0].id
         r_first = client.records.page(vid, page=1, page_size=2)
         r_seen = []
-        for idx, r in enumerate(client.records.iter_list(vid, page=1, page_size=2)):
+        for idx, r in enumerate(client.records.list(vid, page=1, page_size=2)):
             r_seen.append(r.id)
             if idx >= 4:
                 break

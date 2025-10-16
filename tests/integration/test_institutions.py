@@ -30,5 +30,5 @@ def test_institutions_avatar_and_investigators(client: DatabraryClient):
     assert isinstance(data, (bytes, str))
 
     # Investigators derived client-side from affiliates
-    investigators = list(client.institutions.authorized_investigators_list(iid, page=1))
+    investigators = list(client.institutions.authorized_investigators(iid, page=1))
     assert isinstance(investigators, list)
