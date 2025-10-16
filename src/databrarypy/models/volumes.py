@@ -43,8 +43,8 @@ class VolumeListItem(BaseModel):
     sharing_level: str
     coauthors: list[VolumeCoauthor] = Field(default_factory=list)
     owner_connection: InstitutionSponsorship | None = None
-    owner_institution: Institution | None = None
-    access_level: str | None = None
+    owner_institution: Institution
+    access_level: str
 
     model_config = {"populate_by_name": True, "extra": "forbid"}
 
