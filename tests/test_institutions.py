@@ -10,10 +10,12 @@ def test_institutions_list():
         base_url="https://api.example",
         client_id="cid",
         client_secret="sec",
+        username="user@example.org",
+        password="pw",
         user_agent="dbpy-tests",
         transport=transport,
     )
-    client.auth.login_with_password("user", "pass")
+    client.auth.login()
 
     page = client.institutions.list(search="Penn")
     assert page.count == 1
@@ -32,10 +34,12 @@ def test_institutions_list_empty_and_retrieve():
         base_url="https://api.example",
         client_id="cid",
         client_secret="sec",
+        username="user@example.org",
+        password="pw",
         user_agent="dbpy-tests",
         transport=transport,
     )
-    client.auth.login_with_password("user", "pass")
+    client.auth.login()
 
     page = client.institutions.list(search="Nonexistent")
     # Our fixture returns static list; still covers the call path
@@ -50,10 +54,12 @@ def test_institutions_params_and_avatar_404():
         base_url="https://api.example",
         client_id="cid",
         client_secret="sec",
+        username="user@example.org",
+        password="pw",
         user_agent="dbpy-tests",
         transport=transport,
     )
-    client.auth.login_with_password("user", "pass")
+    client.auth.login()
 
     # Exercise page/page_size params on list
     page = client.institutions.list(search="Penn", page=2, page_size=5)

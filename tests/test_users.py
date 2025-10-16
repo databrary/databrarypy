@@ -10,10 +10,12 @@ def test_users_list_and_retrieve():
         base_url="https://api.example",
         client_id="cid",
         client_secret="sec",
+        username="user@example.org",
+        password="pw",
         user_agent="dbpy-tests",
         transport=transport,
     )
-    client.auth.login_with_password("user", "pass")
+    client.auth.login()
 
     page = client.users.list(search="alex")
     assert page.count == 1
@@ -41,10 +43,12 @@ def test_users_affiliates_with_params():
         base_url="https://api.example",
         client_id="cid",
         client_secret="sec",
+        username="user@example.org",
+        password="pw",
         user_agent="dbpy-tests",
         transport=transport,
     )
-    client.auth.login_with_password("user", "pass")
+    client.auth.login()
 
     # Exercise include_expired, page, page_size path
     affs = client.users.affiliates(6, include_expired=True)
@@ -57,10 +61,12 @@ def test_users_list_with_filters_and_volumes():
         base_url="https://api.example",
         client_id="cid",
         client_secret="sec",
+        username="user@example.org",
+        password="pw",
         user_agent="dbpy-tests",
         transport=transport,
     )
-    client.auth.login_with_password("user", "pass")
+    client.auth.login()
 
     page = client.users.list(
         search="rick",
