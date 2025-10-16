@@ -2,7 +2,7 @@
 
 from databrarypy.client import DatabraryClient
 
-from .fixtures.categories import build_composite_transport
+from .fixtures.categories import _get_mock_category, build_composite_transport
 
 
 def test_categories_list_and_retrieve():
@@ -21,9 +21,10 @@ def test_categories_list_and_retrieve():
     page = client.categories.list(page=1, page_size=10, ordering="name")
     assert page.count == 1
     cat = page.results[0]
-    assert cat.name == "Demographics"
-    assert len(cat.metrics) == 2
+    expected = _get_mock_category()
+    assert cat.name == expected["name"]
+    assert len(cat.metrics) == len(expected["metrics"])
 
     detail = client.categories.retrieve(cat.id)
     assert detail.id == cat.id
-    assert any(m.name == "age" for m in detail.metrics)
+    assert any(m.name == expected["metrics"][0]["name"] for m in detail.metrics)

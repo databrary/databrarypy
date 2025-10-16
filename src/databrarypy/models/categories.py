@@ -13,8 +13,11 @@ class Metric(BaseModel):
     id: int
     name: str
     release: str | None = None
+    # Data type of the metric's value (e.g., "number", "choice", "string").
     type: str | None = None
+    # Allowed values for the metric when type is "choice".
     options: Any | None = None
+    # Default/assumed value when missing.
     assumed: Any | None = None
     description: str | None = None
     required: bool | None = None

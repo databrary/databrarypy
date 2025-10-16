@@ -6,9 +6,9 @@ from typing import Any
 
 from ..models import Page
 from ..models.search import (
-    InstitutionSearchHit,
-    UserSearchHit,
-    VolumeSearchHit,
+    InstitutionSearchResult,
+    UserSearchResult,
+    VolumeSearchResult,
 )
 from ._base import BaseResource
 
@@ -25,7 +25,7 @@ class SearchResource(BaseResource):
         page_size: int | None = None,
         sort_by: str | None = None,
         sort_order: str | None = None,
-    ) -> Page[UserSearchHit]:
+    ) -> Page[UserSearchResult]:
         """Search users.
 
         Mirrors backend `/search/users/`, passing query and pagination params.
@@ -41,7 +41,7 @@ class SearchResource(BaseResource):
         return self._get_page(
             "/search/users/",
             params=params,
-            parser=UserSearchHit.model_validate,
+            parser=UserSearchResult.model_validate,
         )
 
     def institutions(
@@ -52,7 +52,7 @@ class SearchResource(BaseResource):
         page_size: int | None = None,
         sort_by: str | None = None,
         sort_order: str | None = None,
-    ) -> Page[InstitutionSearchHit]:
+    ) -> Page[InstitutionSearchResult]:
         """Search institutions."""
         params = self.build_params(
             q=q,
@@ -64,7 +64,7 @@ class SearchResource(BaseResource):
         return self._get_page(
             "/search/institutions/",
             params=params,
-            parser=InstitutionSearchHit.model_validate,
+            parser=InstitutionSearchResult.model_validate,
         )
 
     def volumes(
@@ -80,7 +80,7 @@ class SearchResource(BaseResource):
         page_size: int | None = None,
         sort_by: str | None = None,
         sort_order: str | None = None,
-    ) -> Page[VolumeSearchHit]:
+    ) -> Page[VolumeSearchResult]:
         """Search volumes with optional filters.
 
         Backend accepts both `files_release_levels[]` and `files_release_levels` repeated
@@ -105,5 +105,5 @@ class SearchResource(BaseResource):
         return self._get_page(
             "/search/volumes/",
             params=params,
-            parser=VolumeSearchHit.model_validate,
+            parser=VolumeSearchResult.model_validate,
         )

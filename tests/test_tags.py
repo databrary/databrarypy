@@ -2,7 +2,7 @@
 
 from databrarypy.client import DatabraryClient
 
-from .fixtures.tags import build_composite_transport
+from .fixtures.tags import _get_mock_tag, build_composite_transport
 
 
 def test_tags_list_and_retrieve():
@@ -21,7 +21,8 @@ def test_tags_list_and_retrieve():
     page = client.tags.list(search="lang", ordering="name")
     assert page.count == 1
     tag = page.results[0]
-    assert tag.name == "language"
+    expected = _get_mock_tag()
+    assert tag.name == expected["name"]
 
     detail = client.tags.retrieve(tag.id)
     assert detail.id == tag.id

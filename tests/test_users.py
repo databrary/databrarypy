@@ -2,7 +2,7 @@
 
 from databrarypy.client import DatabraryClient
 from tests.fixtures.data_constants import USER_ID_PRIMARY
-from tests.fixtures.users import build_composite_transport
+from tests.fixtures.users import MOCK_USER_1, build_composite_transport
 
 
 def test_users_list_and_retrieve():
@@ -20,7 +20,8 @@ def test_users_list_and_retrieve():
 
     page = client.users.list(search="alex")
     assert page.count == 1
-    assert page.results[0].first_name == "Alex"
+
+    assert page.results[0].first_name == MOCK_USER_1["first_name"]
 
     me = client.users.retrieve(6, for_self=True)
     assert me.has_api_access is True

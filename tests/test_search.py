@@ -2,7 +2,12 @@
 
 from databrarypy.client import DatabraryClient
 
-from .fixtures.search import build_composite_transport
+from .fixtures.search import (
+    _get_mock_institution_hit,
+    _get_mock_user_hit,
+    _get_mock_volume_hit,
+    build_composite_transport,
+)
 
 
 def _make_client():
@@ -25,7 +30,8 @@ def test_search_users():
     page = client.search.users("alex", filter="active", page=1, page_size=20, sort_by="name")
     assert page.count == 1
     hit = page.results[0]
-    assert hit.full_name == "Alex Doe"
+    expected = _get_mock_user_hit()
+    assert hit.full_name == expected["full_name"]
     assert hit.is_authorized is True
 
 
@@ -34,7 +40,8 @@ def test_search_institutions():
     page = client.search.institutions("Example", page=2, page_size=5, sort_order="desc")
     assert page.count == 1
     hit = page.results[0]
-    assert hit.name == "Example University"
+    expected = _get_mock_institution_hit()
+    assert hit.name == expected["name"]
 
 
 def test_search_volumes():
@@ -53,5 +60,6 @@ def test_search_volumes():
     )
     assert page.count == 1
     hit = page.results[0]
-    assert hit.title == "Language Development"
-    assert hit.owner.full_name == "Alex Doe"
+    expected = _get_mock_volume_hit()
+    assert hit.title == expected["title"]
+    assert hit.owner.full_name == expected["owner"]["full_name"]

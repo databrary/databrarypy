@@ -5,11 +5,8 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 
-class UserSearchHit(BaseModel):
-    """User search hit shape from UserSearchSerializer.
-
-    Field names are snake_case to align with client-side normalization.
-    """
+class UserSearchResult(BaseModel):
+    """Single user result returned by the search endpoint."""
 
     id: int
     first_name: str
@@ -25,8 +22,8 @@ class UserSearchHit(BaseModel):
     model_config = {"populate_by_name": True, "extra": "ignore"}
 
 
-class InstitutionSearchHit(BaseModel):
-    """Institution search hit from InstitutionSearchSerializer."""
+class InstitutionSearchResult(BaseModel):
+    """Institution search result from the search endpoint."""
 
     id: int
     name: str
@@ -38,7 +35,7 @@ class InstitutionSearchHit(BaseModel):
 
 
 class VolumeOwner(BaseModel):
-    """Nested owner object in VolumeSearchSerializer."""
+    """Nested owner object in the search endpoint."""
 
     user_id: int | None = None
     full_name: str | None = None
@@ -47,8 +44,8 @@ class VolumeOwner(BaseModel):
     model_config = {"populate_by_name": True, "extra": "ignore"}
 
 
-class VolumeSearchHit(BaseModel):
-    """Volume search hit from VolumeSearchSerializer."""
+class VolumeSearchResult(BaseModel):
+    """Volume search result from the search endpoint."""
 
     id: int
     title: str

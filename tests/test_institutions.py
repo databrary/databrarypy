@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from databrarypy.client import DatabraryClient
+from tests.fixtures.institutions import MOCK_INSTITUTION_1
 from tests.fixtures.users import build_composite_transport
 
 
@@ -21,7 +22,8 @@ def test_institutions_list():
 
     page = client.institutions.list(search="Example")
     assert page.count == 1
-    assert page.results[0].name == "Example University"
+
+    assert page.results[0].name == MOCK_INSTITUTION_1["name"]
     inst_id = page.results[0].id
     invs = client.institutions.authorized_investigators(inst_id)
     assert invs and invs[0].is_authorized_investigator is True
