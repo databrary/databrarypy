@@ -54,9 +54,6 @@ def _get_mock_user_volumes_page():
     return make_page(results=[volume_1, volume_2], count=2)
 
 
-MOCK_USER_AFFILIATES_PAGE_EMPTY = make_page(results=[], count=0)
-
-
 MOCK_USER_SELF = {
     **MOCK_USER_1,
     "pending_institution_requests": [],
@@ -176,12 +173,8 @@ def handle_user_volumes_user_2(request: httpx.Request) -> httpx.Response:
 
 
 def handle_user_affiliates_user_1(request: httpx.Request) -> httpx.Response:
-    include_expired = request.url.params.get("include_expired") == "true"
-    results = [MOCK_USER_6_AFFILIATE_ACTIVE]
-    if include_expired:
-        results.append(MOCK_USER_6_AFFILIATE_EXPIRED)
-    page = make_page(results=results, count=len(results))
-    return httpx.Response(200, json=page)
+    # Backend returns a list directly (not paginated)
+    return httpx.Response(200, json=[])
 
 
 def handle_user_avatar_user_1(request: httpx.Request) -> httpx.Response:

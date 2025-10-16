@@ -40,9 +40,9 @@ def test_volumes_collaborators(client: DatabraryClient):
         return
     vid = page.results[0].id
 
-    collabs = client.volumes.list_collaborators(vid)
+    collabs = client.volumes.collaborators(vid)
     assert isinstance(collabs, list)
     if collabs:
         cid = collabs[0].id
-        collab = client.volumes.get_collaborator(vid, cid)
+        collab = client.volumes.collaborator(vid, cid)
         assert collab.id == cid
