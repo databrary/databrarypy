@@ -64,8 +64,8 @@ class VolumeDetail(VolumePreview):
     model_config = {"populate_by_name": True, "extra": "ignore"}
 
 
-class VolumeCollaboratorView(BaseModel):
-    """Collaborator view row (VolumeCollaboratorSerializer)."""
+class VolumeCollaborator(BaseModel):
+    """Collaborator row."""
 
     id: int
     volume: int

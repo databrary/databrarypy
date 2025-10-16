@@ -12,7 +12,7 @@ from .supported_types import SupportedFileType, SupportedFileTypes
 from .users import SuspendedBy, UserPublic, UserSelf, UserSlim
 from .volume_shared import VolumeFundingRead, VolumeLink
 from .volumes import (
-    VolumeCollaboratorView,
+    VolumeCollaborator,
     VolumeDetail,
     VolumeListItem,
     VolumePreview,
@@ -36,7 +36,7 @@ __all__ = [
     "UserSelf",
     "UserSlim",
     "VolumeCoauthor",
-    "VolumeCollaboratorView",
+    "VolumeCollaborator",
     "VolumeDetail",
     "VolumeFundingRead",
     "VolumeLink",

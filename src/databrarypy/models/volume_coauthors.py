@@ -17,7 +17,6 @@ class VolumeCoauthor(BaseModel):
 
     id: int
     user: UserSlim | None = None
-    user_id: int | None = None
     sort_order: int | None = None
     volume: int | None = None
     created_at: datetime | None = None

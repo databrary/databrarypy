@@ -54,10 +54,12 @@ def test_volumes_read_endpoints() -> None:
         base_url="https://example.org",
         client_id="id",
         client_secret="secret",
+        username="user@example.org",
+        password="pw",
         user_agent="tests",
         transport=transport,
     )
-    client.auth.login_with_password("user", "pass")
+    client.auth.login()
 
     # list
     page = client.volumes.list(page=1, page_size=10)
@@ -83,8 +85,8 @@ def test_volumes_read_endpoints() -> None:
     assert fundings and fundings[0]["funder"]["is_approved"] is True
 
     # collaborators
-    collabs = client.volumes.list_collaborators(1)
+    collabs = client.volumes.collaborators(1)
     assert collabs and collabs[0].access_level in {"investigator", "read only", "read write"}
 
-    c0 = client.volumes.get_collaborator(1, collabs[0].id)
+    c0 = client.volumes.collaborator(1, collabs[0].id)
     assert c0.user.id == collabs[0].user.id
