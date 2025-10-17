@@ -3,8 +3,8 @@
 help:
 	@echo "Available commands:"
 	@echo "  make install      - Install dependencies"
-	@echo "  make test         - Run tests (excludes 'staging' by default; set RUN_STAGING_TESTS=1 to include)"
-	@echo "  make coverage     - Run tests with coverage (respects RUN_STAGING_TESTS)"
+	@echo "  make test         - Run tests (excludes 'staging' by default)"
+	@echo "  make coverage     - Run tests with coverage"
 	@echo "  make test-integration      - Run only staging integration tests"
 	@echo "  make integration-coverage - Run staging tests with coverage"
 	@echo "  make lint         - Run ruff checks"
