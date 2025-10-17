@@ -35,10 +35,10 @@ def test_institutions_list():
         out_dir.unlink()
     out_dir.mkdir(parents=True, exist_ok=True)
     saved = client.institutions.avatar(inst_id, dest_path=str(out_dir))
-    assert saved
+    assert saved and (out_dir / Path(saved).name).exists()
     explicit = out_dir / "avatar.png"
     saved2 = client.institutions.avatar(inst_id, dest_path=str(explicit))
-    assert saved2.endswith("avatar.png")
+    assert saved2.endswith("avatar.png") and explicit.exists()
 
 
 def test_institutions_list_empty_and_retrieve():

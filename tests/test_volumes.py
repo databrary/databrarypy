@@ -7,13 +7,25 @@ import httpx
 from databrarypy.client import DatabraryClient
 
 from .fixtures.client import build_client_transport
-from .fixtures.data_constants import TASK_STATUS_PROCESSING, VOLUME_ID_PRIMARY
-from .fixtures.volume import build_volumes_transport, handle_volume_history
+from .fixtures.data_constants import (
+    TASK_STATUS_PROCESSING,
+    VOLUME_COLLABORATOR_ID_1,
+    VOLUME_ID_PRIMARY,
+)
+from .fixtures.volume import (
+    MOCK_VOLUME_DETAILED,
+    MOCK_VOLUMES_PAGE,
+    build_volumes_transport,
+    handle_volume_history,
+)
 from .fixtures.volume_collaborators import (
+    MOCK_COLLABORATORS_1,
     handle_volume_collaborator_1,
     handle_volume_collaborators_1,
 )
 from .fixtures.volume_tags_links_fundings import (
+    MOCK_VOLUME_LINKS_1,
+    MOCK_VOLUME_TAGS_1,
     handle_volume_fundings_1,
     handle_volume_links_1,
     handle_volume_tags_1,
@@ -69,36 +81,39 @@ def test_volumes_read_endpoints() -> None:
 
     # list
     page = client.volumes.list(page=1, page_size=10)
-    assert page.count == 208
-    assert page.results and page.results[0].id == 1
+    assert page.count == MOCK_VOLUMES_PAGE["count"]
+    assert page.results and page.results[0].id == VOLUME_ID_PRIMARY
 
     # retrieve
-    detail = client.volumes.retrieve(1)
-    assert detail.id == 1
-    assert detail.sharing_level == "public"
+    detail = client.volumes.retrieve(VOLUME_ID_PRIMARY)
+    assert detail.id == VOLUME_ID_PRIMARY
+    assert detail.sharing_level == MOCK_VOLUME_DETAILED["sharing_level"]
     assert detail.coauthors and detail.coauthors[0].user is not None
 
     # tags
-    tags = client.volumes.tags(1)
-    assert isinstance(tags, list) and len(tags) > 0
+    tags = client.volumes.tags(VOLUME_ID_PRIMARY)
+    assert tags == MOCK_VOLUME_TAGS_1
 
     # links
-    links = client.volumes.links(1)
-    assert links and links[0].url.startswith("http")
+    links = client.volumes.links(VOLUME_ID_PRIMARY)
+    assert links and links[0].url == MOCK_VOLUME_LINKS_1[0]["url"]
 
     # fundings
-    fundings = client.volumes.fundings(1)
-    assert fundings and fundings[0]["funder"]["is_approved"] is True
+    fundings = client.volumes.fundings(VOLUME_ID_PRIMARY)
+    from .fixtures.funders import MOCK_FUNDINGS_LIST
+
+    assert fundings == MOCK_FUNDINGS_LIST
 
     # collaborators
-    collabs = client.volumes.collaborators(1)
-    assert collabs and collabs[0].access_level in {"investigator", "read only", "read write"}
+    collabs = client.volumes.collaborators(VOLUME_ID_PRIMARY)
+    assert collabs and collabs[0].access_level == MOCK_COLLABORATORS_1[0]["access_level"]
 
-    c0 = client.volumes.collaborator(1, collabs[0].id)
+    c0 = client.volumes.collaborator(VOLUME_ID_PRIMARY, collabs[0].id)
+    assert c0.id == VOLUME_COLLABORATOR_ID_1
     assert c0.user.id == collabs[0].user.id
 
     # activity/history
-    hist = client.volumes.activity(1)
+    hist = client.volumes.activity(VOLUME_ID_PRIMARY)
     assert hist.count >= 1 and hist.results[0].timestamp
 
     # download tasks
