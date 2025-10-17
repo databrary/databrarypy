@@ -98,6 +98,32 @@ MOCK_USER_OWNER = {
 }
 
 
+MOCK_USER_6_AFFILIATE_ACTIVE = {
+    "id": 201,
+    "sponsor": MOCK_USER_1,
+    "user": MOCK_USER_1,
+    "institution": {"id": 12, "name": "Penn State"},
+    "access_level": "read",
+    "has_databrary_affiliate_access": True,
+    "sponsor_institution_connection": 1000,
+    "expiration_date": "2099-01-01",
+    "created_at": None,
+    "updated_at": None,
+}
+
+MOCK_USER_6_AFFILIATE_EXPIRED = {
+    "id": 202,
+    "sponsor": MOCK_USER_1,
+    "user": MOCK_USER_1,
+    "institution": {"id": 12, "name": "Penn State"},
+    "access_level": "read",
+    "has_databrary_affiliate_access": False,
+    "sponsor_institution_connection": 1001,
+    "expiration_date": "2000-01-01",
+    "created_at": None,
+    "updated_at": None,
+}
+
 MOCK_USER_6_INSTITUTION_SPONSORS = []
 
 
@@ -124,7 +150,12 @@ def handle_user_volumes_7(request: httpx.Request) -> httpx.Response:
 
 
 def handle_user_affiliates_6(request: httpx.Request) -> httpx.Response:
-    return httpx.Response(200, json=MOCK_USER_6_AFFILIATES_PAGE_EMPTY)
+    include_expired = request.url.params.get("include_expired") == "true"
+    results = [MOCK_USER_6_AFFILIATE_ACTIVE]
+    if include_expired:
+        results.append(MOCK_USER_6_AFFILIATE_EXPIRED)
+    page = make_page(results=results, count=len(results))
+    return httpx.Response(200, json=page)
 
 
 def handle_user_avatar_6(request: httpx.Request) -> httpx.Response:
