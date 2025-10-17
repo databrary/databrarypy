@@ -8,6 +8,7 @@ from tests.fixtures.sessions import (
     SESSION_FILE_ID_1,
     SESSION_ID_1,
     _get_mock_session_1,
+    _get_mock_session_1_file,
     _get_mock_session_1_files_page,
     _get_mock_sessions_page,
     build_composite_transport,
@@ -16,6 +17,7 @@ from tests.fixtures.sessions import (
 MOCK_SESSIONS_PAGE = _get_mock_sessions_page()
 MOCK_SESSION_1 = _get_mock_session_1()
 MOCK_SESSION_1_FILES_PAGE = _get_mock_session_1_files_page()
+MOCK_SESSION_1_FILE = _get_mock_session_1_file()
 
 
 def test_sessions_list_retrieve_and_files() -> None:
@@ -51,6 +53,4 @@ def test_sessions_list_retrieve_and_files() -> None:
     fdetail = client.sessions.get_file(VOLUME_ID_PRIMARY, SESSION_ID_1, SESSION_FILE_ID_1)
     assert fdetail.id == SESSION_FILE_ID_1
     tf = fdetail.transcoded_file
-    assert tf is None or (
-        getattr(tf, "id", None) is not None or (isinstance(tf, dict) and "id" in tf)
-    )
+    assert tf.id == MOCK_SESSION_1_FILE["transcoded_file"]["id"]
