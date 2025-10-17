@@ -1,0 +1,95 @@
+"""System resource for Databrary statistics and metadata."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Any
+
+import httpx
+
+from ..models import (
+    GroupedFormats,
+    PermissionLevels,
+    ReleaseLevels,
+    Stats,
+    SupportedFileType,
+    SupportedFileTypes,
+)
+
+
+class SystemResource:
+    """Resource for system-wide operations and metadata.
+
+    Provides access to Databrary system statistics and asset format information.
+    """
+
+    def __init__(self, http: httpx.Client, headers_fn: Callable[[], dict[str, str]]) -> None:
+        """Initialize the system resource.
+
+        Args:
+            http: HTTP client for making requests.
+            headers_fn: Callable that returns authentication headers.
+        """
+        self._http = http
+        self._headers = headers_fn
+
+    def get_db_stats(self) -> Stats:
+        """Get Databrary system statistics.
+
+        Returns:
+            Stats containing institution, affiliate, and investigator counts.
+
+        Raises:
+            httpx.HTTPStatusError: If the request fails.
+        """
+        resp = self._http.get("/statistics/summary/", headers=self._headers())
+        resp.raise_for_status()
+        data: Any = resp.json()
+        return Stats.model_validate(data)
+
+    def list_asset_formats(self) -> GroupedFormats:
+        """Get available asset formats grouped by category.
+
+        Returns:
+            GroupedFormats mapping category names to lists of Format objects.
+
+        Raises:
+            httpx.HTTPStatusError: If the request fails.
+        """
+        resp = self._http.get("/grouped-formats/", headers=self._headers())
+        resp.raise_for_status()
+        return GroupedFormats.model_validate(resp.json())
+
+    def get_supported_file_types(self) -> SupportedFileTypes:
+        """Return supported file types flattened from grouped formats.
+
+        Derives from the grouped formats endpoint on the server.
+        """
+        grouped = self.list_asset_formats().root
+        items: list[SupportedFileType] = []
+        # Flatten grouped formats into SupportedFileType rows
+        for _category, formats in grouped.items():
+            for fmt in formats:
+                items.append(
+                    SupportedFileType(
+                        asset_type_id=fmt.id,
+                        asset_type=fmt.name,
+                        mimetype=fmt.mimetype,
+                        extensions=fmt.extensions,
+                    )
+                )
+        return SupportedFileTypes(items=items)
+
+    def get_permission_levels(self) -> PermissionLevels:
+        """Return client-side permission level constants.
+
+        Mirrors backend VolumeAccessLevel and VolumeCollaboratorAccessLevel enums.
+        """
+        return PermissionLevels()
+
+    def get_release_levels(self) -> ReleaseLevels:
+        """Return client-side release level constants.
+
+        Mirrors backend FileSharingLevel enum.
+        """
+        return ReleaseLevels()
