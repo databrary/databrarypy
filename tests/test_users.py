@@ -1,7 +1,11 @@
 """UsersResource tests."""
 
 from databrarypy.client import DatabraryClient
-from tests.fixtures.users import build_composite_transport
+from tests.fixtures.users import (
+    MOCK_USER_6_AFFILIATE_ACTIVE,
+    MOCK_USER_6_AFFILIATE_EXPIRED,
+    build_composite_transport,
+)
 
 
 def test_users_list_and_retrieve():
@@ -50,9 +54,25 @@ def test_users_affiliates_with_params():
     )
     client.auth.login()
 
-    # Exercise include_expired, page, page_size path
-    affs = client.users.affiliates(6, include_expired=True)
-    assert isinstance(affs, list)
+    # When include_expired is False (default), only active affiliations are returned
+    affs_active_only = client.users.affiliates(6)
+    assert isinstance(affs_active_only, list)
+    assert len(affs_active_only) == 1
+    assert affs_active_only[0].id == MOCK_USER_6_AFFILIATE_ACTIVE["id"]
+    assert (
+        str(affs_active_only[0].expiration_date) == MOCK_USER_6_AFFILIATE_ACTIVE["expiration_date"]
+    )
+
+    # When include_expired is True, include both active and expired affiliations
+    affs_with_expired = client.users.affiliates(6, include_expired=True)
+    assert isinstance(affs_with_expired, list)
+    assert {a.id for a in affs_with_expired} == {
+        MOCK_USER_6_AFFILIATE_ACTIVE["id"],
+        MOCK_USER_6_AFFILIATE_EXPIRED["id"],
+    }
+    # Verify the expired record has a past date
+    expired = next(a for a in affs_with_expired if a.id == MOCK_USER_6_AFFILIATE_EXPIRED["id"])
+    assert str(expired.expiration_date) == MOCK_USER_6_AFFILIATE_EXPIRED["expiration_date"]
 
 
 def test_users_list_with_filters_and_volumes():
