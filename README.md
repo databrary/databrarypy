@@ -1,100 +1,75 @@
-# databrarypy
+# databrarypy – Databrary API Python Client
 
-Python client for the [Databrary](https://databrary.org) API with OAuth2 authentication.
+A typed Python client for the Databrary API, built on httpx and pydantic. It provides access to users, volumes, sessions, folders, records, search, and system metadata, with robust retry/backoff, pagination, and binary downloads.
+
+- Python: 3.12+
+- Repo: `https://github.com/NYU-Databrary/databrarypy`
+
+## Onboarding & requirements
+
+- Request API access for your account from an admin.
+- Obtain your secret User-Agent string from an admin
+- Create an OAuth2 client in your web profile to get `client_id` and `client_secret` (store the secret safely).
+- The token endpoint (`/o/token/`) follows OAuth2 with a password grant and returns snake_case fields; application endpoints mostly return camelCase keys. This client normalizes response keys to snake_case by default (`snake_case=True`).
 
 ## Installation
 
 ```bash
 pip install databrarypy
+# or from this repo
+poetry install
 ```
 
-## Quick Start
+## Quickstart
 
 ```python
 from databrarypy import DatabraryClient
 
-# Create client (with optional retry configuration)
+# user_agent must be your secret UA string provided by an admin
 client = DatabraryClient(
-    base_url="https://nyu.databrary.org",
-    client_id="your_client_id",
-    client_secret="your_client_secret",
-    username="user@example.com",
-    password="password",
-    user_agent="your_user_agent",
-    max_retries=5,
-    respect_retry_after=True,
-    backoff_base=0.5,
-    backoff_jitter=0.25,
+    base_url="https://api.databrary.org",
+    client_id="<client-id>",
+    client_secret="<client-secret>",
+    username="<username>",
+    password="<password>",
+    user_agent="<SECRET_USER_AGENT>",
 )
-
-# Authenticate
 client.auth.login()
 
-# Get authenticated user info
-user_info = client.whoami()
-print(user_info)
-
-# Iterate volumes without manual paging
-for vol in client.volumes.iter_list(page_size=50):
-    print(vol.id)
-
-# Records in a volume
-# for rec in client.records.iter_list(volume_id, page_size=100):
-#     ...
-
-# Get system statistics
-stats = client.system.get_db_stats()
-print(f"Institutions: {stats.institutions}")
-print(f"Hours of recordings: {stats.hours_of_recordings}")
-
-# List available asset formats
-formats = client.system.list_asset_formats()
+print(client.whoami().model_dump())
+print(client.system.get_db_stats().model_dump())
 ```
 
-## API Overview
+## Usage highlights
 
-### Client
+- Pagination: `page(...)` returns a `Page[T]`, `list(...)` iterates all.
+- Downloads: methods return bytes or stream to `dest_path`.
 
-- `DatabraryClient(base_url, client_id, client_secret, username, password, user_agent)` - Main API client
-- `client.whoami()` - Get authenticated user information
+```python
+for user in client.users.list(search="doe", page_size=100):
+    print(user.id, user.full_name)
 
-#### Errors and retries
+path = client.users.avatar(user_id=123, dest_path="/tmp/avatar.jpg")
+```
 
-- Transient errors (429, 502, 503, 504) are retried with exponential backoff, honoring `Retry-After`.
-- Typed exceptions in `databrarypy.errors`: `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, `RateLimitError`, `ServerError`.
+## Authentication & token refresh
 
-### Authentication
+- Call `client.auth.login()` once after constructing the client. This performs an OAuth2 password grant at `/o/token/` and stores the returned `access_token`, optional `refresh_token`, and expiration time.
+- Every API call obtains headers via the client, which calls `get_valid_access_token()` under the hood. If the token is close to expiry (within ~30 seconds) or expired, the client automatically attempts a refresh using the stored `refresh_token`.
+- If no `refresh_token` is available or refresh fails, subsequent calls will raise an error and you should re-run `client.auth.login()`.
 
-- `client.auth.login()` - Authenticate using credentials provided at initialization
-- `client.auth.refresh()` - Manually refresh access token
-- `client.auth.get_valid_access_token()` - Get valid token (auto-refreshes if expired)
+### Long-running scripts (hours/days)
 
-### System Resources
+- Use a single `DatabraryClient` instance for the lifetime of your process and call `client.auth.login()` once at startup.
+- The client will transparently refresh the access token during requests when needed. You do not need to schedule periodic refreshes yourself.
 
-- `client.system.get_db_stats()` - Get Databrary statistics
-- `client.system.list_asset_formats()` - Get available asset formats
 
 ## Development
 
 ```bash
-# Install dependencies
-poetry install
-
-# Run tests
+make install
 make test
-
-# Format and lint
-make format
 make lint
-
-# All checks (format, lint, type-check, test)
-make all
+make format
+make type-check
 ```
-
-This project uses [Conventional Commits](https://www.conventionalcommits.org/) - use `cz commit` instead of `git commit`.
-
-## Requirements
-
-- Python 3.12+
-- httpx >= 0.27
-- pydantic >= 2.7
