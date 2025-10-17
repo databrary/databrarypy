@@ -38,3 +38,47 @@ def test_folders_files_and_downloads(client: DatabraryClient):
 
     files = client.folders.files_page(vid, fid, page=1)
     assert files.count >= 0
+
+
+def test_folders_iterators(client: DatabraryClient):
+    vid = _first_volume_id(client)
+    if vid is None:
+        return
+    page = client.folders.page(vid, page=1)
+    if not page.results:
+        return
+    fid = page.results[0].id
+    seen = []
+    for idx, f in enumerate(client.folders.files_list(vid, fid, page=1, page_size=5)):
+        seen.append(f)
+        if idx > 5:
+            break
+    assert isinstance(seen, list)
+
+
+def test_folders_list_iterator(client: DatabraryClient):
+    vid = _first_volume_id(client)
+    if vid is None:
+        return
+    seen = []
+    for idx, folder in enumerate(client.folders.list(vid, page=1, page_size=5)):
+        seen.append(folder)
+        if idx > 5:
+            break
+    assert isinstance(seen, list)
+
+
+def test_folders_get_single_file(client: DatabraryClient):
+    vid = _first_volume_id(client)
+    if vid is None:
+        return
+    page = client.folders.page(vid, page=1)
+    if not page.results:
+        return
+    fid = page.results[0].id
+    files = client.folders.files_page(vid, fid, page=1)
+    if not files.results:
+        return
+    file_id = files.results[0].id
+    f = client.folders.get_file(vid, fid, file_id)
+    assert f.id == file_id

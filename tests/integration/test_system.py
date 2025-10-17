@@ -16,3 +16,12 @@ def test_system_stats_and_formats(client: DatabraryClient):
 
 def test_system_health(client: DatabraryClient):
     assert client.system.is_healthy() in (True, False)
+
+
+def test_system_permission_and_release_levels(client: DatabraryClient):
+    perms = client.system.get_permission_levels()
+    assert isinstance(perms.volume_access_levels, list)
+    assert "read only" in perms.volume_access_levels
+
+    rel = client.system.get_release_levels()
+    assert any(level.code == "public" for level in rel.levels)

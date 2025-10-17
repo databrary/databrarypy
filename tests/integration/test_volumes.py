@@ -46,3 +46,19 @@ def test_volumes_collaborators(client: DatabraryClient):
         cid = collabs[0].id
         collab = client.volumes.collaborator(vid, cid)
         assert collab.id == cid
+
+
+def test_volumes_activity(client: DatabraryClient):
+    page = client.volumes.page(page=1)
+    if not page.results:
+        return
+    vid = page.results[0].id
+    act_page = client.volumes.activity_page(vid, page=1)
+    assert act_page.count >= 0
+
+    seen = []
+    for idx, item in enumerate(client.volumes.activity_list(vid, page=1, page_size=5)):
+        seen.append(item)
+        if idx > 5:
+            break
+    assert isinstance(seen, list)

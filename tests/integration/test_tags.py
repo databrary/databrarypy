@@ -17,3 +17,12 @@ def test_tags_list_and_retrieve(client: DatabraryClient):
     if tid is not None:
         tag = client.tags.retrieve(tid)
         assert tag.id == tid
+
+
+def test_tags_iterators(client: DatabraryClient):
+    seen = []
+    for idx, t in enumerate(client.tags.list(page=1, page_size=5)):
+        seen.append(t)
+        if idx > 5:
+            break
+    assert isinstance(seen, list)

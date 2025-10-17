@@ -19,6 +19,15 @@ def test_institutions_list_and_retrieve(client: DatabraryClient):
         assert inst.id == iid
 
 
+def test_institutions_iterators(client: DatabraryClient):
+    seen = []
+    for idx, inst in enumerate(client.institutions.list(page=1, page_size=5)):
+        seen.append(inst)
+        if idx > 5:
+            break
+    assert isinstance(seen, list)
+
+
 def test_institutions_avatar_and_investigators(client: DatabraryClient):
     page = client.institutions.page(page=1)
     if not page.results:

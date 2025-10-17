@@ -59,6 +59,31 @@ def test_users_sponsorships_and_affiliates(client: DatabraryClient):
     assert isinstance(affiliates, list)
 
 
+def test_users_activity_iterators(client: DatabraryClient):
+    who = client.whoami()
+    email = who.user
+    assert email
+    page = client.users.page(search=email, page=1)
+    uid = None
+    for u in page.results:
+        if getattr(u, "email", None) == email:
+            uid = u.id
+            break
+    if uid is None and page.results:
+        uid = page.results[0].id
+    assert uid is not None
+
+    act_page = client.users.activity_page(uid, page=1)
+    assert act_page.count >= 0
+    # Iterator variant
+    seen = []
+    for idx, item in enumerate(client.users.activity_list(uid, page=1, page_size=5)):
+        seen.append(item)
+        if idx > 5:
+            break
+    assert isinstance(seen, list)
+
+
 def test_users_volumes_and_avatar(client: DatabraryClient):
     who = client.whoami()
     uid: int | None = None
@@ -77,3 +102,22 @@ def test_users_volumes_and_avatar(client: DatabraryClient):
     # Avatar can be empty bytes if 404; call to ensure path works
     data = client.users.avatar(uid)
     assert isinstance(data, (bytes, str))
+
+
+def test_users_volumes_list_iterator(client: DatabraryClient):
+    who = client.whoami()
+    uid: int | None = None
+    if isinstance(who, dict):
+        uid = who.get("id")
+    if uid is None:
+        page = client.users.page(page=1)
+        if page.results:
+            uid = page.results[0].id
+    if uid is None:
+        return
+    seen = []
+    for idx, v in enumerate(client.users.volumes_list(uid, page=1, page_size=5)):
+        seen.append(v)
+        if idx > 5:
+            break
+    assert isinstance(seen, list)
