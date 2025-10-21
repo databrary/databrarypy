@@ -20,6 +20,8 @@ class Format(BaseModel):
     name: str
     extensions: list[str] = Field(default_factory=list)
 
+    model_config = {"populate_by_name": True, "extra": "forbid"}
+
 
 class GroupedFormats(RootModel[dict[str, list[Format]]]):
     """Formats grouped by category (e.g., Video, Audio)."""

@@ -17,13 +17,12 @@ class SupportedFileType(BaseModel):
     mimetype: str
     extensions: list[str] = Field(default_factory=list)
 
+    model_config = {"populate_by_name": True, "extra": "forbid"}
+
 
 class SupportedFileTypes(BaseModel):
     """A collection of supported file type entries."""
 
     items: list[SupportedFileType] = Field(default_factory=list)
 
-    model_config = {
-        "populate_by_name": True,
-        "extra": "ignore",
-    }
+    model_config = {"populate_by_name": True, "extra": "forbid"}

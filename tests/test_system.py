@@ -130,3 +130,61 @@ def test_get_permission_and_release_levels():
     releases = client.system.get_release_levels()
     codes = [lvl.code for lvl in releases.levels]
     assert codes == ["private", "authorized_users", "learning_audiences", "public"]
+
+
+def test_is_healthy_true_and_false():
+    transport = build_system_transport()
+
+    client = DatabraryClient(
+        base_url="https://api.example.org",
+        client_id="cid",
+        client_secret="secret",
+        username="user@example.org",
+        password="pw",
+        user_agent="test",
+        transport=transport,
+    )
+
+    client.auth.login()
+
+    # True case is covered separately; here simulate non-200 using explicit handler to cover branch
+    from .fixtures.auth import handle_token_success
+    from .fixtures.common import build_transport, handle_not_found
+
+    def handle_health(_request):
+        return handle_not_found(_request)
+
+    failing_transport = build_transport(
+        ("POST", "/o/token/", handle_token_success), ("GET", "/health/", handle_health)
+    )
+
+    client_fail = DatabraryClient(
+        base_url="https://api.example.org",
+        client_id="cid",
+        client_secret="secret",
+        username="user@example.org",
+        password="pw",
+        user_agent="test",
+        transport=failing_transport,
+    )
+    client_fail.auth.login()
+    assert client_fail.system.is_healthy() is False
+
+    # Now simulate an exception during the request to cover except path
+    def raise_exc(_request):
+        raise RuntimeError("network failure")
+
+    exc_transport = build_transport(
+        ("POST", "/o/token/", handle_token_success), ("GET", "/health/", raise_exc)
+    )
+    client_exc = DatabraryClient(
+        base_url="https://api.example.org",
+        client_id="cid",
+        client_secret="secret",
+        username="user@example.org",
+        password="pw",
+        user_agent="test",
+        transport=exc_transport,
+    )
+    client_exc.auth.login()
+    assert client_exc.system.is_healthy() is False

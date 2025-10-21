@@ -50,10 +50,7 @@ class PermissionLevels(BaseModel):
         ]
     )
 
-    model_config = {
-        "populate_by_name": True,
-        "extra": "ignore",
-    }
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
 
 class ReleaseLevel(BaseModel):
@@ -94,7 +91,4 @@ class ReleaseLevels(BaseModel):
         ]
     )
 
-    model_config = {
-        "populate_by_name": True,
-        "extra": "ignore",
-    }
+    model_config = {"populate_by_name": True, "extra": "forbid"}
