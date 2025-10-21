@@ -41,8 +41,8 @@ def test_institutions_list_empty_and_retrieve():
     )
     client.auth.login()
 
-    page = client.institutions.list(search="Nonexistent")
-    # Our fixture returns static list; still covers the call path
+    page = client.institutions.list(search="test")
+    # Mock returns static data regardless of search params; tests client-side code path
     inst = page.results[0]
     retrieved = client.institutions.retrieve(inst.id)
     assert retrieved.id == inst.id
