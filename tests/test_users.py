@@ -1,6 +1,7 @@
 """UsersResource tests."""
 
 from databrarypy.client import DatabraryClient
+from tests.fixtures.data_constants import USER_ID_PRIMARY
 from tests.fixtures.users import (
     MOCK_USER_6_AFFILIATE_ACTIVE,
     MOCK_USER_6_AFFILIATE_EXPIRED,
@@ -106,3 +107,23 @@ def test_users_list_with_filters_and_volumes():
     # Avatar 404 branch
     missing = client.users.avatar_bytes(999)
     assert missing == b""
+
+
+def test_users_activity_list():
+    transport = build_composite_transport()
+    client = DatabraryClient(
+        base_url="https://api.example",
+        client_id="cid",
+        client_secret="sec",
+        username="user@example.org",
+        password="pw",
+        user_agent="dbpy-tests",
+        transport=transport,
+    )
+    client.auth.login()
+
+    page = client.users.activity(USER_ID_PRIMARY, page=1, page_size=5)
+    assert page.count >= 1
+    item = page.results[0]
+    # ActivityItem allows extras; only assert required fields
+    assert item.type and item.timestamp

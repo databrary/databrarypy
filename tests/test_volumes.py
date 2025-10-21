@@ -8,7 +8,12 @@ from databrarypy.client import DatabraryClient
 
 from .fixtures.client import build_client_transport
 from .fixtures.data_constants import VOLUME_COLLABORATOR_ID_1, VOLUME_ID_PRIMARY
-from .fixtures.volume import MOCK_VOLUME_DETAILED, MOCK_VOLUMES_PAGE, build_volumes_transport
+from .fixtures.volume import (
+    MOCK_VOLUME_DETAILED,
+    MOCK_VOLUMES_PAGE,
+    build_volumes_transport,
+    handle_volume_history,
+)
 from .fixtures.volume_collaborators import (
     MOCK_COLLABORATORS_1,
     handle_volume_collaborator_1,
@@ -35,6 +40,8 @@ def build_transport():
         # Route volume endpoints
         if key in {("GET", "/volumes/"), ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/")}:
             return volumes_transport.handle_request(request)
+        if key == ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/history/"):
+            return handle_volume_history(request)
         # Route other volume endpoints manually
         if key == ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/tags/"):
             return handle_volume_tags_1(request)
@@ -96,3 +103,7 @@ def test_volumes_read_endpoints() -> None:
     c0 = client.volumes.collaborator(VOLUME_ID_PRIMARY, collabs[0].id)
     assert c0.id == VOLUME_COLLABORATOR_ID_1
     assert c0.user.id == collabs[0].user.id
+
+    # activity/history
+    hist = client.volumes.activity(VOLUME_ID_PRIMARY)
+    assert hist.count >= 1 and hist.results[0].timestamp

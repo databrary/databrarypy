@@ -7,8 +7,10 @@ import httpx
 from .common import build_transport
 from .data_constants import VOLUME_ID_PRIMARY
 from .factory import make_page
+from .folders import FOLDER_ID_1
 from .funders import MOCK_FUNDINGS_LIST
 from .institutions import MOCK_INSTITUTION_1_DETAILED
+from .sessions import SESSION_ID_1
 from .sponsorships import _get_mock_institution_sponsorship_1
 from .volume_coauthors import MOCK_VOLUME_COAUTHORS_LIST
 from .volume_metrics import MOCK_VOLUME_CATEGORIES, MOCK_VOLUME_CITATION, MOCK_VOLUME_METRICS
@@ -64,6 +66,31 @@ def _get_mock_volume_detailed():
 MOCK_VOLUME_DETAILED = _get_mock_volume_detailed()
 
 
+def _get_mock_volume_history_page():
+    items = [
+        {
+            "type": "volume_change",
+            "timestamp": "2025-06-03T09:00:00Z",
+            "field": "title",
+            "old_value": "Old Title",
+            "new_value": "Sample Research Dataset Collection",
+        },
+        {
+            "type": "session_change",
+            "timestamp": "2025-06-03T10:00:00Z",
+            "session": {"id": SESSION_ID_1, "name": "Session A"},
+            "action": "created",
+        },
+        {
+            "type": "folder_change",
+            "timestamp": "2025-06-03T11:00:00Z",
+            "folder": {"id": FOLDER_ID_1, "name": "Folder A"},
+            "action": "updated",
+        },
+    ]
+    return make_page(results=items, count=len(items))
+
+
 # ---- Paged payloads ----
 def _get_mock_volumes_page():
     return make_page(results=[_get_mock_volume_base()], count=208)
@@ -81,8 +108,14 @@ def handle_volume_detail(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, json=_get_mock_volume_detailed())
 
 
+def handle_volume_history(request: httpx.Request) -> httpx.Response:
+    assert request.url.path == f"/volumes/{VOLUME_ID_PRIMARY}/history/"
+    return httpx.Response(200, json=_get_mock_volume_history_page())
+
+
 def build_volumes_transport():
     return build_transport(
         ("GET", "/volumes/", handle_volumes_list),
         ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/", handle_volume_detail),
+        ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/history/", handle_volume_history),
     )

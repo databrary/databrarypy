@@ -36,11 +36,11 @@ MOCK_USERS_PAGE = make_page(
 )
 
 
-def _get_mock_user_6_volumes_page_empty():
+def _get_mock_user_volumes_page_empty():
     return make_page(results=[], count=0)
 
 
-def _get_mock_user_7_volumes_page():
+def _get_mock_user_volumes_page():
     from tests.fixtures.volume import _get_mock_volume_base
 
     # Create first volume with title "Vol1"
@@ -54,7 +54,7 @@ def _get_mock_user_7_volumes_page():
     return make_page(results=[volume_1, volume_2], count=2)
 
 
-MOCK_USER_6_AFFILIATES_PAGE_EMPTY = make_page(results=[], count=0)
+MOCK_USER_AFFILIATES_PAGE_EMPTY = make_page(results=[], count=0)
 
 
 MOCK_USER_SELF = {
@@ -96,6 +96,33 @@ MOCK_USER_OWNER = {
     "url": "https://example.org/jjohnson",
     "has_avatar": True,
 }
+
+
+MOCK_USER_INSTITUTION_SPONSORS = []
+
+
+def _get_mock_user_history_page():
+    items = [
+        {
+            "type": "login",
+            "timestamp": "2025-06-02T08:00:00Z",
+            "ip": "192.0.2.1",
+        },
+        {
+            "type": "sponsorship_change",
+            "timestamp": "2025-06-02T09:00:00Z",
+            "sponsorship": {"id": 101, "access_level": "investigator"},
+            "action": "granted",
+        },
+        {
+            "type": "profile_change",
+            "timestamp": "2025-06-02T10:00:00Z",
+            "field": "last_name",
+            "old_value": "Doe",
+            "new_value": "Doe-Smith",
+        },
+    ]
+    return make_page(results=items, count=len(items))
 
 
 MOCK_USER_6_AFFILIATE_ACTIVE = {
@@ -141,15 +168,15 @@ def handle_user_sponsorships(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, json=[_get_mock_sponsorship_1()])
 
 
-def handle_user_volumes_6(request: httpx.Request) -> httpx.Response:
-    return httpx.Response(200, json=_get_mock_user_6_volumes_page_empty())
+def handle_user_volumes_user_1(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, json=_get_mock_user_volumes_page_empty())
 
 
-def handle_user_volumes_7(request: httpx.Request) -> httpx.Response:
-    return httpx.Response(200, json=_get_mock_user_7_volumes_page())
+def handle_user_volumes_user_2(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, json=_get_mock_user_volumes_page())
 
 
-def handle_user_affiliates_6(request: httpx.Request) -> httpx.Response:
+def handle_user_affiliates_user_1(request: httpx.Request) -> httpx.Response:
     include_expired = request.url.params.get("include_expired") == "true"
     results = [MOCK_USER_6_AFFILIATE_ACTIVE]
     if include_expired:
@@ -158,16 +185,20 @@ def handle_user_affiliates_6(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, json=page)
 
 
-def handle_user_avatar_6(request: httpx.Request) -> httpx.Response:
+def handle_user_avatar_user_1(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, content=MOCK_AVATAR_PNG)
 
 
-def handle_user_institution_sponsors_6(request: httpx.Request) -> httpx.Response:
-    return httpx.Response(200, json=MOCK_USER_6_INSTITUTION_SPONSORS)
+def handle_user_institution_sponsors_user_1(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, json=MOCK_USER_INSTITUTION_SPONSORS)
 
 
-def handle_user_avatar_999(request: httpx.Request) -> httpx.Response:
+def handle_user_avatar_not_found(request: httpx.Request) -> httpx.Response:
     return httpx.Response(404, json={"detail": "No avatar"})
+
+
+def handle_user_history_user_1(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, json=_get_mock_user_history_page())
 
 
 def build_users_transport():
@@ -175,16 +206,17 @@ def build_users_transport():
         ("GET", "/users/", handle_users_list),
         ("GET", f"/users/{USER_ID_1}/", handle_user_retrieve),
         ("GET", f"/users/{USER_ID_1}/sponsorships/", handle_user_sponsorships),
-        ("GET", f"/users/{USER_ID_1}/volumes/", handle_user_volumes_6),
-        ("GET", f"/users/{USER_ID_1}/avatar/", handle_user_avatar_6),
+        ("GET", f"/users/{USER_ID_1}/volumes/", handle_user_volumes_user_1),
+        ("GET", f"/users/{USER_ID_1}/avatar/", handle_user_avatar_user_1),
         (
             "GET",
             f"/users/{USER_ID_1}/institution-sponsors/",
-            handle_user_institution_sponsors_6,
+            handle_user_institution_sponsors_user_1,
         ),
-        ("GET", f"/users/{USER_ID_2}/volumes/", handle_user_volumes_7),
-        ("GET", f"/users/{USER_ID_1}/affiliates/", handle_user_affiliates_6),
-        ("GET", f"/users/{USER_ID_NOT_FOUND}/avatar/", handle_user_avatar_999),
+        ("GET", f"/users/{USER_ID_2}/volumes/", handle_user_volumes_user_2),
+        ("GET", f"/users/{USER_ID_1}/affiliates/", handle_user_affiliates_user_1),
+        ("GET", f"/users/{USER_ID_NOT_FOUND}/avatar/", handle_user_avatar_not_found),
+        ("GET", f"/users/{USER_ID_1}/history/", handle_user_history_user_1),
     )
 
 
