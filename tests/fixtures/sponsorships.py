@@ -25,9 +25,9 @@ def _get_mock_sponsorship_1():
         "access_level": "read",
         "has_databrary_affiliate_access": False,
         "sponsor_institution_connection": 999,
-        "expiration_date": None,
-        "created_at": None,
-        "updated_at": None,
+        "expiration_date": "2030-12-31",
+        "created_at": "2025-01-01T00:00:00Z",
+        "updated_at": "2025-06-01T12:30:00Z",
     }
 
 

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import suppress
+from types import TracebackType
 from typing import Any
 
 import httpx
@@ -64,6 +66,7 @@ class DatabraryClient:
             transport=transport,
         )
         self._http = httpx.Client(base_url=self.base_url, timeout=timeout, transport=transport)
+        self._closed = False
 
         self._normalize: Callable[[Any], Any] = (
             (lambda d: snake_keys(d)) if snake_case else (lambda d: d)
@@ -99,12 +102,18 @@ class DatabraryClient:
             res._backoff_base = float(backoff_base)
             res._backoff_jitter = float(backoff_jitter)
 
+    def _ensure_open(self) -> None:
+        """Raise if the client has already been closed."""
+        if self._closed:
+            raise RuntimeError("DatabraryClient is closed.")
+
     def _headers(self) -> dict[str, str]:
         """Generate headers for API requests with valid authentication.
 
         Returns:
             Dictionary of HTTP headers including authorization token.
         """
+        self._ensure_open()
         token = self.auth.get_valid_access_token()
         return {
             "Authorization": f"Bearer {token}",
@@ -121,7 +130,34 @@ class DatabraryClient:
         Raises:
             httpx.HTTPStatusError: If the request fails.
         """
+        self._ensure_open()
         resp = self._http.get("/oauth2/test/", headers=self._headers())
         resp.raise_for_status()
         raw = resp.json()
         return WhoAmI.model_validate(raw)
+
+    def close(self) -> None:
+        """Close the underlying HTTP clients."""
+        if self._closed:
+            return
+        self.auth.close()
+        self._http.close()
+        self._closed = True
+
+    def __enter__(self) -> "DatabraryClient":
+        """Enter the context manager, returning ``self``."""
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        """Exit the context manager and close the HTTP clients."""
+        self.close()
+
+    def __del__(self) -> None:  # pragma: no cover - best-effort cleanup
+        """Ensure resources are freed when the client is garbage collected."""
+        with suppress(Exception):
+            self.close()

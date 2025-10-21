@@ -21,11 +21,12 @@ class Sponsorship(BaseModel):
     has_databrary_affiliate_access: bool
     request: int | None = None
     sponsor_institution_connection: int
-    expiration_date: date | None = None
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
+    expiration_date: date
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: datetime | None = None
 
     model_config = {
         "populate_by_name": True,
-        "extra": "ignore",
+        "extra": "forbid",
     }

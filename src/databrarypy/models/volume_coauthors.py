@@ -22,5 +22,6 @@ class VolumeCoauthor(BaseModel):
     volume: int
     created_at: datetime
     updated_at: datetime
+    deleted_at: datetime | None = None
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}

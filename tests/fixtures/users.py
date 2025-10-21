@@ -130,8 +130,8 @@ MOCK_USER_6_AFFILIATE_ACTIVE = {
     "has_databrary_affiliate_access": True,
     "sponsor_institution_connection": 1000,
     "expiration_date": "2099-01-01",
-    "created_at": None,
-    "updated_at": None,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-06-01T00:00:00Z",
 }
 
 MOCK_USER_6_AFFILIATE_EXPIRED = {
@@ -143,8 +143,8 @@ MOCK_USER_6_AFFILIATE_EXPIRED = {
     "has_databrary_affiliate_access": False,
     "sponsor_institution_connection": 1001,
     "expiration_date": "2000-01-01",
-    "created_at": None,
-    "updated_at": None,
+    "created_at": "1999-01-01T00:00:00Z",
+    "updated_at": "1999-06-01T00:00:00Z",
 }
 
 MOCK_USER_6_INSTITUTION_SPONSORS = []
