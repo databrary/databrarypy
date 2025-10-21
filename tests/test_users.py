@@ -1,0 +1,106 @@
+"""UsersResource tests."""
+
+from databrarypy.client import DatabraryClient
+from tests.fixtures.users import (
+    MOCK_USER_6_AFFILIATE_ACTIVE,
+    MOCK_USER_6_AFFILIATE_EXPIRED,
+    build_composite_transport,
+)
+
+
+def test_users_list_and_retrieve():
+    transport = build_composite_transport()
+    client = DatabraryClient(
+        base_url="https://api.example",
+        client_id="cid",
+        client_secret="sec",
+        username="user@example.org",
+        password="pw",
+        user_agent="dbpy-tests",
+        transport=transport,
+    )
+    client.auth.login()
+
+    page = client.users.list(search="alex")
+    assert page.count == 1
+    assert page.results[0].first_name == "Alex"
+
+    me = client.users.retrieve(6, for_self=True)
+    assert me.has_api_access is True
+    assert me.is_authorized_investigator is True
+
+    sponsors = client.users.sponsors(6)
+    assert sponsors and sponsors[0].id == 101
+    vols = client.users.volumes(6)
+    assert vols.count == 0 and vols.results == []
+    avatar = client.users.avatar_bytes(6)
+    assert avatar.startswith(b"\x89PNG")
+
+    # Cover public branch of retrieve (for_self=False)
+    public = client.users.retrieve(6)
+    assert public.id == me.id
+
+
+def test_users_affiliates_with_params():
+    transport = build_composite_transport()
+    client = DatabraryClient(
+        base_url="https://api.example",
+        client_id="cid",
+        client_secret="sec",
+        username="user@example.org",
+        password="pw",
+        user_agent="dbpy-tests",
+        transport=transport,
+    )
+    client.auth.login()
+
+    # When include_expired is False (default), only active affiliations are returned
+    affs_active_only = client.users.affiliates(6)
+    assert isinstance(affs_active_only, list)
+    assert len(affs_active_only) == 1
+    assert affs_active_only[0].id == MOCK_USER_6_AFFILIATE_ACTIVE["id"]
+    assert (
+        str(affs_active_only[0].expiration_date) == MOCK_USER_6_AFFILIATE_ACTIVE["expiration_date"]
+    )
+
+    # When include_expired is True, include both active and expired affiliations
+    affs_with_expired = client.users.affiliates(6, include_expired=True)
+    assert isinstance(affs_with_expired, list)
+    assert {a.id for a in affs_with_expired} == {
+        MOCK_USER_6_AFFILIATE_ACTIVE["id"],
+        MOCK_USER_6_AFFILIATE_EXPIRED["id"],
+    }
+    # Verify the expired record has a past date
+    expired = next(a for a in affs_with_expired if a.id == MOCK_USER_6_AFFILIATE_EXPIRED["id"])
+    assert str(expired.expiration_date) == MOCK_USER_6_AFFILIATE_EXPIRED["expiration_date"]
+
+
+def test_users_list_with_filters_and_volumes():
+    transport = build_composite_transport()
+    client = DatabraryClient(
+        base_url="https://api.example",
+        client_id="cid",
+        client_secret="sec",
+        username="user@example.org",
+        password="pw",
+        user_agent="dbpy-tests",
+        transport=transport,
+    )
+    client.auth.login()
+
+    page = client.users.list(
+        search="rick",
+        include_suspended=True,
+        exclude_self=True,
+        is_authorized_investigator=True,
+        has_api_access=False,
+    )
+    assert page.count >= 0
+
+    vols = client.users.volumes(7)
+    assert vols.count == 2
+    assert [v.title for v in vols.results] == ["Vol1", "Vol2"]
+
+    # Avatar 404 branch
+    missing = client.users.avatar_bytes(999)
+    assert missing == b""

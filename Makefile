@@ -5,11 +5,11 @@ help:
 	@echo "  make install      - Install dependencies"
 	@echo "  make test         - Run tests with coverage"
 	@echo "  make coverage     - Run tests with coverage and check thresholds"
-	@echo "  make lint         - Run all linters (ruff + mypy)"
+	@echo "  make lint         - Run ruff checks"
 	@echo "  make format       - Format code with ruff and black"
 	@echo "  make type-check   - Run mypy type checking"
 	@echo "  make clean        - Remove cache and build files"
-	@echo "  make all          - Format, lint, type-check, and test"
+	@echo "  make all          - Run pre-commit on all files, then tests"
 	@echo "  make pre-commit   - Run pre-commit hooks on all files"
 	@echo "  make commit       - Create a conventional commit using commitizen"
 	@echo "  make bump         - Bump version and update changelog"
@@ -35,7 +35,6 @@ coverage:
 
 lint:
 	poetry run ruff check src/ tests/
-	poetry run mypy src/
 
 format:
 	poetry run ruff check --fix src/ tests/
@@ -53,7 +52,7 @@ clean:
 	find . -type d -name ".ruff_cache" -exec rm -rf {} + 2>/dev/null || true
 	rm -rf dist/ build/ *.egg-info .coverage htmlcov/ coverage.json
 
-all: format lint type-check test
+all: pre-commit test
 
 pre-commit:
 	poetry run pre-commit run --all-files
