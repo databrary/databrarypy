@@ -20,7 +20,7 @@ class BaseResource:
         self,
         http: httpx.Client,
         headers_fn: Callable[[], dict[str, str]],
-        normalize_json: Callable[[Any], Any],
+        normalize_json: Callable[[object], object] | None,
     ) -> None:
         self._normalize = normalize_json
         self._http = http
@@ -47,7 +47,7 @@ class BaseResource:
 
     def _get_json(self, path: str, *, params: dict[str, Any] | None = None) -> Any:
         data: Any = self._raw_get_json(path, params=params)
-        return self._normalize(data)
+        return self._normalize(data) if self._normalize else data
 
     def _get_bytes_or_empty(self, path: str) -> bytes:
         """GET a binary endpoint; return empty bytes if 404 else content."""

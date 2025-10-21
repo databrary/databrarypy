@@ -54,18 +54,24 @@ class UsersResource(BaseResource):
         return [Sponsorship.model_validate(item) for item in data]
 
     def affiliates(
-        self, user_id: int, *, include_expired: bool | None = None
-    ) -> builtins.list[Sponsorship]:
+        self,
+        user_id: int,
+        *,
+        include_expired: bool | None = None,
+        page: int | None = None,
+        page_size: int | None = None,
+    ) -> Page[Sponsorship]:
         """Get sponsorships where the given user is the sponsor.
 
-        Returns a list of Sponsorship objects; `include_expired=True` includes expired sponsorships.
+        Returns a paginated list of Sponsorship objects; `include_expired=True`
+        includes expired sponsorships.
         """
-        params = self.build_params(include_expired=include_expired)
-        data = self._get_json(
+        params = self.build_params(include_expired=include_expired, page=page, page_size=page_size)
+        return self._get_page(
             f"/users/{user_id}/affiliates/",
             params=params,
+            parser=Sponsorship.model_validate,
         )
-        return [Sponsorship.model_validate(item) for item in data]
 
     def volumes(
         self, user_id: int, *, page: int | None = None, page_size: int | None = None

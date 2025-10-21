@@ -55,23 +55,25 @@ def test_users_affiliates_with_params():
     client.auth.login()
 
     # When include_expired is False (default), only active affiliations are returned
-    affs_active_only = client.users.affiliates(6)
-    assert isinstance(affs_active_only, list)
-    assert len(affs_active_only) == 1
-    assert affs_active_only[0].id == MOCK_USER_6_AFFILIATE_ACTIVE["id"]
+    page_active_only = client.users.affiliates(6)
+    assert page_active_only.count == 1
+    assert page_active_only.results[0].id == MOCK_USER_6_AFFILIATE_ACTIVE["id"]
     assert (
-        str(affs_active_only[0].expiration_date) == MOCK_USER_6_AFFILIATE_ACTIVE["expiration_date"]
+        str(page_active_only.results[0].expiration_date)
+        == MOCK_USER_6_AFFILIATE_ACTIVE["expiration_date"]
     )
 
     # When include_expired is True, include both active and expired affiliations
-    affs_with_expired = client.users.affiliates(6, include_expired=True)
-    assert isinstance(affs_with_expired, list)
-    assert {a.id for a in affs_with_expired} == {
+    page_with_expired = client.users.affiliates(6, include_expired=True, page=1, page_size=10)
+    assert page_with_expired.count == 2
+    assert {a.id for a in page_with_expired.results} == {
         MOCK_USER_6_AFFILIATE_ACTIVE["id"],
         MOCK_USER_6_AFFILIATE_EXPIRED["id"],
     }
     # Verify the expired record has a past date
-    expired = next(a for a in affs_with_expired if a.id == MOCK_USER_6_AFFILIATE_EXPIRED["id"])
+    expired = next(
+        a for a in page_with_expired.results if a.id == MOCK_USER_6_AFFILIATE_EXPIRED["id"]
+    )
     assert str(expired.expiration_date) == MOCK_USER_6_AFFILIATE_EXPIRED["expiration_date"]
 
 
@@ -89,7 +91,7 @@ def test_users_list_with_filters_and_volumes():
     client.auth.login()
 
     page = client.users.list(
-        search="rick",
+        search="john",
         include_suspended=True,
         exclude_self=True,
         is_authorized_investigator=True,

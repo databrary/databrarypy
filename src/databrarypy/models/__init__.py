@@ -1,20 +1,29 @@
 """Data models for Databrary API responses."""
 
 from .formats import Format, GroupedFormats
-from .institutions import Institution, InstitutionRef
+from .funders import Funder
+from .institution_sponsorship import InstitutionSponsorship
+from .institutions import Institution
 from .levels import PermissionLevels, ReleaseLevels
 from .paginated import Page
 from .sponsorships import Sponsorship
 from .stats import Stats
 from .supported_types import SupportedFileType, SupportedFileTypes
 from .users import SuspendedBy, UserPublic, UserSelf, UserSlim
-from .volumes import VolumeCoauthor, VolumePreview
+from .volume_shared import VolumeFundingRead, VolumeLink
+from .volumes import (
+    VolumeCollaborator,
+    VolumeDetail,
+    VolumeListItem,
+    VolumePreview,
+)
 
 __all__ = [
     "Format",
+    "Funder",
     "GroupedFormats",
     "Institution",
-    "InstitutionRef",
+    "InstitutionSponsorship",
     "Page",
     "PermissionLevels",
     "ReleaseLevels",
@@ -27,5 +36,10 @@ __all__ = [
     "UserSelf",
     "UserSlim",
     "VolumeCoauthor",
+    "VolumeCollaborator",
+    "VolumeDetail",
+    "VolumeFundingRead",
+    "VolumeLink",
+    "VolumeListItem",
     "VolumePreview",
 ]

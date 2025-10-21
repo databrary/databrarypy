@@ -27,11 +27,3 @@ class Institution(BaseModel):
         "populate_by_name": True,
         "extra": "ignore",
     }
-
-
-class InstitutionRef(BaseModel):
-    """Minimal embedded institution fields where nested inside other models."""
-
-    id: int
-    name: str
-    url: str | None = None

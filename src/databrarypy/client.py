@@ -7,6 +7,7 @@ import httpx
 
 from .auth import OAuth2Client
 from .resources import InstitutionsResource, SystemResource, UsersResource
+from .resources.volumes import VolumesResource
 from .utils.case import snake_keys
 
 
@@ -54,6 +55,7 @@ class DatabraryClient:
         self.system = SystemResource(self._http, self._headers, self._normalize)
         self.users = UsersResource(self._http, self._headers, self._normalize)
         self.institutions = InstitutionsResource(self._http, self._headers, self._normalize)
+        self.volumes = VolumesResource(self._http, self._headers, self._normalize)
 
     def _headers(self) -> dict[str, str]:
         """Generate headers for API requests with valid authentication.
