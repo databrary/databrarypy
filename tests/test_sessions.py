@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from databrarypy.client import DatabraryClient
-from tests.fixtures.data_constants import VOLUME_ID_PRIMARY
+from tests.fixtures.data_constants import TASK_STATUS_PROCESSING, VOLUME_ID_PRIMARY
 from tests.fixtures.sessions import (
+    SESSION_FILE_BINARY_CONTENT,
+    SESSION_FILE_DEFAULT_NAME,
     SESSION_FILE_ID_1,
     SESSION_ID_1,
     _get_mock_session_1,
@@ -54,3 +58,23 @@ def test_sessions_list_retrieve_and_files() -> None:
     assert fdetail.id == SESSION_FILE_ID_1
     tf = fdetail.transcoded_file
     assert tf.id == MOCK_SESSION_1_FILE["transcoded_file"]["id"]
+
+    # download bytes
+    content = client.sessions.download_file(VOLUME_ID_PRIMARY, SESSION_ID_1, SESSION_FILE_ID_1)
+    assert content == SESSION_FILE_BINARY_CONTENT
+
+    # download to dir should use header-provided filename
+    out_dir = Path(".pytest_tmp/session_dl")
+    if out_dir.exists() and out_dir.is_file():
+        out_dir.unlink()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    saved = client.sessions.download_file(
+        VOLUME_ID_PRIMARY, SESSION_ID_1, SESSION_FILE_ID_1, dest_path=str(out_dir)
+    )
+    assert saved.endswith(SESSION_FILE_DEFAULT_NAME)
+
+    # request session tasks (zip, csv)
+    zip_task = client.sessions.request_zip_download(VOLUME_ID_PRIMARY, SESSION_ID_1)
+    assert zip_task.status == TASK_STATUS_PROCESSING
+    csv_task = client.sessions.request_csv_download(VOLUME_ID_PRIMARY, SESSION_ID_1)
+    assert csv_task.status == TASK_STATUS_PROCESSING

@@ -31,11 +31,15 @@ class InstitutionsResource(BaseResource):
         data = self._get_json(f"/institutions/{institution_id}/")
         return Institution.model_validate(data)
 
-    def avatar_bytes(self, institution_id: int) -> bytes:
-        """Download avatar bytes for an institution (empty if missing)."""
-        return self._get_bytes_or_empty(
-            f"/institutions/{institution_id}/avatar/",
-        )
+    def avatar(self, institution_id: int, *, dest_path: str | None = None) -> bytes | str:
+        """Download an institution's avatar; return bytes or save to disk.
+
+        If dest_path is provided, stream to file and return the full path; otherwise returns bytes.
+        """
+        url = f"/institutions/{institution_id}/avatar/"
+        if dest_path is None:
+            return self._download_bytes(url)
+        return self._download_to_path(url, dest_path)
 
     def authorized_investigators(
         self, institution_id: int, *, page: int | None = None, page_size: int | None = None

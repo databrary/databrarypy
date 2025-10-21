@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ..models import Page, Session
+from ..models.downloads import FileDownloadLink, ProcessingTask
 from ..models.files import File as FileModel
 from ._base import BaseResource
 
@@ -73,3 +74,43 @@ class SessionsResource(BaseResource):
         """Retrieve a single file within a session."""
         data = self._get_json(f"/volumes/{volume_id}/sessions/{session_id}/files/{file_id}/")
         return FileModel.model_validate(data)
+
+    # ---------------------------
+    # Downloads
+    # ---------------------------
+    def get_file_download_link(
+        self, volume_id: int, session_id: int, file_id: int
+    ) -> FileDownloadLink:
+        """Request a signed link for a file download."""
+        payload = self._get_json(
+            f"/volumes/{volume_id}/sessions/{session_id}/files/{file_id}/download-link/"
+        )
+        return FileDownloadLink.model_validate(payload)
+
+    def download_file(
+        self,
+        volume_id: int,
+        session_id: int,
+        file_id: int,
+        *,
+        dest_path: str | None = None,
+    ) -> bytes | str:
+        """Download a file; returns bytes or saves to dest_path.
+
+        If dest_path is provided, streams to file and returns the full path.
+        """
+        link = self.get_file_download_link(volume_id, session_id, file_id)
+        url = link.download_url
+        if dest_path is None:
+            return self._download_bytes(url)
+        return self._download_to_path(url, dest_path)
+
+    def request_zip_download(self, volume_id: int, session_id: int) -> ProcessingTask:
+        """Request async ZIP generation for a session."""
+        payload = self._get_json(f"/volumes/{volume_id}/sessions/{session_id}/download-link/")
+        return ProcessingTask.model_validate(payload)
+
+    def request_csv_download(self, volume_id: int, session_id: int) -> ProcessingTask:
+        """Request async CSV generation for a session."""
+        payload = self._get_json(f"/volumes/{volume_id}/sessions/{session_id}/csv-download-link/")
+        return ProcessingTask.model_validate(payload)

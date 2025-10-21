@@ -7,7 +7,11 @@ import httpx
 from databrarypy.client import DatabraryClient
 
 from .fixtures.client import build_client_transport
-from .fixtures.data_constants import VOLUME_COLLABORATOR_ID_1, VOLUME_ID_PRIMARY
+from .fixtures.data_constants import (
+    TASK_STATUS_PROCESSING,
+    VOLUME_COLLABORATOR_ID_1,
+    VOLUME_ID_PRIMARY,
+)
 from .fixtures.volume import (
     MOCK_VOLUME_DETAILED,
     MOCK_VOLUMES_PAGE,
@@ -42,6 +46,10 @@ def build_transport():
             return volumes_transport.handle_request(request)
         if key == ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/history/"):
             return handle_volume_history(request)
+        if key == ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/download-link/"):
+            return volumes_transport.handle_request(request)
+        if key == ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/csv-download-link/"):
+            return volumes_transport.handle_request(request)
         # Route other volume endpoints manually
         if key == ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/tags/"):
             return handle_volume_tags_1(request)
@@ -107,3 +115,9 @@ def test_volumes_read_endpoints() -> None:
     # activity/history
     hist = client.volumes.activity(VOLUME_ID_PRIMARY)
     assert hist.count >= 1 and hist.results[0].timestamp
+
+    # download tasks
+    zip_task = client.volumes.request_zip_download(VOLUME_ID_PRIMARY)
+    assert zip_task.status == TASK_STATUS_PROCESSING and zip_task.task_id
+    csv_task = client.volumes.request_csv_download(VOLUME_ID_PRIMARY)
+    assert csv_task.status == TASK_STATUS_PROCESSING and csv_task.task_id

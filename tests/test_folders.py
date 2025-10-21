@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from databrarypy.client import DatabraryClient
-from tests.fixtures.data_constants import VOLUME_ID_PRIMARY
+from tests.fixtures.data_constants import TASK_STATUS_PROCESSING, VOLUME_ID_PRIMARY
 from tests.fixtures.folders import (
+    FOLDER_FILE_BINARY_CONTENT,
     FOLDER_FILE_ID_1,
     FOLDER_ID_1,
     JPEG_MIMETYPE,
@@ -52,3 +55,18 @@ def test_folders_list_retrieve_and_files() -> None:
     fdetail = client.folders.get_file(VOLUME_ID_PRIMARY, FOLDER_ID_1, FOLDER_FILE_ID_1)
     assert fdetail.id == FOLDER_FILE_ID_1
     assert fdetail.folder == FOLDER_ID_1
+
+    # download bytes
+    content = client.folders.download_file(VOLUME_ID_PRIMARY, FOLDER_ID_1, FOLDER_FILE_ID_1)
+    assert content == FOLDER_FILE_BINARY_CONTENT
+
+    # download to directory: exercises URL-basename fallback since no header
+    out_dir = Path(".pytest_tmp/folder_dl")
+    saved = client.folders.download_file(
+        VOLUME_ID_PRIMARY, FOLDER_ID_1, FOLDER_FILE_ID_1, dest_path=str(out_dir)
+    )
+    assert saved.startswith(str(out_dir))
+
+    # request folder zip download (task)
+    task = client.folders.request_zip_download(VOLUME_ID_PRIMARY, FOLDER_ID_1)
+    assert task.status == TASK_STATUS_PROCESSING and task.task_id

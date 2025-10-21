@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from .files import File
 from .institution_sponsorship import InstitutionSponsorship
 from .institutions import Institution
 from .sponsorships import Sponsorship
@@ -59,7 +60,7 @@ class VolumeDetail(VolumePreview):
     participant_count: int | None = None
     participant_gender_counts: dict[str, int] | None = None
     file_counts: FileCounts | None = None
-    thumbnail: dict[str, object] | None = None
+    thumbnail: File | None = None
 
     model_config = {"populate_by_name": True, "extra": "ignore"}
 

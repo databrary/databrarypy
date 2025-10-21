@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ..models import Page
+from ..models.downloads import FileDownloadLink, ProcessingTask
 from ..models.files import File as FileModel
 from ..models.folders import Folder
 from ._base import BaseResource
@@ -74,3 +75,35 @@ class FoldersResource(BaseResource):
         """Retrieve a single file within a folder."""
         data = self._get_json(f"/volumes/{volume_id}/folders/{folder_id}/files/{file_id}/")
         return FileModel.model_validate(data)
+
+    # ---------------------------
+    # Downloads
+    # ---------------------------
+    def get_file_download_link(
+        self, volume_id: int, folder_id: int, file_id: int
+    ) -> FileDownloadLink:
+        """Request a signed link for a folder file download."""
+        payload = self._get_json(
+            f"/volumes/{volume_id}/folders/{folder_id}/files/{file_id}/download-link/"
+        )
+        return FileDownloadLink.model_validate(payload)
+
+    def download_file(
+        self,
+        volume_id: int,
+        folder_id: int,
+        file_id: int,
+        *,
+        dest_path: str | None = None,
+    ) -> bytes | str:
+        """Download a folder file; returns bytes or saves to dest_path."""
+        link = self.get_file_download_link(volume_id, folder_id, file_id)
+        url = link.download_url
+        if dest_path is None:
+            return self._download_bytes(url)
+        return self._download_to_path(url, dest_path)
+
+    def request_zip_download(self, volume_id: int, folder_id: int) -> ProcessingTask:
+        """Request async ZIP generation for a folder."""
+        payload = self._get_json(f"/volumes/{volume_id}/folders/{folder_id}/download-link/")
+        return ProcessingTask.model_validate(payload)

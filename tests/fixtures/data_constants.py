@@ -44,3 +44,6 @@ MOCK_AVATAR_PNG = b"\x89PNG\r\n\x1a\n"
 # ---- Pagination Defaults ----
 DEFAULT_PAGE_SIZE = 10
 DEFAULT_PAGE_NUMBER = 1
+
+# ---- Processing Task Status ----
+TASK_STATUS_PROCESSING = "processing"
