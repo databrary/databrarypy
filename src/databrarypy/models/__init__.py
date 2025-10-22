@@ -26,6 +26,16 @@ from .volumes import (
 )
 from .whoami import WhoAmI
 
+# Rebuild models to resolve forward references
+File.model_rebuild()
+Folder.model_rebuild()
+InstitutionSponsorship.model_rebuild()
+UserSlim.model_rebuild()
+UserPublic.model_rebuild()
+UserSelf.model_rebuild()
+VolumeListItem.model_rebuild()
+VolumePreview.model_rebuild()
+
 __all__ = [
     "Category",
     "File",

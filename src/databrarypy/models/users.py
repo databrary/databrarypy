@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from .institution_sponsorship import InstitutionSponsorship
 from .institutions import Institution
 
 
@@ -20,7 +21,7 @@ class UserSlim(BaseModel):
     url: str | None = None
     has_avatar: bool = Field(default=False)
     # Some list responses include these public fields as well
-    institution_sponsorships: list[dict[str, object]] = Field(default_factory=list)
+    institution_sponsorships: list[InstitutionSponsorship] = Field(default_factory=list)
     current_affiliates: list["UserSlim"] = Field(default_factory=list)
     current_sponsors: list["UserSlim"] = Field(default_factory=list)
     is_suspended: bool = Field(default=False)
@@ -43,7 +44,7 @@ class UserPublic(UserSlim):
     """Fields of UserRetrievePublicSerializer."""
 
     # institution_sponsorships: filled via separate endpoints; keep optional list placeholder
-    institution_sponsorships: list[dict[str, object]] = Field(default_factory=list)
+    institution_sponsorships: list[InstitutionSponsorship] = Field(default_factory=list)
     current_affiliates: list[UserSlim] = Field(default_factory=list)
     current_sponsors: list[UserSlim] = Field(default_factory=list)
     is_suspended: bool = Field(default=False)

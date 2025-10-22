@@ -198,7 +198,7 @@ class DatabraryClient:
         Raises:
             RuntimeError: If required configuration values are missing.
         """
-        env_values: dict[str, str] = (
+        env_values: dict[str, str | None] = (
             dotenv_values() if env_file is None else dotenv_values(str(env_file))
         )
 
