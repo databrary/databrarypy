@@ -66,30 +66,40 @@ def test_search_volumes():
 def test_search_list_variants():
     client = _make_client()
     # users list
-    _ = list(
+    users = list(
         client.search.users_list(
             q="alex", filter="active", page=1, page_size=5, sort_by="name", sort_order="asc"
         )
     )
+    assert users and users[0].full_name == _get_mock_user_hit()["full_name"]
     # institutions list
-    _ = list(client.search.institutions_list(q="Example", page=1, page_size=5, sort_order="desc"))
+    insts = list(
+        client.search.institutions_list(q="Example", page=1, page_size=5, sort_order="desc")
+    )
+    assert insts and insts[0].name == _get_mock_institution_hit()["name"]
     # volumes list basic
-    _ = list(
+    vols = list(
         client.search.volumes_list(
             q="lang", files_release_levels=["public"], tag="science", page=1, page_size=2
         )
     )
+    assert vols and vols[0].id == _get_mock_volume_hit()["id"]
 
 
 def test_search_volumes_page_with_format_lists():
     client = _make_client()
     # page variant with format_categories and formats
-    _ = client.search.volumes_page(
+    page = client.search.volumes_page(
         q="lang", format_categories=["video"], formats=["mp4"], page=1, page_size=1
     )
+    assert (
+        page.count == 1
+        and page.results[0].owner.full_name == _get_mock_volume_hit()["owner"]["full_name"]
+    )
     # list variant with both as well
-    _ = list(
+    vols = list(
         client.search.volumes_list(
             q="lang", format_categories=["image"], formats=["jpg"], page=1, page_size=1
         )
     )
+    assert vols and vols[0].title == _get_mock_volume_hit()["title"]

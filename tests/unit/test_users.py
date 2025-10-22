@@ -4,6 +4,7 @@ from databrarypy.client import DatabraryClient
 from tests.fixtures.data_constants import USER_ID_PRIMARY
 from tests.fixtures.users import (
     MOCK_USER_1,
+    MOCK_USER_6_AFFILIATE_ACTIVE,
     build_composite_transport,
 )
 
@@ -33,7 +34,8 @@ def test_users_list_and_retrieve():
     sponsors = client.users.sponsors(6)
     assert sponsors and sponsors[0].id == 101
     vols = client.users.volumes_page(6)
-    assert vols.count == 0 and vols.results == []
+    assert vols.count == 0
+    assert vols.results == []
     avatar2 = client.users.avatar(6)
     assert avatar2.startswith(b"\x89PNG")
     # save avatar to dir and to explicit file
@@ -69,7 +71,8 @@ def test_users_affiliates_with_params():
 
     # Exercise include_expired parameter
     affiliates = client.users.affiliates(6, include_expired=True)
-    assert isinstance(affiliates, list)
+    assert affiliates and len(affiliates) >= 1
+    assert affiliates[0].id == MOCK_USER_6_AFFILIATE_ACTIVE["id"]
 
 
 def test_users_list_with_filters_and_volumes():
@@ -135,5 +138,8 @@ def test_users_iterators():
     first_user = next(client.users.list(search="alex"))
     assert first_user.id is not None
     # Iterate generators to cover code paths
-    _ = list(client.users.volumes_list(6))
-    _ = list(client.users.activity_list(6))
+    vols = list(client.users.volumes_list(6))
+    assert vols == []
+
+    acts = list(client.users.activity_list(6))
+    assert acts and all(item.timestamp for item in acts)

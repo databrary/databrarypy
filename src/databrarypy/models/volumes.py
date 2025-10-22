@@ -35,12 +35,16 @@ class VolumeListItem(BaseModel):
     """Volume list item (VolumeListSerializer)."""
 
     id: int
+    updated_at: object | None = None
+    created_at: object | None = None
     title: str
+    description: str | None = None
     short_name: str | None = None
     sharing_level: str
+    coauthors: list[VolumeCoauthor] = Field(default_factory=list)
     owner_connection: InstitutionSponsorship | None = None
-    owner_institution: Institution
-    access_level: str
+    owner_institution: Institution | None = None
+    access_level: str | None = None
 
     model_config = {"populate_by_name": True, "extra": "forbid"}
 

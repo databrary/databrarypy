@@ -1,43 +1,38 @@
 from __future__ import annotations
 
+import pytest
+from tests.conftest import collect_items, first_page_item
+
 from databrarypy.client import DatabraryClient
-
-
-def _first_id(page) -> int | None:
-    if page.results:
-        item = page.results[0]
-        return getattr(item, "id", None)
-    return None
 
 
 def test_institutions_list_and_retrieve(client: DatabraryClient):
     page = client.institutions.page(page=1)
     assert page.count >= 0
-    iid = _first_id(page)
-    if iid is not None:
-        inst = client.institutions.retrieve(iid)
-        assert inst.id == iid
+    next_item = first_page_item(page)
+    if next_item is None:
+        pytest.skip("No institutions available to test institutions")
+    inst = client.institutions.retrieve(next_item.id)
+    assert inst.id == next_item.id
 
 
 def test_institutions_iterators(client: DatabraryClient):
-    seen = []
-    for idx, inst in enumerate(client.institutions.list(page=1, page_size=5)):
-        seen.append(inst)
-        if idx > 5:
-            break
-    assert isinstance(seen, list)
+    seen_items = collect_items(client.institutions.list(page=1, page_size=5), limit=6)
+    assert len(seen_items) <= 6
 
 
 def test_institutions_avatar_and_investigators(client: DatabraryClient):
     page = client.institutions.page(page=1)
-    if not page.results:
-        return
-    iid = page.results[0].id
+    next_item = first_page_item(page)
+    if next_item is None:
+        pytest.skip("No institutions available to test institutions")
 
     # Avatar may be missing; ensure call works
-    data = client.institutions.avatar(iid)
+    data = client.institutions.avatar(next_item.id)
     assert isinstance(data, (bytes, str))
 
     # Investigators derived client-side from affiliates
-    investigators = list(client.institutions.authorized_investigators(iid, page=1))
-    assert isinstance(investigators, list)
+    investigators = collect_items(
+        client.institutions.authorized_investigators(next_item.id, page=1), limit=6
+    )
+    assert len(investigators) <= 6

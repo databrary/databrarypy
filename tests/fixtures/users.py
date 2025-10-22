@@ -12,7 +12,11 @@ from .data_constants import (
     USER_ID_OWNER,
 )
 from .factory import make_page
-from .institutions import MOCK_INSTITUTION_1_DETAILED, MOCK_INSTITUTION_2, MOCK_INSTITUTION_3
+from .institutions import (
+    MOCK_INSTITUTION_1_DETAILED,
+    MOCK_INSTITUTION_2,
+    MOCK_INSTITUTION_3,
+)
 
 MOCK_USER_1 = {
     "id": USER_ID_1,
@@ -125,7 +129,7 @@ MOCK_USER_6_AFFILIATE_ACTIVE = {
     "id": 201,
     "sponsor": MOCK_USER_1,
     "user": MOCK_USER_1,
-    "institution": {"id": 12, "name": "Penn State"},
+    "institution": MOCK_INSTITUTION_2,
     "access_level": "read",
     "has_databrary_affiliate_access": True,
     "sponsor_institution_connection": 1000,
@@ -138,7 +142,7 @@ MOCK_USER_6_AFFILIATE_EXPIRED = {
     "id": 202,
     "sponsor": MOCK_USER_1,
     "user": MOCK_USER_1,
-    "institution": {"id": 12, "name": "Penn State"},
+    "institution": MOCK_INSTITUTION_2,
     "access_level": "read",
     "has_databrary_affiliate_access": False,
     "sponsor_institution_connection": 1001,
@@ -174,7 +178,11 @@ def handle_user_volumes_user_2(request: httpx.Request) -> httpx.Response:
 
 def handle_user_affiliates_user_1(request: httpx.Request) -> httpx.Response:
     # Backend returns a list directly (not paginated)
-    return httpx.Response(200, json=[])
+    include_expired = request.url.params.get("include_expired") == "true"
+    items = [MOCK_USER_6_AFFILIATE_ACTIVE]
+    if include_expired:
+        items.append(MOCK_USER_6_AFFILIATE_EXPIRED)
+    return httpx.Response(200, json=items)
 
 
 def handle_user_avatar_user_1(request: httpx.Request) -> httpx.Response:

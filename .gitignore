@@ -57,3 +57,6 @@ dmypy.json
 
 # Local temp data for tests
 .pytest_tmp/
+
+# Environment variables
+.env

@@ -134,6 +134,8 @@ def test_volumes_list_iterators() -> None:
     client.auth.login()
 
     # iterate list variant
-    _ = list(client.volumes.list(page=1, page_size=2))
+    list_results = list(client.volumes.list(page=1, page_size=2))
+    assert list_results and list_results[0].id == 1
     # activity list variant
-    _ = list(client.volumes.activity_list(1))
+    activity_results = list(client.volumes.activity_list(1))
+    assert activity_results and activity_results[0].timestamp

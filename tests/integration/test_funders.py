@@ -1,19 +1,15 @@
 from __future__ import annotations
 
+import pytest
+
 from databrarypy.client import DatabraryClient
-
-
-def _first_id(page) -> int | None:
-    if page.results:
-        item = page.results[0]
-        return getattr(item, "id", None)
-    return None
 
 
 def test_funders_list_and_retrieve(client: DatabraryClient):
     items = client.funders.list(is_approved=True)
-    assert isinstance(items, list)
-    fid = items[0].id if items else None
-    if fid is not None:
-        funder = client.funders.retrieve(fid)
-        assert funder.id == fid
+    assert len(items) >= 0
+    next_item = next(iter(items), None)
+    if next_item is None:
+        pytest.skip("No funders available to test funders")
+    funder = client.funders.retrieve(next_item.id)
+    assert funder.id == next_item.id

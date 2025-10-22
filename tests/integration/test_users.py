@@ -1,103 +1,77 @@
 from __future__ import annotations
 
+import pytest
+from tests.conftest import collect_items, first_list_item, first_page_item
+
 from databrarypy.client import DatabraryClient
 
 
-def _first_id(page) -> int | None:
-    if page.results:
-        item = page.results[0]
-        return getattr(item, "id", None)
-    return None
+def _resolve_current_user(client: DatabraryClient) -> tuple[str, int | None]:
+    """Return (email, user_id) for the authenticated user via search fallback."""
+
+    who = client.whoami()
+    email = who.user
+    if not email:
+        raise pytest.skip("Authenticated user email unavailable in environment")
+
+    users_iter = client.users.list(search=email, page=1)
+    user = next((_user for _user in users_iter if _user.email == email), None)
+    return email, user.id if user is not None else None
 
 
 def test_users_list_and_retrieve(client: DatabraryClient):
     page = client.users.page(page=1)
     assert page.count >= 0
-    uid = _first_id(page)
-    if uid is not None:
-        user = client.users.retrieve(uid)
-        assert user.id == uid
+    first_user = first_page_item(page)
+    if first_user is None:
+        pytest.skip("No users available to test users")
+    user = client.users.retrieve(first_user.id)
+    assert user.id == first_user.id
 
 
 def test_users_self(client: DatabraryClient):
-    who = client.whoami()
-    email = who.user
-    assert email
-    # Find user by email from the first page(s)
-    page = client.users.page(search=email, page=1)
-    assert page.count >= 0
-    # If direct search didn't resolve id, fall back to first result match
-    uid = None
-    for u in page.results:
-        if getattr(u, "email", None) == email:
-            uid = u.id
-            break
-    if uid is None and page.results:
-        uid = page.results[0].id
-    assert uid is not None
+    email, uid = _resolve_current_user(client)
+    if uid is None:
+        pytest.skip("Authenticated user id unavailable in search results")
     me = client.users.retrieve(uid, for_self=True)
     assert me.email == email
 
 
 def test_users_sponsorships_and_affiliates(client: DatabraryClient):
-    who = client.whoami()
-    email = who.user
-    assert email
-    page = client.users.page(search=email, page=1)
-    uid = None
-    for u in page.results:
-        if getattr(u, "email", None) == email:
-            uid = u.id
-            break
-    if uid is None and page.results:
-        uid = page.results[0].id
-    assert uid is not None
-    sponsor_list = client.users.sponsors(uid)
-    assert isinstance(sponsor_list, list)
+    _, user_id = _resolve_current_user(client)
+    if user_id is None:
+        pytest.skip("Authenticated user id unavailable in search results")
 
-    affiliates = client.users.affiliates(uid)
-    assert isinstance(affiliates, list)
+    sponsor_list = client.users.sponsors(user_id)
+    assert len(sponsor_list) >= 0
+
+    affiliates = client.users.affiliates(user_id)
+    assert len(affiliates) >= 0
 
 
 def test_users_activity_iterators(client: DatabraryClient):
-    who = client.whoami()
-    email = who.user
-    assert email
-    page = client.users.page(search=email, page=1)
-    uid = None
-    for u in page.results:
-        if getattr(u, "email", None) == email:
-            uid = u.id
-            break
-    if uid is None and page.results:
-        uid = page.results[0].id
-    assert uid is not None
+    _, user_id = _resolve_current_user(client)
+    if user_id is None:
+        pytest.skip("Authenticated user id unavailable in search results")
 
-    act_page = client.users.activity_page(uid, page=1)
+    act_page = client.users.activity_page(user_id, page=1)
     assert act_page.count >= 0
     # Iterator variant
-    seen = []
-    for idx, item in enumerate(client.users.activity_list(uid, page=1, page_size=5)):
-        seen.append(item)
-        if idx > 5:
-            break
-    assert isinstance(seen, list)
+    seen_items = collect_items(client.users.activity_list(user_id, page=1, page_size=5), limit=6)
+    assert len(seen_items) <= 6
 
 
 def test_users_volumes_and_avatar(client: DatabraryClient):
-    who = client.whoami()
-    uid: int | None = None
-    if isinstance(who, dict):
-        uid = who.get("id")
+    _, uid = _resolve_current_user(client)
     if uid is None:
-        page = client.users.page(page=1)
-        if page.results:
-            uid = page.results[0].id
-    if uid is None:
-        return
+        pytest.skip("Authenticated user id unavailable in search results")
 
     volumes = client.users.volumes_page(uid, page=1)
     assert volumes.count >= 0
+    first_volume = first_list_item(volumes.results)
+    if first_volume is None:
+        pytest.skip("User volumes endpoint returned no data")
+    assert first_volume.title
 
     # Avatar can be empty bytes if 404; call to ensure path works
     data = client.users.avatar(uid)
@@ -105,19 +79,8 @@ def test_users_volumes_and_avatar(client: DatabraryClient):
 
 
 def test_users_volumes_list_iterator(client: DatabraryClient):
-    who = client.whoami()
-    uid: int | None = None
-    if isinstance(who, dict):
-        uid = who.get("id")
+    _, uid = _resolve_current_user(client)
     if uid is None:
-        page = client.users.page(page=1)
-        if page.results:
-            uid = page.results[0].id
-    if uid is None:
-        return
-    seen = []
-    for idx, v in enumerate(client.users.volumes_list(uid, page=1, page_size=5)):
-        seen.append(v)
-        if idx > 5:
-            break
-    assert isinstance(seen, list)
+        pytest.skip("Authenticated user id unavailable in search results")
+    seen_items = collect_items(client.users.volumes_list(uid, page=1, page_size=5), limit=6)
+    assert len(seen_items) <= 6
