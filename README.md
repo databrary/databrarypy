@@ -57,7 +57,6 @@ print(client.whoami().model_dump())
 Required keys expected in the `.env` file:
 
 ```bash
-BASE_URL=https://api.databrary.org
 CLIENT_ID=<client-id>
 CLIENT_SECRET=<client-secret>
 USERNAME=<username>

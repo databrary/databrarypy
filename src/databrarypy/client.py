@@ -202,8 +202,8 @@ class DatabraryClient:
             dotenv_values() if env_file is None else dotenv_values(str(env_file))
         )
 
+        # Required settings (BASE_URL is optional and defaults to the public API)
         required_settings: dict[str, str] = {
-            "base_url": "BASE_URL",
             "client_id": "CLIENT_ID",
             "client_secret": "CLIENT_SECRET",
             "username": "USERNAME",
@@ -217,9 +217,10 @@ class DatabraryClient:
             raise RuntimeError(f"Missing required configuration values: {missing_list}")
 
         resolved_str = {name: value for name, value in resolved.items() if value is not None}
+        base_url = env_values.get("BASE_URL") or "https://api.databrary.org"
 
         client = cls(
-            base_url=resolved_str["base_url"],
+            base_url=base_url,
             client_id=resolved_str["client_id"],
             client_secret=resolved_str["client_secret"],
             username=resolved_str["username"],
