@@ -40,6 +40,41 @@ print(client.whoami().model_dump())
 print(client.system.get_db_stats().model_dump())
 ```
 
+## Initialize from .env (from_env)
+
+You can configure the client via a `.env` file using `DatabraryClient.from_env(...)`.
+
+```python
+from databrarypy import DatabraryClient
+
+# Reads required settings from a .env file in the current directory.
+# Set login=True to perform an OAuth2 login immediately.
+client = DatabraryClient.from_env(login=True)
+
+print(client.whoami().model_dump())
+```
+
+Required keys expected in the `.env` file:
+
+```bash
+BASE_URL=https://api.databrary.org
+CLIENT_ID=<client-id>
+CLIENT_SECRET=<client-secret>
+USERNAME=<username>
+PASSWORD=<password>
+USER_AGENT=<SECRET_USER_AGENT>
+```
+
+If your `.env` file lives elsewhere, pass its path explicitly:
+
+```python
+from pathlib import Path
+from databrarypy import DatabraryClient
+
+env_path = Path(__file__).parent / ".env"
+client = DatabraryClient.from_env(env_file=env_path, login=True)
+```
+
 ## Usage highlights
 
 - Pagination: `page(...)` returns a `Page[T]`, `list(...)` iterates all.
