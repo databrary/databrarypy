@@ -36,7 +36,7 @@ def test_sessions_files(client: DatabraryClient):
     files = client.sessions.files_page(vid, sid, page=1)
     if files.count == 0:
         pytest.skip("No session files in fixture")
-    assert files.count > 0
+    assert files.count == len(files.results)
 
 
 def test_sessions_iterators(client: DatabraryClient):

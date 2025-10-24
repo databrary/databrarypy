@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from .affiliate_requests import AffiliateAccessRequest
+from .institution_requests import InstitutionAccessRequest
 from .institution_sponsorship import InstitutionSponsorship
 from .institutions import Institution
 
@@ -50,8 +52,8 @@ class UserPublic(UserSlim):
     is_suspended: bool = Field(default=False)
     suspended_by: SuspendedBy | None = None
     # Some detail responses include self-only fields; accept as optional
-    pending_institution_requests: list[dict[str, object]] = Field(default_factory=list)
-    pending_affiliate_requests: list[dict[str, object]] = Field(default_factory=list)
+    pending_institution_requests: list[InstitutionAccessRequest] = Field(default_factory=list)
+    pending_affiliate_requests: list[AffiliateAccessRequest] = Field(default_factory=list)
     phone: str | None = None
     two_fa: str | None = None
     finished_registration: bool = Field(default=False)
@@ -66,8 +68,8 @@ class UserPublic(UserSlim):
 class UserSelf(UserPublic):
     """Fields of UserRetrieveSelfSerializer."""
 
-    pending_institution_requests: list[dict[str, object]] = Field(default_factory=list)
-    pending_affiliate_requests: list[dict[str, object]] = Field(default_factory=list)
+    pending_institution_requests: list[InstitutionAccessRequest] = Field(default_factory=list)
+    pending_affiliate_requests: list[AffiliateAccessRequest] = Field(default_factory=list)
     phone: str | None = None
     finished_registration: bool = Field(default=False)
     has_api_access: bool = Field(default=False)

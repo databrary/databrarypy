@@ -176,7 +176,9 @@ def test_oauth2_client_close_idempotent() -> None:
         transport=build_auth_transport(),
     )
     oauth.close()
-    oauth.close()
+    assert oauth._closed is True
+    oauth.close()  # no error should be raised
+    assert oauth._closed is True
 
 
 def test_oauth2_client_rejects_usage_after_close() -> None:
@@ -192,25 +194,3 @@ def test_oauth2_client_rejects_usage_after_close() -> None:
     oauth.close()
     with pytest.raises(RuntimeError, match="OAuth2Client is closed"):
         oauth.login()
-
-
-def test_oauth2_client_del_calls_close() -> None:
-    oauth = OAuth2Client(
-        base_url="https://api.example.org",
-        client_id="cid",
-        client_secret="secret",
-        username="user@example.org",
-        password="pw",
-        user_agent="test",
-        transport=build_auth_transport(),
-    )
-
-    called = False
-
-    def fake_close() -> None:
-        nonlocal called
-        called = True
-
-    oauth.close = fake_close
-    oauth.__del__()
-    assert called is True

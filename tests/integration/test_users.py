@@ -11,9 +11,6 @@ def _resolve_current_user(client: DatabraryClient) -> tuple[str, int | None]:
 
     who = client.whoami()
     email = who.user
-    if not email:
-        raise pytest.skip("Authenticated user email unavailable in environment")
-
     users_iter = client.users.list(search=email, page=1)
     user = next((_user for _user in users_iter if _user.email == email), None)
     return email, user.id if user is not None else None

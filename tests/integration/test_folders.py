@@ -25,7 +25,7 @@ def test_folders_list_and_retrieve(client: DatabraryClient):
     assert folder.id == next_folder.id
 
 
-def test_folders_files_and_downloads(client: DatabraryClient):
+def test_folders_files(client: DatabraryClient):
     vid = _first_volume_id(client)
     page = client.folders.page(vid, page=1)
     next_folder = first_page_item(page)
@@ -36,7 +36,7 @@ def test_folders_files_and_downloads(client: DatabraryClient):
     files = client.folders.files_page(vid, fid, page=1)
     if files.count == 0:
         pytest.skip("No files in folders fixtures")
-    assert files.count > 0
+    assert files.count == len(files.results)
 
 
 def test_folders_iterators(client: DatabraryClient):

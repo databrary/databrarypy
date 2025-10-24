@@ -58,20 +58,6 @@ def _get_mock_user_volumes_page():
     return make_page(results=[volume_1, volume_2], count=2)
 
 
-MOCK_USER_SELF = {
-    **MOCK_USER_1,
-    "pending_institution_requests": [],
-    "pending_affiliate_requests": [],
-    "phone": None,
-    "finished_registration": True,
-    "has_api_access": True,
-    "current_affiliates": [],
-    "current_sponsors": [],
-    "is_suspended": False,
-    "suspended_by": None,
-}
-
-
 MOCK_USER_COAUTHOR = {
     "id": USER_ID_COAUTHOR,
     "first_name": "Jane",
@@ -95,6 +81,44 @@ MOCK_USER_OWNER = {
     "orcid": "0000-0000-0000-0001",
     "url": "https://example.org/jjohnson",
     "has_avatar": True,
+}
+
+
+MOCK_PENDING_INSTITUTION_REQUEST_1 = {
+    "id": 3001,
+    "user": MOCK_USER_1,
+    "institution": MOCK_INSTITUTION_1_DETAILED,
+    "role": "investigator",
+    "status": "pending",
+    "created_at": "2025-06-01T00:00:00Z",
+    "updated_at": None,
+    "deleted_at": None,
+}
+
+
+MOCK_PENDING_AFFILIATE_REQUEST_1 = {
+    "id": 4001,
+    "requester": MOCK_USER_1,
+    "sponsor": MOCK_USER_OWNER,
+    "access_level": "read",
+    "status": "pending",
+    "created_at": "2025-06-01T00:00:00Z",
+    "updated_at": None,
+    "deleted_at": None,
+}
+
+
+MOCK_USER_SELF = {
+    **MOCK_USER_1,
+    "pending_institution_requests": [MOCK_PENDING_INSTITUTION_REQUEST_1],
+    "pending_affiliate_requests": [MOCK_PENDING_AFFILIATE_REQUEST_1],
+    "phone": None,
+    "finished_registration": True,
+    "has_api_access": True,
+    "current_affiliates": [],
+    "current_sponsors": [],
+    "is_suspended": False,
+    "suspended_by": None,
 }
 
 
