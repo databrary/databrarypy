@@ -106,4 +106,11 @@ make test
 make lint
 make format
 make type-check
+make docs
+make docs-serve
 ```
+
+## API Reference
+
+- Generated from docstrings with pdoc. Build locally with `make docs` and open `docs/index.html`, or serve with `make docs-serve`.
+- Hosted docs (GitHub Pages): see the repository’s Pages site once the workflow runs on `main`.

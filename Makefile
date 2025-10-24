@@ -1,4 +1,4 @@
-.PHONY: help install test coverage lint format type-check clean all commit bump pre-commit test-integration integration-coverage
+.PHONY: help install test coverage lint format type-check clean all commit bump pre-commit test-integration integration-coverage docs docs-serve
 
 help:
 	@echo "Available commands:"
@@ -15,6 +15,8 @@ help:
 	@echo "  make pre-commit   - Run pre-commit hooks on all files"
 	@echo "  make commit       - Create a conventional commit using commitizen"
 	@echo "  make bump         - Bump version and update changelog"
+	@echo "  make docs         - Generate API docs with pdoc into ./docs"
+	@echo "  make docs-serve   - Serve API docs locally with pdoc"
 
 install:
 	poetry install
@@ -70,3 +72,9 @@ commit:
 
 bump:
 	poetry run cz bump
+
+docs:
+	poetry run pdoc -d google -o docs src/databrarypy
+
+docs-serve:
+	poetry run pdoc -d google -h 127.0.0.1 -p 8080 src/databrarypy

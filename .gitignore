@@ -60,3 +60,6 @@ dmypy.json
 
 # Environment variables
 .env
+
+# Documentation
+docs/
