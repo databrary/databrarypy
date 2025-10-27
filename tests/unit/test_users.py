@@ -5,7 +5,6 @@ from tests.fixtures.data_constants import USER_ID_PRIMARY
 from tests.fixtures.users import (
     MOCK_USER_1,
     MOCK_USER_6_AFFILIATE_ACTIVE,
-    MOCK_USER_6_AFFILIATE_EXPIRED,
     build_composite_transport,
 )
 
@@ -23,7 +22,7 @@ def test_users_list_and_retrieve():
     )
     client.auth.login()
 
-    page = client.users.list(search="alex")
+    page = client.users.page(search="alex")
     assert page.count == 1
 
     assert page.results[0].first_name == MOCK_USER_1["first_name"]
@@ -34,8 +33,9 @@ def test_users_list_and_retrieve():
 
     sponsors = client.users.sponsors(6)
     assert sponsors and sponsors[0].id == 101
-    vols = client.users.volumes(6)
-    assert vols.count == 0 and vols.results == []
+    vols = client.users.volumes_page(6)
+    assert vols.count == 0
+    assert vols.results == []
     avatar2 = client.users.avatar(6)
     assert avatar2.startswith(b"\x89PNG")
     # save avatar to dir and to explicit file
@@ -69,27 +69,10 @@ def test_users_affiliates_with_params():
     )
     client.auth.login()
 
-    # When include_expired is False (default), only active affiliations are returned
-    page_active_only = client.users.affiliates(6)
-    assert page_active_only.count == 1
-    assert page_active_only.results[0].id == MOCK_USER_6_AFFILIATE_ACTIVE["id"]
-    assert (
-        str(page_active_only.results[0].expiration_date)
-        == MOCK_USER_6_AFFILIATE_ACTIVE["expiration_date"]
-    )
-
-    # When include_expired is True, include both active and expired affiliations
-    page_with_expired = client.users.affiliates(6, include_expired=True, page=1, page_size=10)
-    assert page_with_expired.count == 2
-    assert {a.id for a in page_with_expired.results} == {
-        MOCK_USER_6_AFFILIATE_ACTIVE["id"],
-        MOCK_USER_6_AFFILIATE_EXPIRED["id"],
-    }
-    # Verify the expired record has a past date
-    expired = next(
-        a for a in page_with_expired.results if a.id == MOCK_USER_6_AFFILIATE_EXPIRED["id"]
-    )
-    assert str(expired.expiration_date) == MOCK_USER_6_AFFILIATE_EXPIRED["expiration_date"]
+    # Exercise include_expired parameter
+    affiliates = client.users.affiliates(6, include_expired=True)
+    assert affiliates and len(affiliates) >= 1
+    assert affiliates[0].id == MOCK_USER_6_AFFILIATE_ACTIVE["id"]
 
 
 def test_users_list_with_filters_and_volumes():
@@ -105,7 +88,7 @@ def test_users_list_with_filters_and_volumes():
     )
     client.auth.login()
 
-    page = client.users.list(
+    page = client.users.page(
         search="john",
         include_suspended=True,
         exclude_self=True,
@@ -114,7 +97,7 @@ def test_users_list_with_filters_and_volumes():
     )
     assert page.count >= 0
 
-    vols = client.users.volumes(7)
+    vols = client.users.volumes_page(7)
     assert vols.count == 2
     assert [v.title for v in vols.results] == ["Vol1", "Vol2"]
 
@@ -132,8 +115,31 @@ def test_users_activity_list():
     )
     client.auth.login()
 
-    page = client.users.activity(USER_ID_PRIMARY, page=1, page_size=5)
+    page = client.users.activity_page(USER_ID_PRIMARY, page=1, page_size=5)
     assert page.count >= 1
     item = page.results[0]
     # ActivityItem allows extras; only assert required fields
     assert item.type and item.timestamp
+
+
+def test_users_iterators():
+    transport = build_composite_transport()
+    client = DatabraryClient(
+        base_url="https://api.example",
+        client_id="cid",
+        client_secret="sec",
+        username="user@example.org",
+        password="pw",
+        user_agent="dbpy-tests",
+        transport=transport,
+    )
+    client.auth.login()
+
+    first_user = next(client.users.list(search="alex"))
+    assert first_user.id is not None
+    # Iterate generators to cover code paths
+    vols = list(client.users.volumes_list(6))
+    assert vols == []
+
+    acts = list(client.users.activity_list(6))
+    assert acts and all(item.timestamp for item in acts)

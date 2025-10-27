@@ -1,11 +1,13 @@
 """Data models for Databrary API responses."""
 
+from .affiliate_requests import AffiliateAccessRequest
 from .categories import Category, Metric
 from .files import File
 from .folders import Folder
 from .formats import Format, GroupedFormats
 from .funders import Funder
 from .history import HistoryUser, UserActivityItem, VolumeActivityItem
+from .institution_requests import InstitutionAccessRequest
 from .institution_sponsorship import InstitutionSponsorship
 from .institutions import Institution
 from .levels import PermissionLevels, ReleaseLevels
@@ -24,8 +26,20 @@ from .volumes import (
     VolumeListItem,
     VolumePreview,
 )
+from .whoami import WhoAmI
+
+# Rebuild models to resolve forward references
+File.model_rebuild()
+Folder.model_rebuild()
+InstitutionSponsorship.model_rebuild()
+UserSlim.model_rebuild()
+UserPublic.model_rebuild()
+UserSelf.model_rebuild()
+VolumeListItem.model_rebuild()
+VolumePreview.model_rebuild()
 
 __all__ = [
+    "AffiliateAccessRequest",
     "Category",
     "File",
     "Folder",
@@ -34,6 +48,7 @@ __all__ = [
     "GroupedFormats",
     "HistoryUser",
     "Institution",
+    "InstitutionAccessRequest",
     "InstitutionSponsorship",
     "Metric",
     "Page",
@@ -58,4 +73,5 @@ __all__ = [
     "VolumeLink",
     "VolumeListItem",
     "VolumePreview",
+    "WhoAmI",
 ]

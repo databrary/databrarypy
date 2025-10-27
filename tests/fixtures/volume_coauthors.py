@@ -13,7 +13,6 @@ from .users import MOCK_USER_COAUTHOR
 MOCK_VOLUME_COAUTHOR_1 = {
     "id": VOLUME_COAUTHOR_ID_1,
     "user": MOCK_USER_COAUTHOR,
-    "user_id": None,
     "sort_order": 1,
     "volume": VOLUME_ID_PRIMARY,
     "created_at": "2025-03-05T16:35:51.339059Z",

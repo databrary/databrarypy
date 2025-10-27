@@ -4,7 +4,7 @@ import pytest
 
 from databrarypy.auth import OAuth2Client
 
-from .fixtures import (
+from ..fixtures import (
     MOCK_AUTH_RESPONSES,
     build_auth_transport,
     handle_token_error,
@@ -148,3 +148,49 @@ def test_automatic_token_refresh():
     assert token == refreshed_token
     assert oauth._token.access_token == refreshed_token
     assert oauth._token.refresh_token == MOCK_AUTH_RESPONSES["token_refreshed"]["refresh_token"]
+
+
+def test_oauth2_client_context_manager() -> None:
+    oauth = OAuth2Client(
+        base_url="https://api.example.org",
+        client_id="cid",
+        client_secret="secret",
+        username="user@example.org",
+        password="pw",
+        user_agent="test",
+        transport=build_auth_transport(),
+    )
+    with oauth:
+        oauth.login()
+    assert oauth._closed is True
+
+
+def test_oauth2_client_close_idempotent() -> None:
+    oauth = OAuth2Client(
+        base_url="https://api.example.org",
+        client_id="cid",
+        client_secret="secret",
+        username="user@example.org",
+        password="pw",
+        user_agent="test",
+        transport=build_auth_transport(),
+    )
+    oauth.close()
+    assert oauth._closed is True
+    oauth.close()  # no error should be raised
+    assert oauth._closed is True
+
+
+def test_oauth2_client_rejects_usage_after_close() -> None:
+    oauth = OAuth2Client(
+        base_url="https://api.example.org",
+        client_id="cid",
+        client_secret="secret",
+        username="user@example.org",
+        password="pw",
+        user_agent="test",
+        transport=build_auth_transport(),
+    )
+    oauth.close()
+    with pytest.raises(RuntimeError, match="OAuth2Client is closed"):
+        oauth.login()

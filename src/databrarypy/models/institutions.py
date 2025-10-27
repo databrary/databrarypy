@@ -17,13 +17,13 @@ class Institution(BaseModel):
     source: str | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
-    has_avatar: bool | None = None
-    has_administrators: bool | None = None
+    has_avatar: bool
+    has_administrators: bool
     latitude: float | None = None
     longitude: float | None = None
-    manual_coordinates: bool | None = None
+    manual_coordinates: bool
 
     model_config = {
         "populate_by_name": True,
-        "extra": "ignore",
+        "extra": "forbid",
     }

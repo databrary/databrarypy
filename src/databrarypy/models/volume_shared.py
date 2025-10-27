@@ -10,11 +10,11 @@ from .funders import Funder
 class VolumeLink(BaseModel):
     """External link attached to a volume."""
 
-    id: int | None = None
+    id: int
     title: str
     url: str
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
 
 class VolumeFundingRead(BaseModel):
@@ -23,7 +23,7 @@ class VolumeFundingRead(BaseModel):
     funder: Funder
     awards: str | None = None
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
 
 class Metric(BaseModel):
@@ -38,7 +38,7 @@ class Metric(BaseModel):
     description: str | None = None
     required: bool | None = None
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
 
 class Category(BaseModel):
@@ -49,7 +49,7 @@ class Category(BaseModel):
     description: str | None = None
     metrics: list[Metric] = Field(default_factory=list)
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
 
 class FileCountsBreakdown(BaseModel):

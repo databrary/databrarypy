@@ -17,7 +17,7 @@ class FileDownloadLink(BaseModel):
 
     model_config = {
         "populate_by_name": True,
-        "extra": "ignore",
+        "extra": "forbid",
     }
 
 
@@ -30,5 +30,5 @@ class ProcessingTask(BaseModel):
 
     model_config = {
         "populate_by_name": True,
-        "extra": "ignore",
+        "extra": "forbid",
     }

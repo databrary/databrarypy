@@ -12,6 +12,7 @@ repository = "https://github.com/NYU-Databrary/databrarypy"
 python = "^3.12"
 httpx = ">=0.27"
 pydantic = ">=2.7"
+python-dotenv = ">=1.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8.2"
@@ -77,6 +78,9 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+markers = [
+    'staging: marks tests as staging-only (deselect with -m "not staging")',
+]
 
 [tool.commitizen]
 name = "cz_conventional_commits"

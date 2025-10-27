@@ -13,14 +13,18 @@ pip install databrarypy
 ```python
 from databrarypy import DatabraryClient
 
-# Create client
+# Create client (with optional retry configuration)
 client = DatabraryClient(
     base_url="https://nyu.databrary.org",
     client_id="your_client_id",
     client_secret="your_client_secret",
     username="user@example.com",
     password="password",
-    user_agent="your_user_agent"
+    user_agent="your_user_agent",
+    max_retries=5,
+    respect_retry_after=True,
+    backoff_base=0.5,
+    backoff_jitter=0.25,
 )
 
 # Authenticate
@@ -29,6 +33,14 @@ client.auth.login()
 # Get authenticated user info
 user_info = client.whoami()
 print(user_info)
+
+# Iterate volumes without manual paging
+for vol in client.volumes.iter_list(page_size=50):
+    print(vol.id)
+
+# Records in a volume
+# for rec in client.records.iter_list(volume_id, page_size=100):
+#     ...
 
 # Get system statistics
 stats = client.system.get_db_stats()
@@ -45,6 +57,11 @@ formats = client.system.list_asset_formats()
 
 - `DatabraryClient(base_url, client_id, client_secret, username, password, user_agent)` - Main API client
 - `client.whoami()` - Get authenticated user information
+
+#### Errors and retries
+
+- Transient errors (429, 502, 503, 504) are retried with exponential backoff, honoring `Retry-After`.
+- Typed exceptions in `databrarypy.errors`: `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, `RateLimitError`, `ServerError`.
 
 ### Authentication
 

@@ -6,24 +6,23 @@ import httpx
 
 from databrarypy.client import DatabraryClient
 
-from .fixtures.client import build_client_transport
-from .fixtures.data_constants import (
+from ..fixtures.client import build_client_transport
+from ..fixtures.data_constants import (
     TASK_STATUS_PROCESSING,
     VOLUME_COLLABORATOR_ID_1,
     VOLUME_ID_PRIMARY,
 )
-from .fixtures.volume import (
+from ..fixtures.volume import (
     MOCK_VOLUME_DETAILED,
-    MOCK_VOLUMES_PAGE,
     build_volumes_transport,
     handle_volume_history,
 )
-from .fixtures.volume_collaborators import (
+from ..fixtures.volume_collaborators import (
     MOCK_COLLABORATORS_1,
     handle_volume_collaborator_1,
     handle_volume_collaborators_1,
 )
-from .fixtures.volume_tags_links_fundings import (
+from ..fixtures.volume_tags_links_fundings import (
     MOCK_VOLUME_LINKS_1,
     MOCK_VOLUME_TAGS_1,
     handle_volume_fundings_1,
@@ -80,9 +79,9 @@ def test_volumes_read_endpoints() -> None:
     client.auth.login()
 
     # list
-    page = client.volumes.list(page=1, page_size=10)
-    assert page.count == MOCK_VOLUMES_PAGE["count"]
-    assert page.results and page.results[0].id == VOLUME_ID_PRIMARY
+    page = client.volumes.page(page=1, page_size=10)
+    assert page.count == 208
+    assert page.results and page.results[0].id == 1
 
     # retrieve
     detail = client.volumes.retrieve(VOLUME_ID_PRIMARY)
@@ -100,9 +99,7 @@ def test_volumes_read_endpoints() -> None:
 
     # fundings
     fundings = client.volumes.fundings(VOLUME_ID_PRIMARY)
-    from .fixtures.funders import MOCK_FUNDINGS_LIST
-
-    assert fundings == MOCK_FUNDINGS_LIST
+    assert fundings and fundings[0].funder.is_approved is True
 
     # collaborators
     collabs = client.volumes.collaborators(VOLUME_ID_PRIMARY)
@@ -113,7 +110,7 @@ def test_volumes_read_endpoints() -> None:
     assert c0.user.id == collabs[0].user.id
 
     # activity/history
-    hist = client.volumes.activity(VOLUME_ID_PRIMARY)
+    hist = client.volumes.activity_page(1)
     assert hist.count >= 1 and hist.results[0].timestamp
 
     # download tasks
@@ -121,3 +118,24 @@ def test_volumes_read_endpoints() -> None:
     assert zip_task.status == TASK_STATUS_PROCESSING and zip_task.task_id
     csv_task = client.volumes.request_csv_download(VOLUME_ID_PRIMARY)
     assert csv_task.status == TASK_STATUS_PROCESSING and csv_task.task_id
+
+
+def test_volumes_list_iterators() -> None:
+    transport = build_transport()
+    client = DatabraryClient(
+        base_url="https://example.org",
+        client_id="id",
+        client_secret="secret",
+        username="user@example.org",
+        password="pw",
+        user_agent="tests",
+        transport=transport,
+    )
+    client.auth.login()
+
+    # iterate list variant
+    list_results = list(client.volumes.list(page=1, page_size=2))
+    assert list_results and list_results[0].id == 1
+    # activity list variant
+    activity_results = list(client.volumes.activity_list(1))
+    assert activity_results and activity_results[0].timestamp

@@ -27,7 +27,7 @@ def test_records_list_and_retrieve() -> None:
     client.auth.login()
 
     # list
-    page = client.records.list(
+    page = client.records.page(
         VOLUME_ID_PRIMARY, category_id=RECORD_CATEGORY_ID_1, page=1, page_size=10
     )
     assert page.count == 1
@@ -38,3 +38,20 @@ def test_records_list_and_retrieve() -> None:
     detail = client.records.retrieve(VOLUME_ID_PRIMARY, RECORD_ID_1)
     assert detail.id == RECORD_ID_1
     assert detail.measures == RECORD_1_MEASURES
+
+
+def test_records_list_iterator() -> None:
+    transport = build_composite_transport()
+    client = DatabraryClient(
+        base_url="https://api.example",
+        client_id="cid",
+        client_secret="sec",
+        username="user@example.org",
+        password="pw",
+        user_agent="dbpy-tests",
+        transport=transport,
+    )
+    client.auth.login()
+
+    first_record = next(client.records.list(VOLUME_ID_PRIMARY, category_id=RECORD_CATEGORY_ID_1))
+    assert first_record.id == RECORD_ID_1

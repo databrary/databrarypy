@@ -36,8 +36,8 @@ def test_folders_list_retrieve_and_files() -> None:
     client.auth.login()
 
     # list
-    page = client.folders.list(VOLUME_ID_PRIMARY, page=1, page_size=10)
-    assert page.count == MOCK_FOLDERS_PAGE["count"]
+    page = client.folders.page(VOLUME_ID_PRIMARY, page=1, page_size=10)
+    assert page.count == 1
     assert page.results and page.results[0].id == FOLDER_ID_1
 
     # retrieve
@@ -46,8 +46,8 @@ def test_folders_list_retrieve_and_files() -> None:
     assert detail.release_level == MOCK_FOLDER_1["release_level"]
 
     # files list
-    files_page = client.folders.files(VOLUME_ID_PRIMARY, FOLDER_ID_1)
-    assert files_page.count == MOCK_FOLDER_1_FILES_PAGE["count"]
+    files_page = client.folders.files_page(VOLUME_ID_PRIMARY, FOLDER_ID_1)
+    assert files_page.count == 1
     f0 = files_page.results[0]
     assert f0.format and f0.format.mimetype == JPEG_MIMETYPE
 
@@ -70,3 +70,22 @@ def test_folders_list_retrieve_and_files() -> None:
     # request folder zip download (task)
     task = client.folders.request_zip_download(VOLUME_ID_PRIMARY, FOLDER_ID_1)
     assert task.status == TASK_STATUS_PROCESSING and task.task_id
+
+
+def test_folders_iterators() -> None:
+    transport = build_composite_transport()
+    client = DatabraryClient(
+        base_url="https://api.example",
+        client_id="cid",
+        client_secret="sec",
+        username="user@example.org",
+        password="pw",
+        user_agent="dbpy-tests",
+        transport=transport,
+    )
+    client.auth.login()
+
+    first_folder = next(client.folders.list(VOLUME_ID_PRIMARY))
+    assert first_folder.id == FOLDER_ID_1
+    first_file = next(client.folders.files_list(VOLUME_ID_PRIMARY, FOLDER_ID_1))
+    assert first_file.id == FOLDER_FILE_ID_1

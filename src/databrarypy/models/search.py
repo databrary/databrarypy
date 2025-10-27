@@ -17,9 +17,9 @@ class UserSearchResult(BaseModel):
     url: str | None = None
     is_authorized: bool
     has_avatar: bool
-    score: float | None = None
+    score: float
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
 
 class InstitutionSearchResult(BaseModel):
@@ -29,9 +29,9 @@ class InstitutionSearchResult(BaseModel):
     name: str
     url: str | None = None
     has_avatar: bool
-    score: float | None = None
+    score: float
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
 
 class VolumeOwner(BaseModel):
@@ -39,9 +39,10 @@ class VolumeOwner(BaseModel):
 
     user_id: int | None = None
     full_name: str | None = None
-    institution_name: str | None = None
+    institution_id: int
+    institution_name: str
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
 
 class VolumeSearchResult(BaseModel):
@@ -49,12 +50,12 @@ class VolumeSearchResult(BaseModel):
 
     id: int
     title: str
-    description: str
+    description: str | None = None
     owner: VolumeOwner
     tags: list[str] = Field(default_factory=list)
     file_types: list[str] = Field(default_factory=list)
-    has_session: bool
-    sharing_level: str | None = None
-    score: float | None = None
+    has_session: bool | None = None
+    sharing_level: str
+    score: float
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}

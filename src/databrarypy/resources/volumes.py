@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import builtins
-from typing import Any
+from typing import Iterator
 
 from ..models import (
     Page,
     VolumeActivityItem,
     VolumeCollaborator,
     VolumeDetail,
+    VolumeFundingRead,
     VolumeLink,
     VolumeListItem,
 )
@@ -20,7 +21,7 @@ from ._base import BaseResource
 class VolumesResource(BaseResource):
     """Resource for volume operations and relations (excluding sessions/downloads)."""
 
-    def list(
+    def page(
         self,
         *,
         search: str | None = None,
@@ -31,6 +32,18 @@ class VolumesResource(BaseResource):
         """List related volumes for the authenticated user (paginated)."""
         params = self.build_params(search=search, ordering=ordering, page=page, page_size=page_size)
         return self._get_page("/volumes/", params=params, parser=VolumeListItem.model_validate)
+
+    def list(
+        self,
+        *,
+        search: str | None = None,
+        ordering: str | None = None,
+        page: int | None = None,
+        page_size: int | None = None,
+    ) -> Iterator[VolumeListItem]:
+        """Iterate all volumes across pages yielding `VolumeListItem` objects."""
+        params = self.build_params(search=search, ordering=ordering, page=page, page_size=page_size)
+        return self.paginate_items("/volumes/", params=params, parser=VolumeListItem.model_validate)
 
     def retrieve(self, volume_id: int) -> VolumeDetail:
         """Retrieve full volume details by id."""
@@ -47,11 +60,11 @@ class VolumesResource(BaseResource):
         data = self._get_json(f"/volumes/{volume_id}/links/")
         return [VolumeLink.model_validate(item) for item in data]
 
-    def fundings(self, volume_id: int) -> builtins.list[dict[str, Any]]:
-        """List volume fundings (nested funder objects)."""
-        # Backend returns list of VolumeFundingSerializer; we parse nested on VolumeDetail
+    # Fundings
+    def fundings(self, volume_id: int) -> builtins.list[VolumeFundingRead]:
+        """List volume fundings (typed objects)."""
         data = self._get_json(f"/volumes/{volume_id}/fundings/")
-        return list(data)
+        return [VolumeFundingRead.model_validate(item) for item in data]
 
     def collaborators(self, volume_id: int) -> builtins.list[VolumeCollaborator]:
         """List collaborators visible to the current user for the volume."""
@@ -64,7 +77,7 @@ class VolumesResource(BaseResource):
         return VolumeCollaborator.model_validate(data)
 
     # Activity/history
-    def activity(
+    def activity_page(
         self,
         volume_id: int,
         *,
@@ -74,6 +87,21 @@ class VolumesResource(BaseResource):
         """List combined activity for a volume (sessions, folders, links, etc.)."""
         params = self.build_params(page=page, page_size=page_size)
         return self._get_page(
+            f"/volumes/{volume_id}/history/",
+            params=params,
+            parser=VolumeActivityItem.model_validate,
+        )
+
+    def activity_list(
+        self,
+        volume_id: int,
+        *,
+        page: int | None = None,
+        page_size: int | None = None,
+    ) -> Iterator[VolumeActivityItem]:
+        """Iterate combined activity for a volume across pages yielding `VolumeActivityItem`."""
+        params = self.build_params(page=page, page_size=page_size)
+        return self.paginate_items(
             f"/volumes/{volume_id}/history/",
             params=params,
             parser=VolumeActivityItem.model_validate,

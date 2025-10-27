@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import time
+from contextlib import suppress
 from dataclasses import dataclass
+from types import TracebackType
 
 import httpx
 
@@ -53,6 +55,7 @@ class OAuth2Client:
         self.user_agent = user_agent
         self._http = httpx.Client(base_url=self.base_url, timeout=timeout, transport=transport)
         self._token: OAuth2Token | None = None
+        self._closed = False
 
     def _request_token(self, data: dict[str, str]) -> OAuth2Token:
         """Request an OAuth2 token from the server.
@@ -71,6 +74,7 @@ class OAuth2Client:
             "Accept": "application/json",
             "Content-Type": "application/x-www-form-urlencoded",
         }
+        self._ensure_open()
         resp = self._http.post("/o/token/", data=data, headers=headers)
         if resp.is_error:
             raise RuntimeError(f"Token request failed {resp.status_code}: {resp.text}")
@@ -134,11 +138,41 @@ class OAuth2Client:
         Raises:
             RuntimeError: If not authenticated or token cannot be refreshed.
         """
+        self._ensure_open()
         if not self._token:
-            raise RuntimeError("Not authenticated. Call login_with_password() first.")
+            raise RuntimeError("Not authenticated. Call login() first to obtain a token.")
         if self._token.should_refresh:
             if self._token.refresh_token:
                 self.refresh()
             else:
                 raise RuntimeError("Access token expired and no refresh token.")
         return self._token.access_token
+
+    def close(self) -> None:
+        """Close the underlying HTTP client."""
+        if not self._closed:
+            self._http.close()
+            self._closed = True
+
+    def __enter__(self) -> "OAuth2Client":
+        """Enter the context manager, returning ``self``."""
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        """Exit the context manager and ensure the client is closed."""
+        self.close()
+
+    def __del__(self) -> None:
+        """Ensure the HTTP client is closed when garbage collected."""
+        with suppress(Exception):
+            self.close()
+
+    def _ensure_open(self) -> None:
+        """Raise if the OAuth2 client has been closed."""
+        if self._closed:
+            raise RuntimeError("OAuth2Client is closed.")

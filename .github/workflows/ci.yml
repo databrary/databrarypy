@@ -56,7 +56,7 @@ jobs:
         run: poetry run mypy src/
 
       - name: Run tests with coverage
-        run: poetry run pytest tests/ -v --cov=databrarypy --cov-report=term-missing --cov-report=json --cov-fail-under=80
+        run: poetry run pytest tests/unit/ -v --cov=databrarypy --cov-report=term-missing --cov-report=json --cov-fail-under=80
 
       - name: Check coverage threshold
         run: |

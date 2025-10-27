@@ -18,10 +18,11 @@ class Page(BaseModel, Generic[T]):
     results: list[T]
     total_pages: int | None = None
     current_page: int | None = None
+    page_size: int | None = None
     sort_by: str | None = None
     sort_order: str | None = None
 
     model_config = {
         "populate_by_name": True,
-        "extra": "ignore",
+        "extra": "forbid",
     }

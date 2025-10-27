@@ -24,29 +24,36 @@ class VolumePreview(BaseModel):
     short_name: str | None = None
     sharing_level: str
     coauthors: list[VolumeCoauthor] = Field(default_factory=list)
+    owner_connection: InstitutionSponsorship | None = None
+    owner_institution: Institution | None = None
+    access_level: str | None = None
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
 
 class VolumeListItem(BaseModel):
     """Volume list item (VolumeListSerializer)."""
 
     id: int
+    updated_at: object | None = None
+    created_at: object | None = None
     title: str
+    description: str | None = None
     short_name: str | None = None
     sharing_level: str
+    coauthors: list[VolumeCoauthor] = Field(default_factory=list)
     owner_connection: InstitutionSponsorship | None = None
     owner_institution: Institution | None = None
     access_level: str | None = None
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
 
 class VolumeDetail(VolumePreview):
     """Full VolumeSerializer subset used by client."""
 
     owner_connection: InstitutionSponsorship | None = None
-    owner_institution: Institution | None = None
+    owner_institution: Institution
     sharing_level: str
     fundings: list[VolumeFundingRead] = Field(default_factory=list)
     links: list[VolumeLink] = Field(default_factory=list)
@@ -62,7 +69,7 @@ class VolumeDetail(VolumePreview):
     file_counts: FileCounts | None = None
     thumbnail: File | None = None
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
 
 class VolumeCollaborator(BaseModel):
@@ -76,5 +83,6 @@ class VolumeCollaborator(BaseModel):
     is_publicly_visible: bool
     access_level: str
     expiration_date: object | None = None
+    sponsored_users: list[UserSlim] = Field(default_factory=list)
 
-    model_config = {"populate_by_name": True, "extra": "ignore"}
+    model_config = {"populate_by_name": True, "extra": "forbid"}

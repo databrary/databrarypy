@@ -12,7 +12,11 @@ from .data_constants import (
     USER_ID_OWNER,
 )
 from .factory import make_page
-from .institutions import MOCK_INSTITUTION_1_DETAILED, MOCK_INSTITUTION_2, MOCK_INSTITUTION_3
+from .institutions import (
+    MOCK_INSTITUTION_1_DETAILED,
+    MOCK_INSTITUTION_2,
+    MOCK_INSTITUTION_3,
+)
 
 MOCK_USER_1 = {
     "id": USER_ID_1,
@@ -41,7 +45,7 @@ def _get_mock_user_volumes_page_empty():
 
 
 def _get_mock_user_volumes_page():
-    from tests.fixtures.volume import _get_mock_volume_base
+    from .volume import _get_mock_volume_base
 
     # Create first volume with title "Vol1"
     volume_1 = _get_mock_volume_base().copy()
@@ -52,24 +56,6 @@ def _get_mock_user_volumes_page():
     volume_2.update({"id": 2, "title": "Vol2"})
 
     return make_page(results=[volume_1, volume_2], count=2)
-
-
-MOCK_USER_AFFILIATES_PAGE_EMPTY = make_page(results=[], count=0)
-
-
-MOCK_USER_SELF = {
-    **MOCK_USER_1,
-    "pending_institution_requests": [],
-    "pending_affiliate_requests": [],
-    "phone": None,
-    "totp_enrolled_at": None,
-    "finished_registration": True,
-    "has_api_access": True,
-    "current_affiliates": [],
-    "current_sponsors": [],
-    "is_suspended": False,
-    "suspended_by": None,
-}
 
 
 MOCK_USER_COAUTHOR = {
@@ -95,6 +81,44 @@ MOCK_USER_OWNER = {
     "orcid": "0000-0000-0000-0001",
     "url": "https://example.org/jjohnson",
     "has_avatar": True,
+}
+
+
+MOCK_PENDING_INSTITUTION_REQUEST_1 = {
+    "id": 3001,
+    "user": MOCK_USER_1,
+    "institution": MOCK_INSTITUTION_1_DETAILED,
+    "role": "investigator",
+    "status": "pending",
+    "created_at": "2025-06-01T00:00:00Z",
+    "updated_at": None,
+    "deleted_at": None,
+}
+
+
+MOCK_PENDING_AFFILIATE_REQUEST_1 = {
+    "id": 4001,
+    "requester": MOCK_USER_1,
+    "sponsor": MOCK_USER_OWNER,
+    "access_level": "read",
+    "status": "pending",
+    "created_at": "2025-06-01T00:00:00Z",
+    "updated_at": None,
+    "deleted_at": None,
+}
+
+
+MOCK_USER_SELF = {
+    **MOCK_USER_1,
+    "pending_institution_requests": [MOCK_PENDING_INSTITUTION_REQUEST_1],
+    "pending_affiliate_requests": [MOCK_PENDING_AFFILIATE_REQUEST_1],
+    "phone": None,
+    "finished_registration": True,
+    "has_api_access": True,
+    "current_affiliates": [],
+    "current_sponsors": [],
+    "is_suspended": False,
+    "suspended_by": None,
 }
 
 
@@ -129,26 +153,26 @@ MOCK_USER_6_AFFILIATE_ACTIVE = {
     "id": 201,
     "sponsor": MOCK_USER_1,
     "user": MOCK_USER_1,
-    "institution": {"id": 12, "name": "Penn State"},
+    "institution": MOCK_INSTITUTION_2,
     "access_level": "read",
     "has_databrary_affiliate_access": True,
     "sponsor_institution_connection": 1000,
     "expiration_date": "2099-01-01",
-    "created_at": None,
-    "updated_at": None,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-06-01T00:00:00Z",
 }
 
 MOCK_USER_6_AFFILIATE_EXPIRED = {
     "id": 202,
     "sponsor": MOCK_USER_1,
     "user": MOCK_USER_1,
-    "institution": {"id": 12, "name": "Penn State"},
+    "institution": MOCK_INSTITUTION_2,
     "access_level": "read",
     "has_databrary_affiliate_access": False,
     "sponsor_institution_connection": 1001,
     "expiration_date": "2000-01-01",
-    "created_at": None,
-    "updated_at": None,
+    "created_at": "1999-01-01T00:00:00Z",
+    "updated_at": "1999-06-01T00:00:00Z",
 }
 
 MOCK_USER_6_INSTITUTION_SPONSORS = []
@@ -177,12 +201,12 @@ def handle_user_volumes_user_2(request: httpx.Request) -> httpx.Response:
 
 
 def handle_user_affiliates_user_1(request: httpx.Request) -> httpx.Response:
+    # Backend returns a list directly (not paginated)
     include_expired = request.url.params.get("include_expired") == "true"
-    results = [MOCK_USER_6_AFFILIATE_ACTIVE]
+    items = [MOCK_USER_6_AFFILIATE_ACTIVE]
     if include_expired:
-        results.append(MOCK_USER_6_AFFILIATE_EXPIRED)
-    page = make_page(results=results, count=len(results))
-    return httpx.Response(200, json=page)
+        items.append(MOCK_USER_6_AFFILIATE_EXPIRED)
+    return httpx.Response(200, json=items)
 
 
 def handle_user_avatar_user_1(request: httpx.Request) -> httpx.Response:
