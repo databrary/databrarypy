@@ -99,7 +99,7 @@ def test_client_context_manager_closes_client():
 
 
 def test_client_from_env_success():
-    """Test successful client creation from environment variables."""
+    """Test successful client creation from environment variables with explicit BASE_URL."""
     env_vars = {
         "BASE_URL": "https://api.example.org",
         "CLIENT_ID": "test_client_id",
@@ -184,10 +184,10 @@ def test_client_from_env_with_login():
 
 
 def test_client_from_env_missing_required_vars():
-    """Test client creation fails with missing required environment variables."""
-    # Missing some required variables
+    """Test client creation fails with missing required environment variables (BASE_URL optional)."""
+    # Missing some required variables (BASE_URL is optional)
     env_vars = {
-        "BASE_URL": "https://api.example.org",
+        # No BASE_URL
         "CLIENT_ID": "test_client_id",
         "CLIENT_SECRET": "test_client_secret",
         # Missing USERNAME, PASSWORD, USER_AGENT
@@ -210,9 +210,9 @@ def test_client_from_env_empty_env_file():
 
 
 def test_client_from_env_with_none_values():
-    """Test client creation fails with None values in environment."""
+    """Test client creation fails with None values in environment (BASE_URL may be None)."""
     env_vars = {
-        "BASE_URL": None,
+        "BASE_URL": None,  # should fall back to default
         "CLIENT_ID": "test_client_id",
         "CLIENT_SECRET": "test_client_secret",
         "USERNAME": "test@example.org",
@@ -220,11 +220,9 @@ def test_client_from_env_with_none_values():
         "USER_AGENT": "test_agent",
     }
 
-    with (
-        patch("databrarypy.client.dotenv_values", return_value=env_vars),
-        pytest.raises(RuntimeError, match="Missing required configuration values"),
-    ):
-        DatabraryClient.from_env()
+    with patch("databrarypy.client.dotenv_values", return_value=env_vars):
+        client = DatabraryClient.from_env()
+        assert client.base_url == "https://api.databrary.org"
 
 
 def test_client_from_env_with_env_file_path():
