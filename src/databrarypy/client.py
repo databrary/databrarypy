@@ -36,6 +36,16 @@ class DatabraryClient:
     Attributes:
         auth: OAuth2Client for authentication management.
         system: SystemResource for system-wide operations.
+        search: SearchResource for searching across the API.
+        users: UsersResource for user management.
+        institutions: InstitutionsResource for institution operations.
+        volumes: VolumesResource for volume operations.
+        sessions: SessionsResource for session management.
+        folders: FoldersResource for folder operations.
+        records: RecordsResource for record management.
+        funders: FundersResource for funder information.
+        tags: TagsResource for tag operations.
+        categories: CategoriesResource for category management.
     """
 
     def __init__(
@@ -73,17 +83,23 @@ class DatabraryClient:
         self._normalize: Callable[[Any], Any] = (
             (lambda d: snake_keys(d)) if snake_case else (lambda d: d)
         )
-        self.system = SystemResource(self._http, self._headers, self._normalize)
-        self.search = SearchResource(self._http, self._headers, self._normalize)
-        self.users = UsersResource(self._http, self._headers, self._normalize)
-        self.institutions = InstitutionsResource(self._http, self._headers, self._normalize)
-        self.volumes = VolumesResource(self._http, self._headers, self._normalize)
-        self.sessions = SessionsResource(self._http, self._headers, self._normalize)
-        self.folders = FoldersResource(self._http, self._headers, self._normalize)
-        self.records = RecordsResource(self._http, self._headers, self._normalize)
-        self.funders = FundersResource(self._http, self._headers, self._normalize)
-        self.tags = TagsResource(self._http, self._headers, self._normalize)
-        self.categories = CategoriesResource(self._http, self._headers, self._normalize)
+        self.system: SystemResource = SystemResource(self._http, self._headers, self._normalize)
+        self.search: SearchResource = SearchResource(self._http, self._headers, self._normalize)
+        self.users: UsersResource = UsersResource(self._http, self._headers, self._normalize)
+        self.institutions: InstitutionsResource = InstitutionsResource(
+            self._http, self._headers, self._normalize
+        )
+        self.volumes: VolumesResource = VolumesResource(self._http, self._headers, self._normalize)
+        self.sessions: SessionsResource = SessionsResource(
+            self._http, self._headers, self._normalize
+        )
+        self.folders: FoldersResource = FoldersResource(self._http, self._headers, self._normalize)
+        self.records: RecordsResource = RecordsResource(self._http, self._headers, self._normalize)
+        self.funders: FundersResource = FundersResource(self._http, self._headers, self._normalize)
+        self.tags: TagsResource = TagsResource(self._http, self._headers, self._normalize)
+        self.categories: CategoriesResource = CategoriesResource(
+            self._http, self._headers, self._normalize
+        )
 
         # Apply retry configuration to all resources (attributes exist on BaseResource)
         for res in (
@@ -199,7 +215,7 @@ class DatabraryClient:
             RuntimeError: If required configuration values are missing.
         """
         env_values: dict[str, str | None] = (
-            dotenv_values() if env_file is None else dotenv_values(str(env_file))
+            dotenv_values(".env") if env_file is None else dotenv_values(str(env_file))
         )
 
         # Required settings (BASE_URL is optional and defaults to the public API)

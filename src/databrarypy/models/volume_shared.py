@@ -31,7 +31,7 @@ class Metric(BaseModel):
 
     id: int
     name: str
-    release: str
+    release: str | None = None
     type: str
     options: list[str] | None = None
     assumed: str | None = None

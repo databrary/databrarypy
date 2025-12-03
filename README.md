@@ -57,11 +57,12 @@ print(client.whoami().model_dump())
 Required keys expected in the `.env` file:
 
 ```bash
+BASE_URL=<base-url>
 CLIENT_ID=<client-id>
 CLIENT_SECRET=<client-secret>
 USERNAME=<username>
 PASSWORD=<password>
-USER_AGENT=<SECRET_USER_AGENT>
+USER_AGENT=<secret-user-agent>
 ```
 
 If your `.env` file lives elsewhere, pass its path explicitly:

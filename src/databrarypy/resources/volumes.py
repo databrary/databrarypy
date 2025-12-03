@@ -111,11 +111,11 @@ class VolumesResource(BaseResource):
     # Downloads (ZIP/CSV)
     # ---------------------------
     def request_zip_download(self, volume_id: int) -> ProcessingTask:
-        """Request async ZIP generation for a volume."""
+        """Request async ZIP generation for a volume. This task sends an email when complete."""
         payload = self._get_json(f"/volumes/{volume_id}/download-link/")
         return ProcessingTask.model_validate(payload)
 
     def request_csv_download(self, volume_id: int) -> ProcessingTask:
-        """Request async CSV generation for a volume."""
+        """Request async CSV generation for a volume. This task sends an email when complete."""
         payload = self._get_json(f"/volumes/{volume_id}/csv-download-link/")
         return ProcessingTask.model_validate(payload)

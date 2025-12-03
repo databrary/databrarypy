@@ -30,7 +30,7 @@ class Session(BaseModel):
     release_level: str
     created_at: object
     updated_at: object
-    source_date: str
+    source_date: str | None = None
     # The date of the session. Backend may return a structured dict or a blurred string constant.
     date: SessionDate | str | None = None
 

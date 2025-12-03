@@ -182,20 +182,6 @@ class BaseResource:
             data["results"] = [parser(item) for item in data.get("results", [])]
         return Page[T].model_validate(data)
 
-    def _get_page_url(
-        self,
-        url: str,
-        *,
-        parser: TypingCallable[[Any], T] | None = None,
-    ) -> Page[T]:
-        data = self._request_json(url=url)
-        if not isinstance(data, dict) or "count" not in data:
-            results = [] if not isinstance(data, dict) else data.get("results", [])
-            data = {"count": len(results), "next": None, "previous": None, "results": results}
-        if parser is not None:
-            data["results"] = [parser(item) for item in data.get("results", [])]
-        return Page[T].model_validate(data)
-
     # ---------------------------
     # Pagination helpers
     # ---------------------------
@@ -210,11 +196,7 @@ class BaseResource:
         yield page
         next_url = page.next
         while next_url:
-            # If next is absolute, use URL variant; otherwise, treat as path
-            if next_url.startswith("http://") or next_url.startswith("https://"):
-                page = self._get_page_url(next_url, parser=parser)
-            else:
-                page = self._get_page(next_url, parser=parser)
+            page = self._get_page(next_url, parser=parser)
             yield page
             next_url = page.next
 

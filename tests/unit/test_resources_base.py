@@ -228,14 +228,3 @@ def test_get_page_normalizes_missing_count():
     br = _br_with_transport(httpx.MockTransport(handler))
     page = br._get_page("/p1")
     assert page.count == 2 and page.results == [1, 2]
-
-
-def test_get_page_url_normalizes_when_dict_missing_count():
-    def handler(request: httpx.Request) -> httpx.Response:
-        if request.url.path.endswith("/abs"):
-            return httpx.Response(200, json={"results": ["a"]})
-        return httpx.Response(404)
-
-    br = _br_with_transport(httpx.MockTransport(handler))
-    page = br._get_page_url("https://api.example/abs")
-    assert page.count == 1 and page.results == ["a"]
