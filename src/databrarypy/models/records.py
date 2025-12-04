@@ -17,6 +17,9 @@ class Age(BaseModel):
 
     # The age in days. Example: 365 days.
     total_days: int | None = None
+    formatted_value: str | None = None
+    is_estimated: bool | None = None
+    is_blurred: bool | None = None
 
     model_config = {"populate_by_name": True, "extra": "forbid"}
 
