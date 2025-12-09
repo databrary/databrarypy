@@ -77,11 +77,11 @@ class BaseResource:
             try:
                 if path is not None:
                     path_s: str = path
-                    resp = self._http.get(path_s, params=params, headers=self._headers())
+                    resp = self._http.get(path_s, params=params, headers=self._headers(), follow_redirects=True)
                 else:
                     assert url is not None
                     url_s: str = url
-                    resp = self._http.get(url_s, headers=self._headers())
+                    resp = self._http.get(url_s, headers=self._headers(), follow_redirects=True)
             except (
                 httpx.HTTPError
             ) as exc:  # network-level errors, treat as retriable if attempts remain
