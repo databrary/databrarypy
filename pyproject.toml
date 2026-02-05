@@ -23,6 +23,7 @@ mypy = ">=1.11"
 pre-commit = ">=3.5"
 commitizen = ">=3.29"
 pdoc = ">=14"
+python-semantic-release = ">=9.0"
 
 [tool.ruff]
 line-length = 100
@@ -86,13 +87,63 @@ markers = [
 [tool.commitizen]
 name = "cz_conventional_commits"
 version = "0.0.1"
-tag_format = "v$version"
+tag_format = "$version"
 version_files = [
     "pyproject.toml:version",
     "src/databrarypy/__init__.py:__version__"
 ]
 update_changelog_on_bump = true
 major_version_zero = true
+bump_pattern = "^(break|feat|fix|refactor)"
+bump_map = {"break" = "MAJOR", "feat" = "MINOR", "fix" = "PATCH", "refactor" = "PATCH"}
+commit_types = [
+    {name = "feat", description = "A new feature"},
+    {name = "fix", description = "A bug fix"},
+    {name = "docs", description = "Documentation only changes"},
+    {name = "style", description = "Changes that do not affect the meaning of the code"},
+    {name = "refactor", description = "A code change that neither fixes a bug nor adds a feature"},
+    {name = "perf", description = "A code change that improves performance"},
+    {name = "test", description = "Adding missing tests or correcting existing tests"},
+    {name = "build", description = "Changes that affect the build system or external dependencies"},
+    {name = "ci", description = "Changes to our CI configuration files and scripts"},
+    {name = "chore", description = "Other changes that don't modify src or test files"},
+    {name = "revert", description = "Reverts a previous commit"},
+    {name = "cleanup", description = "Code cleanup"}
+]
+commit_regex = "^(build|ci|docs|feat|fix|perf|refactor|style|test|chore|revert|bump|cleanup)(\\(\\S+\\))?!?: (.+)$"
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:tool.poetry.version"]
+version_variables = ["src/databrarypy/__init__.py:__version__"]
+branch = "main"
+build_command = "poetry build"
+commit_message = "chore(release): {version} [skip ci]"
+tag_format = "{version}"
+
+[tool.semantic_release.changelog]
+changelog_file = "CHANGELOG.md"
+exclude_commit_patterns = [
+    "^chore\\(release\\):",
+    "^Merge",
+]
+
+[tool.semantic_release.branches.main]
+match = "main"
+prerelease = false
+
+[tool.semantic_release.branches.staging]
+match = "staging"
+prerelease = true
+prerelease_token = "stg"
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = ["build", "chore", "ci", "docs", "feat", "fix", "perf", "refactor", "style", "test", "revert", "cleanup"]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf", "refactor"]
+
+[tool.semantic_release.remote]
+type = "github"
+token = { env = "GH_TOKEN" }
 
 [build-system]
 requires = ["poetry-core>=1.9.0"]
