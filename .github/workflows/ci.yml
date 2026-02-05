@@ -2,7 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [main, staging, development]
+    branches:
+      - main
+      - staging
+      - development
+      - feature/DAT-1480  # TEMPORARY - remove after testing
   pull_request:
     # Run on all pull requests
 
