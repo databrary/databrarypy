@@ -1,0 +1,177 @@
+"""Sessions fixtures and mock handlers (including nested files)."""
+
+from __future__ import annotations
+
+import httpx
+
+from .client import build_client_transport
+from .common import build_transport
+from .data_constants import TASK_STATUS_PROCESSING, VOLUME_ID_PRIMARY
+from .factory import make_page
+
+# ---- IDs ----
+SESSION_ID_1 = 101
+SESSION_FILE_ID_1 = 1001
+
+
+def _get_mock_session_1():
+    return {
+        "id": SESSION_ID_1,
+        "name": "Session A",
+        "volume": VOLUME_ID_PRIMARY,
+        "release_level": "public",
+        "created_at": "2025-06-01T12:00:00Z",
+        "updated_at": "2025-06-01T12:30:00Z",
+        "source_date": "2025-05-31",
+        "date": {"year": 2025, "month": 5, "day": 31},
+        "file_count": 1,
+        "accessible_file_count": 1,
+        "has_full_access": True,
+        "contains_different_release_levels": False,
+    }
+
+
+def _get_mock_session_1_file():
+    return {
+        "id": SESSION_FILE_ID_1,
+        "name": "Video 1.mp4",
+        "uploader": {"id": 6, "first_name": "Alex", "last_name": "Doe"},
+        "created_at": "2025-06-01T12:05:00Z",
+        "updated_at": "2025-06-01T12:06:00Z",
+        "upload": {"status": "completed"},
+        "records": [],
+        "release_level": "public",
+        # Parsed into Format model by pydantic
+        "format": {
+            "id": 1,
+            "mimetype": "video/mp4",
+            "name": "MP4",
+            "extensions": [".mp4"],
+        },
+        "source_date": "2025-05-31",
+        "date": {"year": 2025, "month": 5, "day": 31},
+        "sha1": "abc123",
+        "size": 123456,
+        "volume": VOLUME_ID_PRIMARY,
+        "folder": None,
+        "session": SESSION_ID_1,
+        "mime_type": "video/mp4",
+        "transcoded_file": {
+            "id": 2001,
+            "name": "Video 1 (HLS)",
+            "format": {"name": "HLS", "mimetype": "application/vnd.apple.mpegurl"},
+            "sha1": None,
+        },
+        "has_full_access": True,
+        "thumbnail_url": "https://cdn.example/thumb.jpg",
+    }
+
+
+# ---- Paged payloads ----
+def _get_mock_sessions_page():
+    return make_page(results=[_get_mock_session_1()], count=1)
+
+
+def _get_mock_session_1_files_page():
+    return make_page(results=[_get_mock_session_1_file()], count=1)
+
+
+# ---- Handlers ----
+def handle_sessions_list(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, json=_get_mock_sessions_page())
+
+
+def handle_session_detail(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, json=_get_mock_session_1())
+
+
+def handle_session_files_list(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, json=_get_mock_session_1_files_page())
+
+
+def handle_session_file_detail(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, json=_get_mock_session_1_file())
+
+
+# ---- Downloads ----
+def handle_session_file_download_link(request: httpx.Request) -> httpx.Response:
+    payload = {
+        "download_url": "/dl/session-file.bin?token=abc",
+        "expires_at": "2030-01-01T00:00:00Z",
+        "file_name": "Video 1.mp4",
+        "file_size": 123456,
+    }
+    return httpx.Response(200, json=payload)
+
+
+SESSION_FILE_BINARY_CONTENT = b"SESSION_FILE_CONTENT"
+SESSION_FILE_DEFAULT_NAME = "Video 1.mp4"
+
+
+def handle_session_file_binary(request: httpx.Request) -> httpx.Response:
+    # Respond with Content-Disposition to exercise header-based filename
+    headers = {"content-disposition": f'attachment; filename="{SESSION_FILE_DEFAULT_NAME}"'}
+    return httpx.Response(200, content=SESSION_FILE_BINARY_CONTENT, headers=headers)
+
+
+def handle_session_zip_download_link(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(
+        200, json={"status": TASK_STATUS_PROCESSING, "message": None, "task_id": "zip-session-1"}
+    )
+
+
+def handle_session_csv_download_link(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(
+        200, json={"status": TASK_STATUS_PROCESSING, "message": None, "task_id": "csv-session-1"}
+    )
+
+
+def build_sessions_transport():
+    return build_transport(
+        ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/sessions/", handle_sessions_list),
+        (
+            "GET",
+            f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/",
+            handle_session_detail,
+        ),
+        (
+            "GET",
+            f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/files/",
+            handle_session_files_list,
+        ),
+        (
+            "GET",
+            f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/files/{SESSION_FILE_ID_1}/",
+            handle_session_file_detail,
+        ),
+        (
+            "GET",
+            f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/files/{SESSION_FILE_ID_1}/download-link/",
+            handle_session_file_download_link,
+        ),
+        ("GET", "/dl/session-file.bin", handle_session_file_binary),
+        (
+            "GET",
+            f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/download-link/",
+            handle_session_zip_download_link,
+        ),
+        (
+            "GET",
+            f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/csv-download-link/",
+            handle_session_csv_download_link,
+        ),
+    )
+
+
+def build_composite_transport():
+    """Composite transport with auth and sessions routes."""
+    client_transport = build_client_transport()
+    sessions_transport = build_sessions_transport()
+
+    def router(request: httpx.Request) -> httpx.Response:
+        key = (request.method, request.url.path)
+        if key in {("POST", "/o/token/"), ("GET", "/oauth2/test/")}:
+            return client_transport.handle_request(request)
+        return sessions_transport.handle_request(request)
+
+    return httpx.MockTransport(router)

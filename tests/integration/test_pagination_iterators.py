@@ -1,0 +1,40 @@
+from __future__ import annotations
+
+import pytest
+from tests.conftest import collect_items, first_list_item
+
+from databrarypy.client import DatabraryClient
+
+
+def test_iterate_volumes_users_and_records(client: DatabraryClient):
+    # Volumes iterator yields at least first page size
+    first_page = client.volumes.page(page=1, page_size=5)
+    first_items = list(first_page.results)
+    seen = collect_items(client.volumes.list(page=1, page_size=5), limit=10)
+
+    first_ids = {item.id for item in first_items}
+    seen_ids = {item.id for item in seen}
+
+    assert first_ids.issubset(seen_ids)
+
+    # Users iterator basic smoke
+    # list(...) returns a generator across pages; collect_items gathers up to the limit into a list
+    u_first = client.users.page(page=1, page_size=5)
+    u_first_items = list(u_first.results)
+    u_seen = collect_items(client.users.list(page=1, page_size=5), limit=10)
+    u_first_ids = {item.id for item in u_first_items}
+    u_seen_ids = {item.id for item in u_seen}
+    assert u_first_ids.issubset(u_seen_ids)
+
+    # Records iterator for first available volume
+    next_element = first_list_item(first_page.results)
+    if next_element is None:
+        pytest.skip("No volumes available to test records")
+    vid = next_element.id
+    # list(...) returns a generator across pages; collect_items gathers up to the limit into a list
+    r_first = client.records.page(vid, page=1, page_size=2)
+    r_first_items = list(r_first.results)
+    r_seen = collect_items(client.records.list(vid, page=1, page_size=2), limit=5)
+    r_first_ids = {item.id for item in r_first_items}
+    r_seen_ids = {item.id for item in r_seen}
+    assert r_first_ids.issubset(r_seen_ids)
