@@ -33,4 +33,4 @@ __all__ = [
     "VolumesResource",
 ]
 
-__version__ = "0.0.1"
+__version__ = "0.1.0-dev.1"
