@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - staging
+      - feature/DAT-1480  # TEMPORARY - remove after testing
 
 jobs:
   release:

@@ -136,6 +136,12 @@ match = "staging"
 prerelease = true
 prerelease_token = "stg"
 
+# TEMPORARY - remove after testing
+[tool.semantic_release.branches.feature-test]
+match = "feature/DAT-1480"
+prerelease = true
+prerelease_token = "test"
+
 [tool.semantic_release.commit_parser_options]
 allowed_tags = ["build", "chore", "ci", "docs", "feat", "fix", "perf", "refactor", "style", "test", "revert", "cleanup"]
 minor_tags = ["feat"]
