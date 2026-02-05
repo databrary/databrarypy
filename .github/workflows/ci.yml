@@ -5,10 +5,16 @@ on:
     branches:
       - main
       - staging
-      - development
       - feature/DAT-1480  # TEMPORARY - remove after testing
   pull_request:
-    # Run on all pull requests
+    branches:
+      - main
+      - staging
+      - development
+
+permissions:
+  contents: write
+  id-token: write
 
 jobs:
   lint-and-test:
@@ -74,3 +80,57 @@ jobs:
           else
             echo "✅ Coverage is above 90% (${COVERAGE}%)"
           fi
+
+  release:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    # Only run on push (not PRs), and skip release commits
+    if: >
+      github.event_name == 'push' &&
+      !contains(github.event.head_commit.message, '[skip ci]')
+
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: false
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.8.3
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-3.12-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      - name: Install project
+        run: poetry install --no-interaction
+
+      - name: Python Semantic Release
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          poetry run semantic-release version
+          poetry run semantic-release publish
