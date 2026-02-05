@@ -116,16 +116,17 @@ commit_regex = "^(build|ci|docs|feat|fix|perf|refactor|style|test|chore|revert|b
 version_toml = ["pyproject.toml:tool.poetry.version"]
 version_variables = ["src/databrarypy/__init__.py:__version__"]
 branch = "main"
-build_command = "poetry build"
 commit_message = "chore(release): {version} [skip ci]"
 tag_format = "{version}"
 
 [tool.semantic_release.changelog]
-changelog_file = "CHANGELOG.md"
 exclude_commit_patterns = [
     "^chore\\(release\\):",
     "^Merge",
 ]
+
+[tool.semantic_release.changelog.default_templates]
+changelog_file = "CHANGELOG.md"
 
 [tool.semantic_release.branches.main]
 match = "main"
@@ -134,13 +135,13 @@ prerelease = false
 [tool.semantic_release.branches.staging]
 match = "staging"
 prerelease = true
-prerelease_token = "stg"
+prerelease_token = "rc"
 
 # TEMPORARY - remove after testing
 [tool.semantic_release.branches.feature-test]
 match = "feature/DAT-1480"
 prerelease = true
-prerelease_token = "test"
+prerelease_token = "dev"
 
 [tool.semantic_release.commit_parser_options]
 allowed_tags = ["build", "chore", "ci", "docs", "feat", "fix", "perf", "refactor", "style", "test", "revert", "cleanup"]
