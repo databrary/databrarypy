@@ -3,6 +3,12 @@
 A Python client library for interacting with the Databrary API.
 """
 
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("databrarypy")
+except PackageNotFoundError:
+    __version__ = "0.0.0.dev0"
 from .client import DatabraryClient
 from .resources import (
     CategoriesResource,
@@ -32,5 +38,3 @@ __all__ = [
     "UsersResource",
     "VolumesResource",
 ]
-
-__version__ = "0.1.0-dev.1"

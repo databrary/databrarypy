@@ -32,7 +32,6 @@ def test_sessions_list_retrieve_and_files() -> None:
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=transport,
     )
     client.auth.login()
@@ -88,7 +87,6 @@ def test_sessions_iterators() -> None:
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=transport,
     )
     client.auth.login()

@@ -8,7 +8,6 @@ A typed Python client for the Databrary API, built on httpx and pydantic. It pro
 ## Onboarding & requirements
 
 - Request API access for your account from an admin.
-- Obtain your secret User-Agent string from an admin
 - Create an OAuth2 client in your web profile to get `client_id` and `client_secret` (store the secret safely).
 - The token endpoint (`/o/token/`) follows OAuth2 with a password grant and returns snake_case fields; application endpoints mostly return camelCase keys. This client normalizes response keys to snake_case by default (`snake_case=True`).
 
@@ -25,14 +24,12 @@ poetry install
 ```python
 from databrarypy import DatabraryClient
 
-# user_agent must be your secret UA string provided by an admin
 client = DatabraryClient(
     base_url="https://api.databrary.org",
     client_id="<client-id>",
     client_secret="<client-secret>",
     username="<username>",
     password="<password>",
-    user_agent="<SECRET_USER_AGENT>",
 )
 client.auth.login()
 
@@ -62,8 +59,9 @@ CLIENT_ID=<client-id>
 CLIENT_SECRET=<client-secret>
 USERNAME=<username>
 PASSWORD=<password>
-USER_AGENT=<secret-user-agent>
 ```
+
+The User-Agent is set automatically to `databrarypy/<version>`.
 
 If your `.env` file lives elsewhere, pass its path explicitly:
 

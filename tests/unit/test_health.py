@@ -38,7 +38,6 @@ def test_health_true():
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=build_health_transport(ok=True),
     )
     client.auth.login()
@@ -52,7 +51,6 @@ def test_health_false():
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=build_health_transport(ok=False),
     )
     client.auth.login()

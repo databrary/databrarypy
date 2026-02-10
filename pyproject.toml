@@ -86,11 +86,11 @@ markers = [
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.0.1"
+version = "0.1.0-dev.1"
 tag_format = "$version"
 version_files = [
-    "pyproject.toml:version",
-    "src/databrarypy/__init__.py:__version__"
+    "pyproject.toml:tool.poetry.version",
+    "pyproject.toml:tool.commitizen.version",
 ]
 update_changelog_on_bump = true
 major_version_zero = true
@@ -114,7 +114,6 @@ commit_regex = "^(build|ci|docs|feat|fix|perf|refactor|style|test|chore|revert|b
 
 [tool.semantic_release]
 version_toml = ["pyproject.toml:tool.poetry.version"]
-version_variables = ["src/databrarypy/__init__.py:__version__"]
 branch = "main"
 commit_message = "chore(release): {version} [skip ci]"
 tag_format = "{version}"

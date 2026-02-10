@@ -15,7 +15,6 @@ def test_get_db_stats():
         client_secret="secret",
         username="user@example.org",
         password="pw",
-        user_agent="test",
         transport=transport,
     )
 
@@ -40,7 +39,6 @@ def test_list_asset_formats():
         client_secret="secret",
         username="user@example.org",
         password="pw",
-        user_agent="test",
         transport=transport,
     )
 
@@ -85,7 +83,6 @@ def test_get_supported_file_types():
         client_secret="secret",
         username="user@example.org",
         password="pw",
-        user_agent="test",
         transport=transport,
     )
 
@@ -117,7 +114,6 @@ def test_get_permission_and_release_levels():
         client_secret="secret",
         username="user@example.org",
         password="pw",
-        user_agent="test",
         transport=transport,
     )
 
@@ -141,7 +137,6 @@ def test_is_healthy_true_and_false():
         client_secret="secret",
         username="user@example.org",
         password="pw",
-        user_agent="test",
         transport=transport,
     )
 
@@ -164,7 +159,6 @@ def test_is_healthy_true_and_false():
         client_secret="secret",
         username="user@example.org",
         password="pw",
-        user_agent="test",
         transport=failing_transport,
     )
     client_fail.auth.login()
@@ -183,7 +177,6 @@ def test_is_healthy_true_and_false():
         client_secret="secret",
         username="user@example.org",
         password="pw",
-        user_agent="test",
         transport=exc_transport,
     )
     client_exc.auth.login()
