@@ -19,7 +19,6 @@ def test_client_initialization_and_whoami():
         client_secret="secret",
         username="user@example.org",
         password="pw",
-        user_agent="test",
         transport=transport,
     )
 
@@ -41,7 +40,6 @@ def test_client_requires_open_state_for_headers():
         client_secret="secret",
         username="user@example.org",
         password="pw",
-        user_agent="test",
         transport=transport,
     )
 
@@ -60,7 +58,6 @@ def test_client_close_is_idempotent():
         client_secret="secret",
         username="user@example.org",
         password="pw",
-        user_agent="test",
         transport=transport,
     )
 
@@ -85,7 +82,6 @@ def test_client_context_manager_closes_client():
         client_secret="secret",
         username="user@example.org",
         password="pw",
-        user_agent="test",
         transport=transport,
     )
 
@@ -98,6 +94,21 @@ def test_client_context_manager_closes_client():
     assert client._closed is True
 
 
+def test_client_default_user_agent():
+    """Client uses databrarypy/<version> as User-Agent."""
+    transport = build_client_transport()
+    client = DatabraryClient(
+        base_url="https://api.example.org",
+        client_id="cid",
+        client_secret="secret",
+        username="user@example.org",
+        password="pw",
+        transport=transport,
+    )
+    assert client.user_agent.startswith("databrarypy/")
+    assert "/" in client.user_agent
+
+
 def test_client_from_env_success():
     """Test successful client creation from environment variables with explicit BASE_URL."""
     env_vars = {
@@ -106,7 +117,6 @@ def test_client_from_env_success():
         "CLIENT_SECRET": "test_client_secret",
         "USERNAME": "test@example.org",
         "PASSWORD": "test_password",
-        "USER_AGENT": "test_agent",
     }
 
     with patch("databrarypy.client.dotenv_values", return_value=env_vars):
@@ -114,7 +124,7 @@ def test_client_from_env_success():
 
         # Test that the client is created with the correct attributes
         assert client.base_url == "https://api.example.org"
-        assert client.user_agent == "test_agent"
+        assert client.user_agent.startswith("databrarypy/")
         assert client.auth.client_id == "test_client_id"
         assert client.auth.client_secret == "test_client_secret"
         assert client.auth.username == "test@example.org"
@@ -129,7 +139,6 @@ def test_client_from_env_with_custom_params():
         "CLIENT_SECRET": "test_client_secret",
         "USERNAME": "test@example.org",
         "PASSWORD": "test_password",
-        "USER_AGENT": "test_agent",
     }
 
     transport = build_client_transport()
@@ -148,7 +157,7 @@ def test_client_from_env_with_custom_params():
 
         # Test that the client is created with the correct attributes
         assert client.base_url == "https://api.example.org"
-        assert client.user_agent == "test_agent"
+        assert client.user_agent.startswith("databrarypy/")
         assert client.auth.client_id == "test_client_id"
         assert client.auth.client_secret == "test_client_secret"
         assert client.auth.username == "test@example.org"
@@ -169,7 +178,6 @@ def test_client_from_env_with_login():
         "CLIENT_SECRET": "test_client_secret",
         "USERNAME": "test@example.org",
         "PASSWORD": "test_password",
-        "USER_AGENT": "test_agent",
     }
 
     with (
@@ -190,7 +198,7 @@ def test_client_from_env_missing_required_vars():
         # No BASE_URL
         "CLIENT_ID": "test_client_id",
         "CLIENT_SECRET": "test_client_secret",
-        # Missing USERNAME, PASSWORD, USER_AGENT
+        # Missing USERNAME, PASSWORD
     }
 
     with (
@@ -217,12 +225,25 @@ def test_client_from_env_with_none_values():
         "CLIENT_SECRET": "test_client_secret",
         "USERNAME": "test@example.org",
         "PASSWORD": "test_password",
-        "USER_AGENT": "test_agent",
     }
 
     with patch("databrarypy.client.dotenv_values", return_value=env_vars):
         client = DatabraryClient.from_env()
         assert client.base_url == "https://api.databrary.org"
+
+
+def test_client_from_env_uses_default_user_agent():
+    """from_env uses databrarypy/<version> as User-Agent."""
+    env_vars = {
+        "BASE_URL": "https://api.example.org",
+        "CLIENT_ID": "test_client_id",
+        "CLIENT_SECRET": "test_client_secret",
+        "USERNAME": "test@example.org",
+        "PASSWORD": "test_password",
+    }
+    with patch("databrarypy.client.dotenv_values", return_value=env_vars):
+        client = DatabraryClient.from_env()
+        assert client.user_agent.startswith("databrarypy/")
 
 
 def test_client_from_env_with_env_file_path():
@@ -233,7 +254,6 @@ def test_client_from_env_with_env_file_path():
         "CLIENT_SECRET": "test_client_secret",
         "USERNAME": "test@example.org",
         "PASSWORD": "test_password",
-        "USER_AGENT": "test_agent",
     }
 
     with patch("databrarypy.client.dotenv_values") as mock_dotenv:

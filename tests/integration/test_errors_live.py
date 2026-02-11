@@ -21,7 +21,6 @@ def test_rate_limit_on_csv_download_raises(client: DatabraryClient):
         client_secret=client.auth.client_secret,
         username=client.auth.username,
         password=client.auth.password,
-        user_agent=client.user_agent,
         transport=client.auth._http._transport,  # reuse transport to keep session
         max_retries=0,
     )

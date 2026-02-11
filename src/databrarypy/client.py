@@ -9,6 +9,8 @@ from typing import Any
 import httpx
 from dotenv import dotenv_values
 
+from databrarypy import __version__
+
 from .auth import OAuth2Client
 from .models import WhoAmI
 from .resources import (
@@ -55,7 +57,6 @@ class DatabraryClient:
         client_secret: str,
         username: str,
         password: str,
-        user_agent: str,
         *,
         timeout: float = 30.0,
         transport: httpx.BaseTransport | None = None,
@@ -66,14 +67,14 @@ class DatabraryClient:
         backoff_jitter: float = 0.25,
     ) -> None:
         self.base_url = base_url.rstrip("/")
-        self.user_agent = user_agent
+        self.user_agent = f"databrarypy/{__version__}"
         self.auth = OAuth2Client(
             base_url=self.base_url,
             client_id=client_id,
             client_secret=client_secret,
             username=username,
             password=password,
-            user_agent=user_agent,
+            user_agent=self.user_agent,
             timeout=timeout,
             transport=transport,
         )
@@ -218,13 +219,12 @@ class DatabraryClient:
             dotenv_values(".env") if env_file is None else dotenv_values(str(env_file))
         )
 
-        # Required settings (BASE_URL is optional and defaults to the public API)
+        # Required settings (BASE_URL is optional)
         required_settings: dict[str, str] = {
             "client_id": "CLIENT_ID",
             "client_secret": "CLIENT_SECRET",
             "username": "USERNAME",
             "password": "PASSWORD",
-            "user_agent": "USER_AGENT",
         }
         resolved = {name: env_values.get(key) for name, key in required_settings.items()}
         missing = [name for name, value in resolved.items() if value is None]
@@ -241,7 +241,6 @@ class DatabraryClient:
             client_secret=resolved_str["client_secret"],
             username=resolved_str["username"],
             password=resolved_str["password"],
-            user_agent=resolved_str["user_agent"],
             timeout=timeout,
             transport=transport,
             snake_case=snake_case,

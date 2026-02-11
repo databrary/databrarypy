@@ -13,7 +13,6 @@ def test_funders_list_and_retrieve():
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=transport,
     )
     client.auth.login()
@@ -50,7 +49,6 @@ def test_funders_list_include_all_param_only_when_true():
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=transport,
     )
     client.auth.login()
