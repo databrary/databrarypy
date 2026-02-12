@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from pydantic import BaseModel, Field
 
 from .affiliate_requests import AffiliateAccessRequest
@@ -28,6 +30,10 @@ class UserSlim(BaseModel):
     current_sponsors: list["UserSlim"] = Field(default_factory=list)
     is_suspended: bool = Field(default=False)
     suspended_by: SuspendedBy | None = None
+    totp_enrolled_at: datetime | None = Field(
+        default=None,
+        description="Timestamp when user completed TOTP enrollment. Null means not enrolled.",
+    )
 
     model_config = {
         "populate_by_name": True,

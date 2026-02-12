@@ -17,7 +17,6 @@ def test_users_list_and_retrieve():
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=transport,
     )
     client.auth.login()
@@ -64,7 +63,6 @@ def test_users_affiliates_with_params():
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=transport,
     )
     client.auth.login()
@@ -83,7 +81,6 @@ def test_users_list_with_filters_and_volumes():
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=transport,
     )
     client.auth.login()
@@ -110,7 +107,6 @@ def test_users_activity_list():
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=transport,
     )
     client.auth.login()
@@ -130,7 +126,6 @@ def test_users_iterators():
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=transport,
     )
     client.auth.login()

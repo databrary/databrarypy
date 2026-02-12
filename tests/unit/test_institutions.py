@@ -15,7 +15,6 @@ def test_institutions_list():
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=transport,
     )
     client.auth.login()
@@ -50,7 +49,6 @@ def test_institutions_list_empty_and_retrieve():
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=transport,
     )
     client.auth.login()
@@ -70,7 +68,6 @@ def test_institutions_params_and_avatar_404():
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=transport,
     )
     client.auth.login()
@@ -88,7 +85,6 @@ def test_institutions_list_iterator():
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=transport,
     )
     client.auth.login()

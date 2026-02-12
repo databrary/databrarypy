@@ -73,7 +73,6 @@ def test_volumes_read_endpoints() -> None:
         client_secret="secret",
         username="user@example.org",
         password="pw",
-        user_agent="tests",
         transport=transport,
     )
     client.auth.login()
@@ -128,7 +127,6 @@ def test_volumes_list_iterators() -> None:
         client_secret="secret",
         username="user@example.org",
         password="pw",
-        user_agent="tests",
         transport=transport,
     )
     client.auth.login()

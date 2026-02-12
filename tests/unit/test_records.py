@@ -21,7 +21,6 @@ def test_records_list_and_retrieve() -> None:
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=transport,
     )
     client.auth.login()
@@ -48,7 +47,6 @@ def test_records_list_iterator() -> None:
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=transport,
     )
     client.auth.login()

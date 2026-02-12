@@ -13,7 +13,6 @@ def test_tags_list_and_retrieve():
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=transport,
     )
     client.auth.login()
@@ -36,7 +35,6 @@ def test_tags_list_iterator():
         client_secret="sec",
         username="user@example.org",
         password="pw",
-        user_agent="dbpy-tests",
         transport=transport,
     )
     client.auth.login()
