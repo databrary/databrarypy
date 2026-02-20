@@ -181,7 +181,7 @@ class SessionsResource(BaseResource):
         record_id: int,
     ) -> dict[str, Any]:
         """Assign a record to a session file (idempotent)."""
-        path = f"/volumes/{volume_id}/sessions/{session_id}" f"/files/{file_id}/assign-record/"
+        path = f"/volumes/{volume_id}/sessions/{session_id}/files/{file_id}/assign-record/"
         data = self._post_json(path, json={"record_id": record_id})
         return data  # type: ignore[no-any-return]
 
@@ -193,6 +193,6 @@ class SessionsResource(BaseResource):
         record_id: int,
     ) -> dict[str, Any]:
         """Remove the association between a record and a session file."""
-        path = f"/volumes/{volume_id}/sessions/{session_id}" f"/files/{file_id}/unassign-record/"
+        path = f"/volumes/{volume_id}/sessions/{session_id}/files/{file_id}/unassign-record/"
         data = self._post_json(path, json={"record_id": record_id})
         return data  # type: ignore[no-any-return]

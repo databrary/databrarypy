@@ -161,16 +161,14 @@ def handle_unassign_record(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, json={"record_id": body["record_id"], "status": "unassigned"})
 
 
-_MEASURE_PATH = (
-    f"/volumes/{VOLUME_ID_PRIMARY}/records/{RECORD_ID_1}" f"/measures/{METRIC_ID_OPTIONAL}/"
-)
+_MEASURE_PATH = f"/volumes/{VOLUME_ID_PRIMARY}/records/{RECORD_ID_1}/measures/{METRIC_ID_OPTIONAL}/"
 
 _ASSIGN_PATH = (
-    f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}" f"/files/{FILE_ID_1}/assign-record/"
+    f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/files/{FILE_ID_1}/assign-record/"
 )
 
 _UNASSIGN_PATH = (
-    f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}" f"/files/{FILE_ID_1}/unassign-record/"
+    f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/files/{FILE_ID_1}/unassign-record/"
 )
 
 

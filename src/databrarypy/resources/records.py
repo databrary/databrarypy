@@ -133,7 +133,7 @@ class RecordsResource(BaseResource):
         metric_id = self._get_priority_metric_id(volume_id, category_id)
         if metric_id is None:
             raise ValueError(
-                f"Cannot resolve name metric for category {category_id} " f"in volume {volume_id}"
+                f"Cannot resolve name metric for category {category_id} in volume {volume_id}"
             )
 
         merged_measures = dict(measures) if measures else {}
