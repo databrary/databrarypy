@@ -35,3 +35,51 @@ class Record(BaseModel):
     age: Age | None = None
 
     model_config = {"populate_by_name": True, "extra": "forbid"}
+
+
+# ---------------------------------------------------------------------------
+# Write-side models
+# ---------------------------------------------------------------------------
+
+
+class BirthdayInput(BaseModel):
+    """Birthday date components for participant record creation/update."""
+
+    year: int
+    month: int
+    day: int
+
+    model_config = {"extra": "forbid"}
+
+
+class AgeInput(BaseModel):
+    """Age components for participant record creation/update."""
+
+    years: int = 0
+    months: int = 0
+    days: int = 0
+
+    model_config = {"extra": "forbid"}
+
+
+class ParticipantInput(BaseModel):
+    """Participant-specific fields (birthday xor age) for create/update.
+
+    Only one of ``birthday`` or ``age`` should be provided.
+    """
+
+    birthday: BirthdayInput | None = None
+    age: AgeInput | None = None
+
+    model_config = {"extra": "forbid"}
+
+
+class DateMeasureValue(BaseModel):
+    """Structured date value for a metric of type *date*."""
+
+    year: int
+    month: int
+    day: int
+    is_estimated: bool = False
+
+    model_config = {"extra": "forbid"}

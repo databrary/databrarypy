@@ -1,8 +1,8 @@
-"""Sessions resource for Databrary API (read-only)."""
+"""Sessions resource for Databrary API."""
 
 from __future__ import annotations
 
-from typing import Iterator
+from typing import Any, Iterator
 
 from ..models import Page, Session
 from ..models.downloads import FileDownloadLink, ProcessingTask
@@ -11,7 +11,7 @@ from ._base import BaseResource
 
 
 class SessionsResource(BaseResource):
-    """Read-only operations for sessions and their files."""
+    """Operations for sessions, their files, and record-file associations."""
 
     def page(
         self,
@@ -169,3 +169,30 @@ class SessionsResource(BaseResource):
         """Request async CSV generation for a session."""
         payload = self._get_json(f"/volumes/{volume_id}/sessions/{session_id}/csv-download-link/")
         return ProcessingTask.model_validate(payload)
+
+    # ---------------------------
+    # Record-file associations
+    # ---------------------------
+    def assign_record_to_file(
+        self,
+        volume_id: int,
+        session_id: int,
+        file_id: int,
+        record_id: int,
+    ) -> dict[str, Any]:
+        """Assign a record to a session file (idempotent)."""
+        path = f"/volumes/{volume_id}/sessions/{session_id}" f"/files/{file_id}/assign-record/"
+        data = self._post_json(path, json={"record_id": record_id})
+        return data  # type: ignore[no-any-return]
+
+    def unassign_record_from_file(
+        self,
+        volume_id: int,
+        session_id: int,
+        file_id: int,
+        record_id: int,
+    ) -> dict[str, Any]:
+        """Remove the association between a record and a session file."""
+        path = f"/volumes/{volume_id}/sessions/{session_id}" f"/files/{file_id}/unassign-record/"
+        data = self._post_json(path, json={"record_id": record_id})
+        return data  # type: ignore[no-any-return]

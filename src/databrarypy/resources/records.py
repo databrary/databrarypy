@@ -1,16 +1,22 @@
-"""Records resource for Databrary API (read-only)."""
+"""Records resource for Databrary API."""
 
 from __future__ import annotations
 
-from typing import Iterator
+from typing import Any, Iterator
 
 from ..models import Page
 from ..models.records import Record
 from ._base import BaseResource
 
+_PRIORITY_METRIC_NAMES = ("name", "id", "description")
+
 
 class RecordsResource(BaseResource):
-    """List and retrieve records (measures included)."""
+    """CRUD operations for volume records, measures, and file assignments."""
+
+    # ------------------------------------------------------------------
+    # Read
+    # ------------------------------------------------------------------
 
     def page(
         self,
@@ -56,3 +62,147 @@ class RecordsResource(BaseResource):
         """Retrieve a single record by id within a volume."""
         data = self._get_json(f"/volumes/{volume_id}/records/{record_id}/")
         return Record.model_validate(data)
+
+    # ------------------------------------------------------------------
+    # Write
+    # ------------------------------------------------------------------
+
+    def _get_priority_metric_id(self, volume_id: int, category_id: int) -> int | None:
+        """Resolve the name/ID metric for a category in a volume.
+
+        Mirrors the R package's ``get_volume_record_name_metric_id`` /
+        the frontend's ``getPriorityMetric`` logic:
+        1. required metrics first
+        2. then by name priority: name > id > description
+        3. fallback: first available metric
+        """
+        vol_data = self._get_json(f"/volumes/{volume_id}/")
+        if not isinstance(vol_data, dict):
+            return None
+
+        enabled_categories = vol_data.get("enabled_categories") or []
+        enabled_metrics = vol_data.get("enabled_metrics") or []
+        if not enabled_categories or not enabled_metrics:
+            return None
+
+        category = None
+        for cat in enabled_categories:
+            if int(cat.get("id", -1)) == category_id:
+                category = cat
+                break
+        if category is None:
+            return None
+
+        cat_metrics = category.get("metrics") or []
+        if not cat_metrics:
+            return None
+
+        enabled_metric_ids = {int(m["id"]) for m in enabled_metrics if "id" in m}
+        available = [m for m in cat_metrics if int(m.get("id", -1)) in enabled_metric_ids]
+        if not available:
+            return None
+
+        for m in available:
+            if m.get("required"):
+                return int(m["id"])
+        for pname in _PRIORITY_METRIC_NAMES:
+            for m in available:
+                if (m.get("name") or "").lower() == pname:
+                    return int(m["id"])
+
+        return int(available[0]["id"])
+
+    def create(
+        self,
+        volume_id: int,
+        *,
+        category_id: int,
+        name: str,
+        measures: dict[str, Any] | None = None,
+        participant: dict[str, Any] | None = None,
+    ) -> Record:
+        """Create a new record in a volume.
+
+        The *name* is resolved to the category's priority metric automatically.
+        Additional metric values can be supplied via *measures*
+        (mapping metric ID strings to values).
+
+        For participant records, *participant* may contain a ``birthday``
+        dict (year/month/day) or an ``age`` dict (years/months/days).
+        """
+        metric_id = self._get_priority_metric_id(volume_id, category_id)
+        if metric_id is None:
+            raise ValueError(
+                f"Cannot resolve name metric for category {category_id} " f"in volume {volume_id}"
+            )
+
+        merged_measures = dict(measures) if measures else {}
+        merged_measures[str(metric_id)] = name
+
+        body: dict[str, Any] = {
+            "category_id": category_id,
+            "measures": merged_measures,
+        }
+        if participant is not None:
+            body["participant"] = participant
+
+        data = self._post_json(f"/volumes/{volume_id}/records/", json=body)
+        return Record.model_validate(data)
+
+    def update(
+        self,
+        volume_id: int,
+        record_id: int,
+        *,
+        measures: dict[str, Any] | None = None,
+        participant: dict[str, Any] | None = None,
+    ) -> Record:
+        """Partial-update (PATCH) an existing record.
+
+        Only the provided fields are modified.
+        """
+        body: dict[str, Any] = {}
+        if measures is not None:
+            body["measures"] = measures
+        if participant is not None:
+            body["participant"] = participant
+        if not body:
+            raise ValueError("At least one of measures or participant must be provided")
+
+        data = self._patch_json(f"/volumes/{volume_id}/records/{record_id}/", json=body)
+        return Record.model_validate(data)
+
+    def delete(self, volume_id: int, record_id: int) -> bool:
+        """Soft-delete a record from a volume."""
+        return self._delete_request(f"/volumes/{volume_id}/records/{record_id}/")
+
+    # ------------------------------------------------------------------
+    # Measures
+    # ------------------------------------------------------------------
+
+    def set_measure(
+        self,
+        volume_id: int,
+        record_id: int,
+        metric_id: int,
+        *,
+        value: str | int | float | dict[str, Any],
+    ) -> dict[str, Any]:
+        """Create or update a single measure on a record (upsert).
+
+        *value* may be a string, number, or a date dict
+        (year/month/day/is_estimated).
+        """
+        body: Any = value if isinstance(value, dict) else {"value": value}
+
+        data = self._post_json(
+            f"/volumes/{volume_id}/records/{record_id}/measures/{metric_id}/",
+            json=body,
+        )
+        return data  # type: ignore[no-any-return]
+
+    def delete_measure(self, volume_id: int, record_id: int, metric_id: int) -> bool:
+        """Delete a measure from a record. Fails for required metrics."""
+        return self._delete_request(
+            f"/volumes/{volume_id}/records/{record_id}/measures/{metric_id}/"
+        )
