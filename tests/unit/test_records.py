@@ -204,6 +204,56 @@ def test_assign_record_to_file() -> None:
     assert result["status"] == "assigned"
 
 
+def test_assign_record_to_file_warns_on_duplicate(caplog) -> None:
+    """When the server returns 200 (already assigned), a warning is logged."""
+    import logging
+
+    from tests.fixtures.records import _ASSIGN_PATH
+
+    call_count = 0
+
+    def _router(request: httpx.Request) -> httpx.Response:
+        nonlocal call_count
+        if request.method == "POST" and request.url.path == "/o/token/":
+            return httpx.Response(
+                200,
+                json={
+                    "access_token": "tok",
+                    "token_type": "Bearer",
+                    "expires_in": 3600,
+                },
+            )
+        if request.method == "POST" and request.url.path == _ASSIGN_PATH:
+            call_count += 1
+            if call_count == 1:
+                return httpx.Response(201, json={"record_id": RECORD_ID_1, "status": "assigned"})
+            return httpx.Response(200, json={"record_id": RECORD_ID_1, "status": "assigned"})
+        return httpx.Response(404)
+
+    client = DatabraryClient(
+        base_url="https://api.example",
+        client_id="cid",
+        client_secret="sec",
+        username="u@e.org",
+        password="pw",
+        transport=httpx.MockTransport(_router),
+    )
+    client.auth.login()
+
+    with caplog.at_level(logging.WARNING, logger="databrarypy.resources.sessions"):
+        client.sessions.assign_record_to_file(
+            VOLUME_ID_PRIMARY, SESSION_ID_1, FILE_ID_1, RECORD_ID_1
+        )
+    assert "already assigned" not in caplog.text
+
+    caplog.clear()
+    with caplog.at_level(logging.WARNING, logger="databrarypy.resources.sessions"):
+        client.sessions.assign_record_to_file(
+            VOLUME_ID_PRIMARY, SESSION_ID_1, FILE_ID_1, RECORD_ID_1
+        )
+    assert "already assigned" in caplog.text
+
+
 def test_unassign_record_from_file() -> None:
     client = _make_client()
 
