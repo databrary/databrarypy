@@ -159,7 +159,15 @@ class RecordsResource(BaseResource):
     ) -> Record:
         """Partial-update (PATCH) an existing record.
 
-        Only the provided fields are modified.
+        Only the provided fields are modified.  Use this method when you
+        need to set multiple measures at once or update participant-specific
+        data (birthday / age).
+
+        .. tip::
+
+           To set a single measure, :meth:`set_measure` provides a simpler
+           interface that creates or replaces the value in one call without
+           requiring the full measures dict.
         """
         body: dict[str, Any] = {}
         if measures is not None:
@@ -190,8 +198,16 @@ class RecordsResource(BaseResource):
     ) -> dict[str, Any]:
         """Create or update a single measure on a record (upsert).
 
+        This is the simplest way to set an individual metric value.  The
+        measure is created if it doesn't exist or replaced if it does.
+
         *value* may be a string, number, or a date dict
         (year/month/day/is_estimated).
+
+        .. tip::
+
+           To update multiple measures or participant data (birthday / age)
+           in a single request, use :meth:`update` instead.
         """
         body: Any = value if isinstance(value, dict) else {"value": value}
 
