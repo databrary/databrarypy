@@ -12,7 +12,7 @@ from .institution_sponsorship import InstitutionSponsorship
 from .institutions import Institution
 from .levels import PermissionLevels, ReleaseLevels
 from .paginated import Page
-from .records import Record
+from .records import AgeInput, BirthdayInput, DateMeasureValue, ParticipantInput, Record
 from .sessions import Session
 from .sponsorships import Sponsorship
 from .stats import Stats
@@ -40,6 +40,8 @@ VolumePreview.model_rebuild()
 
 __all__ = [
     "AffiliateAccessRequest",
+    "AgeInput",
+    "BirthdayInput",
     "Category",
     "File",
     "Folder",
@@ -51,7 +53,9 @@ __all__ = [
     "InstitutionAccessRequest",
     "InstitutionSponsorship",
     "Metric",
+    "DateMeasureValue",
     "Page",
+    "ParticipantInput",
     "PermissionLevels",
     "Record",
     "ReleaseLevels",

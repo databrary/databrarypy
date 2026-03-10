@@ -1,17 +1,20 @@
-"""Sessions resource for Databrary API (read-only)."""
+"""Sessions resource for Databrary API."""
 
 from __future__ import annotations
 
-from typing import Iterator
+import logging
+from typing import Any, Iterator
 
 from ..models import Page, Session
 from ..models.downloads import FileDownloadLink, ProcessingTask
 from ..models.files import File as FileModel
 from ._base import BaseResource
 
+logger = logging.getLogger(__name__)
+
 
 class SessionsResource(BaseResource):
-    """Read-only operations for sessions and their files."""
+    """Operations for sessions, their files, and record-file associations."""
 
     def page(
         self,
@@ -169,3 +172,46 @@ class SessionsResource(BaseResource):
         """Request async CSV generation for a session."""
         payload = self._get_json(f"/volumes/{volume_id}/sessions/{session_id}/csv-download-link/")
         return ProcessingTask.model_validate(payload)
+
+    # ---------------------------
+    # Record-file associations
+    # ---------------------------
+    def assign_record_to_file(
+        self,
+        volume_id: int,
+        session_id: int,
+        file_id: int,
+        record_id: int,
+    ) -> dict[str, Any]:
+        """Assign a record to a session file.
+
+        Returns the assignment data.  Logs a warning if the record was
+        already assigned to the file (server returns 200 instead of 201).
+        """
+        path = f"/volumes/{volume_id}/sessions/{session_id}/files/{file_id}/assign-record/"
+        resp = self._send_request("POST", path=path, json={"record_id": record_id})
+        if resp.status_code == 200:
+            logger.warning(
+                "Record %d is already assigned to file %d in session %d of volume %d",
+                record_id,
+                file_id,
+                session_id,
+                volume_id,
+            )
+        try:
+            data = resp.json()
+        except Exception:
+            return {}
+        return self._normalize(data) if self._normalize else data  # type: ignore[return-value]
+
+    def unassign_record_from_file(
+        self,
+        volume_id: int,
+        session_id: int,
+        file_id: int,
+        record_id: int,
+    ) -> dict[str, Any]:
+        """Remove the association between a record and a session file."""
+        path = f"/volumes/{volume_id}/sessions/{session_id}/files/{file_id}/unassign-record/"
+        data = self._post_json(path, json={"record_id": record_id})
+        return data  # type: ignore[no-any-return]

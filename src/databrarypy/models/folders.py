@@ -9,7 +9,7 @@ class Folder(BaseModel):
     """Folder list/detail fields (FolderSerializer)."""
 
     id: int
-    name: str
+    name: str | None = None
     volume: int
     release_level: str
     created_at: object

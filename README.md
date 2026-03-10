@@ -97,6 +97,38 @@ path = client.users.avatar(user_id=123, dest_path="/tmp/avatar.jpg")
 - The client will transparently refresh the access token during requests when needed. You do not need to schedule periodic refreshes yourself.
 
 
+## Example script
+
+The `example/example.py` script demonstrates records management (create, update,
+delete records and measures, assign records to files). It runs interactively,
+prompting for a volume ID and then a menu of operations.
+
+### Prepare .env
+
+Create `example/.env` with your Databrary API credentials (this file is
+gitignored and must not be committed):
+
+```bash
+BASE_URL=https://api.databrary.org
+CLIENT_ID=<your-client-id>
+CLIENT_SECRET=<your-client-secret>
+USERNAME=<your-email>
+PASSWORD=<your-password>
+```
+
+Obtain `CLIENT_ID` and `CLIENT_SECRET` from your Databrary web profile
+(OAuth2 client). Request API access from an admin if needed.
+
+### Build and run
+
+```bash
+# Install dependencies (if not already done)
+poetry install
+
+# Run the example
+poetry run python example/example.py
+```
+
 ## Development
 
 ```bash
