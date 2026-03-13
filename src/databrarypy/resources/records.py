@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Iterator
 
+from ..errors import ApiError, NotFoundError
 from ..models import Page
 from ..models.records import Record
 from ._base import BaseResource
@@ -211,10 +212,28 @@ class RecordsResource(BaseResource):
         """
         body: Any = value if isinstance(value, dict) else {"value": value}
 
-        data = self._post_json(
-            f"/volumes/{volume_id}/records/{record_id}/measures/{metric_id}/",
-            json=body,
-        )
+        try:
+            data = self._post_json(
+                f"/volumes/{volume_id}/records/{record_id}/measures/{metric_id}/",
+                json=body,
+            )
+        except NotFoundError:
+            raise NotFoundError(
+                f"Failed to load record '{record_id}': Not Found.",
+                status_code=404,
+            ) from None
+        except ApiError as exc:
+            if (
+                exc.status_code == 400
+                and "record" in str(exc).lower()
+                and "volume" in str(exc).lower()
+            ):
+                raise NotFoundError(
+                    f"Failed to load record '{record_id}': Not Found.",
+                    status_code=404,
+                ) from None
+            raise
+
         return data  # type: ignore[no-any-return]
 
     def delete_measure(self, volume_id: int, record_id: int, metric_id: int) -> bool:
