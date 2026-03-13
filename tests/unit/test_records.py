@@ -182,6 +182,91 @@ def test_records_set_measure_date() -> None:
     assert data.get("year") == 2020
 
 
+def test_records_set_measure_raises_friendly_error_on_not_found() -> None:
+    """set_measure raises NotFoundError with user-friendly message for deleted/invalid records."""
+    from databrarypy.errors import NotFoundError
+
+    def _router(request: httpx.Request) -> httpx.Response:
+        if request.method == "POST" and request.url.path == "/o/token/":
+            return httpx.Response(
+                200,
+                json={
+                    "access_token": "tok",
+                    "token_type": "Bearer",
+                    "expires_in": 3600,
+                },
+            )
+        if (
+            request.method == "POST"
+            and f"/volumes/{VOLUME_ID_PRIMARY}/records/{RECORD_ID_1}/measures/" in request.url.path
+        ):
+            return httpx.Response(404, json={"error": "Record not found"})
+        return httpx.Response(404)
+
+    client = DatabraryClient(
+        base_url="https://api.example",
+        client_id="cid",
+        client_secret="sec",
+        username="u@e.org",
+        password="pw",
+        transport=httpx.MockTransport(_router),
+    )
+    client.auth.login()
+
+    with pytest.raises(NotFoundError) as exc_info:
+        client.records.set_measure(
+            VOLUME_ID_PRIMARY,
+            RECORD_ID_1,
+            METRIC_ID_OPTIONAL,
+            value="x",
+        )
+    assert str(exc_info.value) == f"Failed to load record '{RECORD_ID_1}': Not Found."
+
+
+def test_records_set_measure_raises_friendly_error_on_400_record_volume() -> None:
+    """set_measure converts 400 'Record must belong to volume' to NotFoundError with friendly message."""
+    from databrarypy.errors import NotFoundError
+
+    def _router(request: httpx.Request) -> httpx.Response:
+        if request.method == "POST" and request.url.path == "/o/token/":
+            return httpx.Response(
+                200,
+                json={
+                    "access_token": "tok",
+                    "token_type": "Bearer",
+                    "expires_in": 3600,
+                },
+            )
+        if (
+            request.method == "POST"
+            and f"/volumes/{VOLUME_ID_PRIMARY}/records/{RECORD_ID_1}/measures/" in request.url.path
+        ):
+            return httpx.Response(
+                400,
+                json={"recordId": ["Record must belong to the specified volume"]},
+            )
+        return httpx.Response(404)
+
+    client = DatabraryClient(
+        base_url="https://api.example",
+        client_id="cid",
+        client_secret="sec",
+        username="u@e.org",
+        password="pw",
+        transport=httpx.MockTransport(_router),
+    )
+    client.auth.login()
+
+    with pytest.raises(NotFoundError) as exc_info:
+        client.records.set_measure(
+            VOLUME_ID_PRIMARY,
+            RECORD_ID_1,
+            METRIC_ID_OPTIONAL,
+            value="x",
+        )
+    assert str(exc_info.value) == f"Failed to load record '{RECORD_ID_1}': Not Found."
+
+
 def test_records_delete_measure() -> None:
     client = _make_client()
 
