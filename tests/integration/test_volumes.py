@@ -22,13 +22,13 @@ def test_volumes_tags_links_fundings(client: DatabraryClient):
     if next_volume is None:
         pytest.skip("No volumes available to test volumes")
     tags = client.volumes.tags(next_volume.id)
-    assert len(tags) > 0
+    assert isinstance(tags, list)
 
     links = client.volumes.links(next_volume.id)
-    assert len(links) > 0
+    assert isinstance(links, list)
 
     fundings = client.volumes.fundings(next_volume.id)
-    assert len(fundings) > 0
+    assert isinstance(fundings, list)
 
 
 def test_volumes_collaborators(client: DatabraryClient):

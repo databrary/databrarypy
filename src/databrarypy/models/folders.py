@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel
 
 
@@ -16,9 +18,9 @@ class Folder(BaseModel):
     updated_at: object
     source_date: str | None = None
 
-    file_count: int
-    accessible_file_count: int
+    file_counts: dict[str, Any]
     has_full_access: bool
     contains_different_release_levels: bool
+    source_info: dict[str, Any] | None = None
 
     model_config = {"populate_by_name": True, "extra": "forbid"}

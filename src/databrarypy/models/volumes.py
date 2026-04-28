@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 from .files import File
@@ -45,6 +47,7 @@ class VolumeListItem(BaseModel):
     owner_connection: InstitutionSponsorship | None = None
     owner_institution: Institution | None = None
     access_level: str | None = None
+    thumbnail: File | None = None
 
     model_config = {"populate_by_name": True, "extra": "forbid"}
 
@@ -67,6 +70,12 @@ class VolumeDetail(VolumePreview):
     participant_count: int | None = None
     participant_gender_counts: dict[str, int] | None = None
     file_counts: FileCounts | None = None
+    folder_count: int | None = None
+    linked_session_count: int | None = None
+    linked_folder_count: int | None = None
+    linked_volume_count: int | None = None
+    linked_file_counts: dict[str, Any] | None = None
+    source_volumes: list[dict[str, Any]] = Field(default_factory=list)
     thumbnail: File | None = None
 
     model_config = {"populate_by_name": True, "extra": "forbid"}
@@ -84,5 +93,8 @@ class VolumeCollaborator(BaseModel):
     access_level: str
     expiration_date: object | None = None
     sponsored_users: list[UserSlim] = Field(default_factory=list)
+    is_expired: bool | None = Field(
+        default=None,
+    )
 
     model_config = {"populate_by_name": True, "extra": "forbid"}

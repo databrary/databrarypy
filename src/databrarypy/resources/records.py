@@ -203,7 +203,7 @@ class RecordsResource(BaseResource):
         measure is created if it doesn't exist or replaced if it does.
 
         *value* may be a string, number, or a date dict
-        (year/month/day/is_estimated).
+        (year and optional month/day for partial precision).
 
         .. tip::
 

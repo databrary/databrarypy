@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .formats import Format
 from .records import Record
@@ -55,5 +55,9 @@ class File(BaseModel):
     transcoded_file: SlimFile | dict[str, Any] | None = None
     has_full_access: bool | None = None
     thumbnail_url: str | None = None
+    source_info: dict[str, Any] | None = None
+    linked_destinations: list[dict[str, Any]] = Field(default_factory=list)
+    is_added_file: bool | None = None
+    link_kind: str | None = None
 
     model_config = {"populate_by_name": True, "extra": "forbid"}

@@ -24,10 +24,12 @@ def _get_mock_session_1():
         "updated_at": "2025-06-01T12:30:00Z",
         "source_date": "2025-05-31",
         "date": {"year": 2025, "month": 5, "day": 31},
-        "file_count": 1,
-        "accessible_file_count": 1,
+        "default_records": [],
+        "file_records": [],
+        "file_counts": {"native_total": 1, "linked_total": 0},
         "has_full_access": True,
         "contains_different_release_levels": False,
+        "source_info": None,
     }
 
 
