@@ -12,6 +12,7 @@ from ..models import (
     UserPublic,
     UserSelf,
     UserSlim,
+    UserStatistics,
     VolumeListItem,
 )
 from ._base import BaseResource
@@ -80,6 +81,18 @@ class UsersResource(BaseResource):
         if for_self:
             return UserSelf.model_validate(payload)
         return UserPublic.model_validate(payload)
+
+    def statistics(self, user_id: int) -> UserStatistics | None:
+        """Retrieve statistics for a user.
+
+        Returns ``None`` when the backend responds with 204 No Content
+        (statistics have not been computed yet). Raises ``NotFoundError``
+        when the user itself does not exist.
+        """
+        data = self._get_json_or_none(f"/users/{user_id}/statistics/")
+        if data is None:
+            return None
+        return UserStatistics.model_validate(data)
 
     def sponsors(self, user_id: int) -> builtins.list[Sponsorship]:
         """Get active sponsorships where the given user is the affiliate.

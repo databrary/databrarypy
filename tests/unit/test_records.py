@@ -171,7 +171,6 @@ def test_records_set_measure_date() -> None:
         "year": 2020,
         "month": 3,
         "day": 15,
-        "is_estimated": False,
     }
     data = client.records.set_measure(
         VOLUME_ID_PRIMARY,

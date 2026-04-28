@@ -174,6 +174,17 @@ class BaseResource:
         data: Any = self._raw_get_json(path, params=params)
         return self._normalize(data) if self._normalize else data
 
+    def _get_json_or_none(self, path: str, *, params: dict[str, Any] | None = None) -> Any | None:
+        """GET JSON, returning ``None`` when the server replies 204 No Content."""
+        resp = self._send_request("GET", path=path, params=params)
+        if resp.status_code == 204:
+            return None
+        try:
+            data = resp.json()
+        except Exception:
+            return None
+        return self._normalize(data) if self._normalize else data
+
     # ---------------------------
     # Write helpers (POST / PATCH / DELETE)
     # ---------------------------

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import uuid
+
 import pytest
 from tests.conftest import first_page_item
 
@@ -28,7 +30,7 @@ def test_records_create_update_delete_lifecycle(client: DatabraryClient):
     record = client.records.create(
         VOLUME_ID,
         category_id=CATEGORY_ID_TASK,
-        name="Integration test record",
+        name=f"Integration test record {uuid.uuid4().hex[:10]}",
     )
     assert record.id > 0
     assert record.volume == VOLUME_ID
@@ -54,7 +56,7 @@ def test_records_create_with_extra_measures(client: DatabraryClient):
     record = client.records.create(
         VOLUME_ID,
         category_id=CATEGORY_ID_TASK,
-        name="Task with measures",
+        name=f"Task with measures {uuid.uuid4().hex[:10]}",
         measures={"30": "Extra value"},
     )
     assert record.id > 0
@@ -68,7 +70,7 @@ def test_records_set_and_delete_measure(client: DatabraryClient):
     record = client.records.create(
         VOLUME_ID,
         category_id=CATEGORY_ID_TASK,
-        name="Measure test record",
+        name=f"Measure test record {uuid.uuid4().hex[:10]}",
     )
     assert record.id > 0
 

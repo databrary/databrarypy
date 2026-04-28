@@ -158,7 +158,6 @@ def _do_set_measure(client: DatabraryClient, volume_id: int) -> None:
                     "year": year,
                     "month": month,
                     "day": day,
-                    "is_estimated": False,
                 }
         else:
             try:

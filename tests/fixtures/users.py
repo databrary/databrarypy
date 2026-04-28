@@ -18,6 +18,18 @@ from .institutions import (
     MOCK_INSTITUTION_3,
 )
 
+MOCK_USER_STATISTICS = {
+    "user_id": USER_ID_1,
+    "volumes_number": 4,
+    "files_number": 57,
+    "uploaded_data_footprint": 512,
+    "transcoded_data_footprint": 1024,
+    "soft_deleted_uploaded_data_footprint": 16,
+    "soft_deleted_transcoded_data_footprint": 32,
+    "created_at": "2025-03-05T16:04:01.655967Z",
+    "updated_at": "2025-05-27T13:26:37.830779Z",
+}
+
 MOCK_USER_1 = {
     "id": USER_ID_1,
     "first_name": "Alex",
@@ -225,6 +237,14 @@ def handle_user_history_user_1(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, json=_get_mock_user_history_page())
 
 
+def handle_user_statistics(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, json=MOCK_USER_STATISTICS)
+
+
+def handle_user_statistics_no_content(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(204)
+
+
 def build_users_transport():
     return build_transport(
         ("GET", "/users/", handle_users_list),
@@ -241,6 +261,12 @@ def build_users_transport():
         ("GET", f"/users/{USER_ID_1}/affiliates/", handle_user_affiliates_user_1),
         ("GET", f"/users/{USER_ID_NOT_FOUND}/avatar/", handle_user_avatar_not_found),
         ("GET", f"/users/{USER_ID_1}/history/", handle_user_history_user_1),
+        ("GET", f"/users/{USER_ID_1}/statistics/", handle_user_statistics),
+        (
+            "GET",
+            f"/users/{USER_ID_2}/statistics/",
+            handle_user_statistics_no_content,
+        ),
     )
 
 

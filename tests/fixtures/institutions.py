@@ -12,6 +12,18 @@ from .data_constants import (
 )
 from .factory import make_page
 
+MOCK_INSTITUTION_STATISTICS = {
+    "institution_id": INSTITUTION_ID_1,
+    "volumes_number": 12,
+    "files_number": 345,
+    "uploaded_data_footprint": 1024,
+    "transcoded_data_footprint": 2048,
+    "soft_deleted_uploaded_data_footprint": 64,
+    "soft_deleted_transcoded_data_footprint": 128,
+    "created_at": "2025-03-05T16:04:01.655967Z",
+    "updated_at": "2025-05-27T13:26:37.830779Z",
+}
+
 MOCK_INSTITUTION_1 = {
     "id": INSTITUTION_ID_1,
     "name": "Example University",
@@ -116,6 +128,16 @@ def handle_institution_avatar_404(request: httpx.Request) -> httpx.Response:
     return httpx.Response(404, json=MOCK_NOT_FOUND)
 
 
+def handle_institution_statistics(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, json=MOCK_INSTITUTION_STATISTICS)
+
+
+def handle_institution_statistics_no_content(
+    request: httpx.Request,
+) -> httpx.Response:
+    return httpx.Response(204)
+
+
 def build_institutions_transport():
     return build_transport(
         ("GET", "/institutions/", handle_institutions_list),
@@ -127,4 +149,14 @@ def build_institutions_transport():
         ),
         ("GET", f"/institutions/{INSTITUTION_ID_1}/avatar/", handle_institution_avatar),
         ("GET", f"/institutions/{INSTITUTION_ID_NOT_FOUND}/avatar/", handle_institution_avatar_404),
+        (
+            "GET",
+            f"/institutions/{INSTITUTION_ID_1}/statistics/",
+            handle_institution_statistics,
+        ),
+        (
+            "GET",
+            f"/institutions/{INSTITUTION_ID_2}/statistics/",
+            handle_institution_statistics_no_content,
+        ),
     )

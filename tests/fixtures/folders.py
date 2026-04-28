@@ -26,10 +26,10 @@ def _get_mock_folder_1():
         "created_at": "2025-06-02T10:00:00Z",
         "updated_at": "2025-06-02T10:10:00Z",
         "source_date": "2025-06-01",
-        "file_count": 1,
-        "accessible_file_count": 1,
+        "file_counts": {"native_total": 1, "linked_total": 0},
         "has_full_access": True,
         "contains_different_release_levels": False,
+        "source_info": None,
     }
 
 

@@ -15,6 +15,7 @@ from .paginated import Page
 from .records import AgeInput, BirthdayInput, DateMeasureValue, ParticipantInput, Record
 from .sessions import Session
 from .sponsorships import Sponsorship
+from .statistics import InstitutionStatistics, UserStatistics
 from .stats import Stats
 from .supported_types import SupportedFileType, SupportedFileTypes
 from .tags import Tag
@@ -52,6 +53,7 @@ __all__ = [
     "Institution",
     "InstitutionAccessRequest",
     "InstitutionSponsorship",
+    "InstitutionStatistics",
     "Metric",
     "DateMeasureValue",
     "Page",
@@ -70,6 +72,7 @@ __all__ = [
     "UserPublic",
     "UserSelf",
     "UserSlim",
+    "UserStatistics",
     "VolumeActivityItem",
     "VolumeCollaborator",
     "VolumeDetail",

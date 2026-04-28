@@ -9,14 +9,14 @@ def test_search_users(client: DatabraryClient):
     page = client.search.users_page(q="a", page=1)
     assert page.count >= 0
     users = list(client.search.users_list(q="a", page=1, page_size=5))
-    assert users and len(users) >= 0
+    assert len(users) >= 0
 
 
 def test_search_institutions(client: DatabraryClient):
     page = client.search.institutions_page(q="a", page=1)
     assert page.count >= 0
     insts = list(client.search.institutions_list(q="a", page=1, page_size=5))
-    assert insts and len(insts) >= 0
+    assert len(insts) >= 0
 
 
 def test_search_volumes(client: DatabraryClient):

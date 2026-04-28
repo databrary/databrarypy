@@ -18,7 +18,7 @@ class Age(BaseModel):
     # The age in days. Example: 365 days.
     total_days: int | None = None
     formatted_value: str | None = None
-    is_estimated: bool | None = None
+    is_partial: bool | None = None
     is_blurred: bool | None = None
 
     model_config = {"populate_by_name": True, "extra": "forbid"}
@@ -29,10 +29,13 @@ class Record(BaseModel):
 
     id: int
     volume: int
+    volume_name: str | None = None
     category_id: int
     measures: dict[str, Any] = Field(default_factory=dict)
     birthday: dict[str, Any] | str | None = None
     age: Age | None = None
+    default_sessions: list[dict[str, Any]] = Field(default_factory=list)
+    record_source_kind: str | None = None
 
     model_config = {"populate_by_name": True, "extra": "forbid"}
 
@@ -46,8 +49,8 @@ class BirthdayInput(BaseModel):
     """Birthday date components for participant record creation/update."""
 
     year: int
-    month: int
-    day: int
+    month: int | None = None
+    day: int | None = None
 
     model_config = {"extra": "forbid"}
 
@@ -78,8 +81,7 @@ class DateMeasureValue(BaseModel):
     """Structured date value for a metric of type *date*."""
 
     year: int
-    month: int
-    day: int
-    is_estimated: bool = False
+    month: int | None = None
+    day: int | None = None
 
     model_config = {"extra": "forbid"}
