@@ -10,14 +10,12 @@ from .records import Record
 
 
 class SessionDate(BaseModel):
-    """Structured date for a session.
-
-    In staging fixtures this appears as separate year/month/day fields.
-    """
+    """Structured date for a session (snake_case; see :class:`~databrarypy.models.records.Age`)."""
 
     year: int | None = None
     month: int | None = None
     day: int | None = None
+    is_estimated: bool | None = None
 
     model_config = {"populate_by_name": True, "extra": "forbid"}
 

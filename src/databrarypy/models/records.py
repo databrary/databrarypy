@@ -8,7 +8,11 @@ from pydantic import BaseModel, Field
 
 
 class Age(BaseModel):
-    """Age structure from AgeSerializer."""
+    """Age structure from AgeSerializer.
+
+    Expect **snake_case** keys, matching JSON after the client's default
+    :func:`~databrarypy.utils.case.snake_keys` normalization of API camelCase.
+    """
 
     # The age in years, months, and days. Example: 1 year, 2 months, 3 days.
     years: int | None = None
@@ -18,7 +22,7 @@ class Age(BaseModel):
     # The age in days. Example: 365 days.
     total_days: int | None = None
     formatted_value: str | None = None
-    is_partial: bool | None = None
+    is_estimated: bool | None = None
     is_blurred: bool | None = None
 
     model_config = {"populate_by_name": True, "extra": "forbid"}
@@ -46,11 +50,12 @@ class Record(BaseModel):
 
 
 class BirthdayInput(BaseModel):
-    """Birthday date components for participant record creation/update."""
+    """Birthday date components for participant record creation/update (snake_case)."""
 
     year: int
     month: int | None = None
     day: int | None = None
+    is_estimated: bool | None = None
 
     model_config = {"extra": "forbid"}
 
@@ -78,10 +83,11 @@ class ParticipantInput(BaseModel):
 
 
 class DateMeasureValue(BaseModel):
-    """Structured date value for a metric of type *date*."""
+    """Structured date value for a metric of type *date* (snake_case)."""
 
     year: int
     month: int | None = None
     day: int | None = None
+    is_estimated: bool | None = None
 
     model_config = {"extra": "forbid"}

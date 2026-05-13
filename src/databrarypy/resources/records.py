@@ -129,7 +129,8 @@ class RecordsResource(BaseResource):
         (mapping metric ID strings to values).
 
         For participant records, *participant* may contain a ``birthday``
-        dict (year/month/day) or an ``age`` dict (years/months/days).
+        dict (year/month/day and optional ``is_estimated``) or an ``age`` dict
+        (years/months/days).
         """
         metric_id = self._get_priority_metric_id(volume_id, category_id)
         if metric_id is None:

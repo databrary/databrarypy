@@ -9,7 +9,7 @@ A typed Python client for the Databrary API, built on httpx and pydantic. It pro
 
 - Request API access for your account from an admin.
 - Create an OAuth2 client in your web profile to get `client_id` and `client_secret` (store the secret safely).
-- The token endpoint (`/o/token/`) follows OAuth2 with a password grant and returns snake_case fields; application endpoints mostly return camelCase keys. This client normalizes response keys to snake_case by default (`snake_case=True`).
+- The token endpoint (`/o/token/`) follows OAuth2 with a password grant and returns snake_case fields; application endpoints mostly return camelCase keys. This client normalizes response keys to snake_case by default (`snake_case=True`). Pydantic models in this package expect **snake_case** payloads—the same shape you get from the client under that default. If you set `snake_case=False`, normalize manually with `databrarypy.utils.case.snake_keys` before calling `model_validate` on those models.
 
 ## Installation
 
