@@ -217,11 +217,14 @@ def handle_session_file_put(request: httpx.Request) -> httpx.Response:
     import json as _json
 
     body = _json.loads(request.content or b"{}")
-    return httpx.Response(200, json=_session_file_response_with(
-        name=body.get("name") or "Video 1.mp4",
-        release_level=body.get("release_level") or "public",
-        source_date=body.get("source_date") or "2025-05-31",
-    ))
+    return httpx.Response(
+        200,
+        json=_session_file_response_with(
+            name=body.get("name") or "Video 1.mp4",
+            release_level=body.get("release_level") or "public",
+            source_date=body.get("source_date") or "2025-05-31",
+        ),
+    )
 
 
 def handle_session_file_patch(request: httpx.Request) -> httpx.Response:

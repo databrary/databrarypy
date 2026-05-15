@@ -231,7 +231,4 @@ def test_folders_patch_file_requires_fields() -> None:
 def test_folders_delete_file() -> None:
     client = _make_client()
 
-    assert (
-        client.folders.delete_file(VOLUME_ID_PRIMARY, FOLDER_ID_1, FOLDER_FILE_ID_1)
-        is True
-    )
+    assert client.folders.delete_file(VOLUME_ID_PRIMARY, FOLDER_ID_1, FOLDER_FILE_ID_1) is True

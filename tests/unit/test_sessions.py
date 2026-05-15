@@ -289,7 +289,4 @@ def test_sessions_patch_file_requires_fields() -> None:
 def test_sessions_delete_file() -> None:
     client = _make_client()
 
-    assert (
-        client.sessions.delete_file(VOLUME_ID_PRIMARY, SESSION_ID_1, SESSION_FILE_ID_1)
-        is True
-    )
+    assert client.sessions.delete_file(VOLUME_ID_PRIMARY, SESSION_ID_1, SESSION_FILE_ID_1) is True

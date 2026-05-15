@@ -379,6 +379,4 @@ class SessionsResource(BaseResource):
 
     def delete_file(self, volume_id: int, session_id: int, file_id: int) -> bool:
         """Soft-delete a file from a session."""
-        return self._delete_request(
-            f"/volumes/{volume_id}/sessions/{session_id}/files/{file_id}/"
-        )
+        return self._delete_request(f"/volumes/{volume_id}/sessions/{session_id}/files/{file_id}/")
