@@ -1,15 +1,19 @@
-"""FoldersResource tests (list, retrieve, nested files)."""
+"""FoldersResource tests (list, retrieve, nested files, CRUD)."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from databrarypy.client import DatabraryClient
 from tests.fixtures.data_constants import TASK_STATUS_PROCESSING, VOLUME_ID_PRIMARY
 from tests.fixtures.folders import (
+    DUPLICATE_FILENAME,
     FOLDER_FILE_BINARY_CONTENT,
     FOLDER_FILE_ID_1,
     FOLDER_ID_1,
+    FOLDER_ID_CREATED,
     JPEG_MIMETYPE,
     _get_mock_folder_1,
     _get_mock_folder_1_files_page,
@@ -87,3 +91,99 @@ def test_folders_iterators() -> None:
     assert first_folder.id == FOLDER_ID_1
     first_file = next(client.folders.files_list(VOLUME_ID_PRIMARY, FOLDER_ID_1))
     assert first_file.id == FOLDER_FILE_ID_1
+
+
+def _make_client() -> DatabraryClient:
+    transport = build_composite_transport()
+    client = DatabraryClient(
+        base_url="https://api.example",
+        client_id="cid",
+        client_secret="sec",
+        username="user@example.org",
+        password="pw",
+        transport=transport,
+    )
+    client.auth.login()
+    return client
+
+
+def test_folders_create() -> None:
+    client = _make_client()
+
+    folder = client.folders.create(
+        VOLUME_ID_PRIMARY,
+        name="My New Folder",
+        release_level="private",
+        source_date="2026-01-15",
+    )
+    assert folder.id == FOLDER_ID_CREATED
+    assert folder.name == "My New Folder"
+    assert folder.release_level == "private"
+    assert folder.source_date == "2026-01-15"
+
+
+def test_folders_create_minimal() -> None:
+    client = _make_client()
+
+    folder = client.folders.create(VOLUME_ID_PRIMARY, name="Minimal")
+    assert folder.id == FOLDER_ID_CREATED
+    assert folder.name == "Minimal"
+
+
+def test_folders_update_put() -> None:
+    client = _make_client()
+
+    folder = client.folders.update(
+        VOLUME_ID_PRIMARY,
+        FOLDER_ID_1,
+        name="Renamed",
+        release_level="public",
+        source_date="2026-02-01",
+    )
+    assert folder.id == FOLDER_ID_1
+    assert folder.name == "Renamed"
+    assert folder.source_date == "2026-02-01"
+
+
+def test_folders_patch_name_only() -> None:
+    client = _make_client()
+
+    folder = client.folders.patch(VOLUME_ID_PRIMARY, FOLDER_ID_1, name="Just renamed")
+    assert folder.id == FOLDER_ID_1
+    assert folder.name == "Just renamed"
+    # Other fields preserved from base mock folder
+    assert folder.release_level == _get_mock_folder_1()["release_level"]
+
+
+def test_folders_patch_requires_fields() -> None:
+    client = _make_client()
+
+    with pytest.raises(ValueError, match="At least one"):
+        client.folders.patch(VOLUME_ID_PRIMARY, FOLDER_ID_1)
+
+
+def test_folders_delete() -> None:
+    client = _make_client()
+
+    assert client.folders.delete(VOLUME_ID_PRIMARY, FOLDER_ID_1) is True
+
+
+def test_folders_check_duplicate_files() -> None:
+    client = _make_client()
+
+    result = client.folders.check_duplicate_files(
+        VOLUME_ID_PRIMARY,
+        FOLDER_ID_1,
+        filenames=[DUPLICATE_FILENAME, "new_file.jpg"],
+    )
+    assert result == [
+        {"filename": DUPLICATE_FILENAME, "exists": True},
+        {"filename": "new_file.jpg", "exists": False},
+    ]
+
+
+def test_folders_check_duplicate_files_empty() -> None:
+    client = _make_client()
+
+    result = client.folders.check_duplicate_files(VOLUME_ID_PRIMARY, FOLDER_ID_1, filenames=[])
+    assert result == []
