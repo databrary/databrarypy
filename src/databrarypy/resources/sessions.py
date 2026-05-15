@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Iterator
+from typing import Any, Iterator, List
 
 from ..models import Page, Session
 from ..models.downloads import FileDownloadLink, ProcessingTask
@@ -215,3 +215,102 @@ class SessionsResource(BaseResource):
         path = f"/volumes/{volume_id}/sessions/{session_id}/files/{file_id}/unassign-record/"
         data = self._post_json(path, json={"record_id": record_id})
         return data  # type: ignore[no-any-return]
+
+    # ---------------------------
+    # Write (CRUD)
+    # ---------------------------
+    def create(
+        self,
+        volume_id: int,
+        *,
+        name: str,
+        release_level: str | None = None,
+        source_date: str | None = None,
+    ) -> Session:
+        """Create a session in a volume. ``name`` is required and non-empty."""
+        body: dict[str, Any] = {"name": name}
+        if release_level is not None:
+            body["release_level"] = release_level
+        if source_date is not None:
+            body["source_date"] = source_date
+        data = self._post_json(f"/volumes/{volume_id}/sessions/", json=body)
+        return Session.model_validate(data)
+
+    def update(
+        self,
+        volume_id: int,
+        session_id: int,
+        *,
+        name: str,
+        release_level: str | None = None,
+        source_date: str | None = None,
+    ) -> Session:
+        """Full update (PUT) of a session. ``name`` is required."""
+        body: dict[str, Any] = {
+            "name": name,
+            "release_level": release_level,
+            "source_date": source_date,
+        }
+        data = self._put_json(f"/volumes/{volume_id}/sessions/{session_id}/", json=body)
+        return Session.model_validate(data)
+
+    def patch(
+        self,
+        volume_id: int,
+        session_id: int,
+        *,
+        name: str | None = None,
+        release_level: str | None = None,
+        source_date: str | None = None,
+    ) -> Session:
+        """Partial update (PATCH) of a session. Only provided fields are sent."""
+        body: dict[str, Any] = {}
+        if name is not None:
+            body["name"] = name
+        if release_level is not None:
+            body["release_level"] = release_level
+        if source_date is not None:
+            body["source_date"] = source_date
+        if not body:
+            raise ValueError("At least one of name, release_level, or source_date must be provided")
+        data = self._patch_json(f"/volumes/{volume_id}/sessions/{session_id}/", json=body)
+        return Session.model_validate(data)
+
+    def delete(self, volume_id: int, session_id: int) -> bool:
+        """Soft-delete a session."""
+        return self._delete_request(f"/volumes/{volume_id}/sessions/{session_id}/")
+
+    # ---------------------------
+    # Default records
+    # ---------------------------
+    def add_default_record(self, volume_id: int, session_id: int, record_id: int) -> bool:
+        """Attach a record as a session default. Returns True on success."""
+        self._post_json(
+            f"/volumes/{volume_id}/sessions/{session_id}/add-default-record/",
+            json={"record_id": record_id},
+        )
+        return True
+
+    def remove_default_record(self, volume_id: int, session_id: int, record_id: int) -> bool:
+        """Detach a record from session defaults. Returns True on success."""
+        self._post_json(
+            f"/volumes/{volume_id}/sessions/{session_id}/remove-default-record/",
+            json={"record_id": record_id},
+        )
+        return True
+
+    # ---------------------------
+    # Duplicate file check
+    # ---------------------------
+    def check_duplicate_files(
+        self,
+        volume_id: int,
+        session_id: int,
+        filenames: List[str],
+    ) -> List[dict[str, Any]]:
+        """Return ``[{"filename": str, "exists": bool}, ...]`` for each filename."""
+        data = self._post_json(
+            f"/volumes/{volume_id}/sessions/{session_id}/check-duplicate-files/",
+            json={"filenames": filenames},
+        )
+        return data if isinstance(data, list) else []

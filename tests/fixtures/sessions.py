@@ -128,13 +128,122 @@ def handle_session_csv_download_link(request: httpx.Request) -> httpx.Response:
     )
 
 
+# ---- Write handlers (CRUD + default records + duplicate files) ----
+SESSION_ID_CREATED = 102
+DEFAULT_RECORD_ID = 555
+SESSION_DUPLICATE_FILENAME = "existing.mp4"
+
+
+def _session_response_with(
+    name: str = "Session A", release_level: str = "public", source_date: str | None = "2025-05-31"
+) -> dict:
+    session = _get_mock_session_1()
+    session["name"] = name
+    session["release_level"] = release_level
+    session["source_date"] = source_date
+    return session
+
+
+def handle_session_create(request: httpx.Request) -> httpx.Response:
+    import json as _json
+
+    body = _json.loads(request.content or b"{}")
+    response = _session_response_with(
+        name=body.get("name", "Session A"),
+        release_level=body.get("release_level", "public"),
+        source_date=body.get("source_date"),
+    )
+    response["id"] = SESSION_ID_CREATED
+    return httpx.Response(201, json=response)
+
+
+def handle_session_put(request: httpx.Request) -> httpx.Response:
+    import json as _json
+
+    body = _json.loads(request.content or b"{}")
+    return httpx.Response(
+        200,
+        json=_session_response_with(
+            name=body.get("name", "Session A"),
+            release_level=body.get("release_level") or "public",
+            source_date=body.get("source_date"),
+        ),
+    )
+
+
+def handle_session_patch(request: httpx.Request) -> httpx.Response:
+    import json as _json
+
+    body = _json.loads(request.content or b"{}")
+    base = _get_mock_session_1()
+    if "name" in body:
+        base["name"] = body["name"]
+    if "release_level" in body:
+        base["release_level"] = body["release_level"]
+    if "source_date" in body:
+        base["source_date"] = body["source_date"]
+    return httpx.Response(200, json=base)
+
+
+def handle_session_delete(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(204)
+
+
+def handle_session_add_default_record(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, json={})
+
+
+def handle_session_remove_default_record(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(204)
+
+
+def handle_session_check_duplicate_files(request: httpx.Request) -> httpx.Response:
+    import json as _json
+
+    body = _json.loads(request.content or b"{}")
+    filenames = body.get("filenames", [])
+    result = [{"filename": fn, "exists": fn == SESSION_DUPLICATE_FILENAME} for fn in filenames]
+    return httpx.Response(200, json=result)
+
+
 def build_sessions_transport():
     return build_transport(
         ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/sessions/", handle_sessions_list),
+        ("POST", f"/volumes/{VOLUME_ID_PRIMARY}/sessions/", handle_session_create),
         (
             "GET",
             f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/",
             handle_session_detail,
+        ),
+        (
+            "PUT",
+            f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/",
+            handle_session_put,
+        ),
+        (
+            "PATCH",
+            f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/",
+            handle_session_patch,
+        ),
+        (
+            "DELETE",
+            f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/",
+            handle_session_delete,
+        ),
+        (
+            "POST",
+            f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/add-default-record/",
+            handle_session_add_default_record,
+        ),
+        (
+            "POST",
+            f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/remove-default-record/",
+            handle_session_remove_default_record,
+        ),
+        (
+            "POST",
+            f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/check-duplicate-files/",
+            handle_session_check_duplicate_files,
         ),
         (
             "GET",
