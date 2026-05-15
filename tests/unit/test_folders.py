@@ -187,3 +187,51 @@ def test_folders_check_duplicate_files_empty() -> None:
 
     result = client.folders.check_duplicate_files(VOLUME_ID_PRIMARY, FOLDER_ID_1, filenames=[])
     assert result == []
+
+
+# ------------------------------------------------------------------
+# File metadata (update_file / patch_file / delete_file)
+# ------------------------------------------------------------------
+
+
+def test_folders_update_file_put() -> None:
+    client = _make_client()
+
+    file_obj = client.folders.update_file(
+        VOLUME_ID_PRIMARY,
+        FOLDER_ID_1,
+        FOLDER_FILE_ID_1,
+        name="Renamed Image",
+        release_level="private",
+    )
+    assert file_obj.id == FOLDER_FILE_ID_1
+    assert file_obj.name == "Renamed Image"
+    assert file_obj.release_level == "private"
+
+
+def test_folders_patch_file_name_only() -> None:
+    client = _make_client()
+
+    file_obj = client.folders.patch_file(
+        VOLUME_ID_PRIMARY,
+        FOLDER_ID_1,
+        FOLDER_FILE_ID_1,
+        name="Just Renamed",
+    )
+    assert file_obj.name == "Just Renamed"
+
+
+def test_folders_patch_file_requires_fields() -> None:
+    client = _make_client()
+
+    with pytest.raises(ValueError, match="At least one"):
+        client.folders.patch_file(VOLUME_ID_PRIMARY, FOLDER_ID_1, FOLDER_FILE_ID_1)
+
+
+def test_folders_delete_file() -> None:
+    client = _make_client()
+
+    assert (
+        client.folders.delete_file(VOLUME_ID_PRIMARY, FOLDER_ID_1, FOLDER_FILE_ID_1)
+        is True
+    )

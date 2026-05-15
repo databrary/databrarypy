@@ -206,6 +206,36 @@ def handle_session_check_duplicate_files(request: httpx.Request) -> httpx.Respon
     return httpx.Response(200, json=result)
 
 
+# ---- File metadata handlers ----
+def _session_file_response_with(**overrides) -> dict:
+    base = _get_mock_session_1_file()
+    base.update(overrides)
+    return base
+
+
+def handle_session_file_put(request: httpx.Request) -> httpx.Response:
+    import json as _json
+
+    body = _json.loads(request.content or b"{}")
+    return httpx.Response(200, json=_session_file_response_with(
+        name=body.get("name") or "Video 1.mp4",
+        release_level=body.get("release_level") or "public",
+        source_date=body.get("source_date") or "2025-05-31",
+    ))
+
+
+def handle_session_file_patch(request: httpx.Request) -> httpx.Response:
+    import json as _json
+
+    body = _json.loads(request.content or b"{}")
+    overrides = {k: v for k, v in body.items() if k in {"name", "release_level", "source_date"}}
+    return httpx.Response(200, json=_session_file_response_with(**overrides))
+
+
+def handle_session_file_delete(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(204)
+
+
 def build_sessions_transport():
     return build_transport(
         ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/sessions/", handle_sessions_list),
@@ -254,6 +284,21 @@ def build_sessions_transport():
             "GET",
             f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/files/{SESSION_FILE_ID_1}/",
             handle_session_file_detail,
+        ),
+        (
+            "PUT",
+            f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/files/{SESSION_FILE_ID_1}/",
+            handle_session_file_put,
+        ),
+        (
+            "PATCH",
+            f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/files/{SESSION_FILE_ID_1}/",
+            handle_session_file_patch,
+        ),
+        (
+            "DELETE",
+            f"/volumes/{VOLUME_ID_PRIMARY}/sessions/{SESSION_ID_1}/files/{SESSION_FILE_ID_1}/",
+            handle_session_file_delete,
         ),
         (
             "GET",

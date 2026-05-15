@@ -32,6 +32,27 @@ class SlimFile(BaseModel):
     model_config = {"populate_by_name": True, "extra": "forbid"}
 
 
+class FileWrite(BaseModel):
+    """Writable fields for file PUT/PATCH (mirrors FileWriteSerializer).
+
+    Sessions honor the full set; folders (which use FileSerializer for writes)
+    effectively only honor ``name`` and ``release_level``.
+    """
+
+    name: str | None = None
+    release_level: str | None = None
+    source_date: str | None = None
+    date: dict[str, Any] | None = None
+    date_precision: str | None = None
+    is_estimated: bool | None = None
+
+    model_config = {"populate_by_name": True, "extra": "forbid"}
+
+    def to_payload(self, *, drop_none: bool) -> dict[str, Any]:
+        """Serialize for the wire. ``drop_none=True`` for PATCH; False for PUT."""
+        return self.model_dump(exclude_none=drop_none)
+
+
 class File(BaseModel):
     """File object as returned by FileSerializer (subset)."""
 
