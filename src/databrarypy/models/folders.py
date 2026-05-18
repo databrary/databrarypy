@@ -24,3 +24,12 @@ class Folder(BaseModel):
     source_info: dict[str, Any] | None = None
 
     model_config = {"populate_by_name": True, "extra": "forbid"}
+
+
+class FolderDuplicateFileCheckItem(BaseModel):
+    """One entry from the folder check-duplicate-files endpoint."""
+
+    filename: str
+    exists: bool
+
+    model_config = {"extra": "forbid"}
