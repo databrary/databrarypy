@@ -13,7 +13,7 @@ from .institutions import Institution
 from .levels import PermissionLevels, ReleaseLevels
 from .paginated import Page
 from .records import AgeInput, BirthdayInput, DateMeasureValue, ParticipantInput, Record
-from .sessions import Session
+from .sessions import Session, SessionDuplicateFileCheckItem
 from .sponsorships import Sponsorship
 from .statistics import InstitutionStatistics, UserStatistics
 from .stats import Stats
@@ -32,6 +32,7 @@ from .whoami import WhoAmI
 # Rebuild models to resolve forward references
 File.model_rebuild()
 Folder.model_rebuild()
+Session.model_rebuild()
 InstitutionSponsorship.model_rebuild()
 UserSlim.model_rebuild()
 UserPublic.model_rebuild()
@@ -63,6 +64,7 @@ __all__ = [
     "Record",
     "ReleaseLevels",
     "Session",
+    "SessionDuplicateFileCheckItem",
     "Sponsorship",
     "Stats",
     "SupportedFileType",
