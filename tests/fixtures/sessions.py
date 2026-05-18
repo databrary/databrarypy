@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import httpx
 
 from .client import build_client_transport
@@ -145,9 +147,7 @@ def _session_response_with(
 
 
 def handle_session_create(request: httpx.Request) -> httpx.Response:
-    import json as _json
-
-    body = _json.loads(request.content or b"{}")
+    body = json.loads(request.content or b"{}")
     response = _session_response_with(
         name=body.get("name", "Session A"),
         release_level=body.get("release_level", "public"),
@@ -158,23 +158,16 @@ def handle_session_create(request: httpx.Request) -> httpx.Response:
 
 
 def handle_session_put(request: httpx.Request) -> httpx.Response:
-    import json as _json
-
-    body = _json.loads(request.content or b"{}")
-    return httpx.Response(
-        200,
-        json=_session_response_with(
-            name=body.get("name", "Session A"),
-            release_level=body.get("release_level") or "public",
-            source_date=body.get("source_date"),
-        ),
-    )
+    body = json.loads(request.content or b"{}")
+    merged = {
+        **_get_mock_session_1(),
+        **{k: body[k] for k in ("name", "release_level", "source_date") if k in body},
+    }
+    return httpx.Response(200, json=merged)
 
 
 def handle_session_patch(request: httpx.Request) -> httpx.Response:
-    import json as _json
-
-    body = _json.loads(request.content or b"{}")
+    body = json.loads(request.content or b"{}")
     base = _get_mock_session_1()
     if "name" in body:
         base["name"] = body["name"]
@@ -198,9 +191,7 @@ def handle_session_remove_default_record(request: httpx.Request) -> httpx.Respon
 
 
 def handle_session_check_duplicate_files(request: httpx.Request) -> httpx.Response:
-    import json as _json
-
-    body = _json.loads(request.content or b"{}")
+    body = json.loads(request.content or b"{}")
     filenames = body.get("filenames", [])
     result = [{"filename": fn, "exists": fn == SESSION_DUPLICATE_FILENAME} for fn in filenames]
     return httpx.Response(200, json=result)

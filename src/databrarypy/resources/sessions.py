@@ -5,10 +5,11 @@ from __future__ import annotations
 import logging
 from typing import Any, Iterator, List
 
-from ..models import Page, Session
+from ..models import Page, Session, SessionDuplicateFileCheckItem
 from ..models.downloads import FileDownloadLink, ProcessingTask
 from ..models.files import File as FileModel
 from ..models.files import FileWrite
+from ..utils.strings import require_nonempty_stripped
 from ._base import BaseResource
 
 logger = logging.getLogger(__name__)
@@ -229,7 +230,7 @@ class SessionsResource(BaseResource):
         source_date: str | None = None,
     ) -> Session:
         """Create a session in a volume. ``name`` is required and non-empty."""
-        body: dict[str, Any] = {"name": name}
+        body: dict[str, Any] = {"name": require_nonempty_stripped(name, field="name")}
         if release_level is not None:
             body["release_level"] = release_level
         if source_date is not None:
@@ -246,12 +247,16 @@ class SessionsResource(BaseResource):
         release_level: str | None = None,
         source_date: str | None = None,
     ) -> Session:
-        """Full update (PUT) of a session. ``name`` is required."""
-        body: dict[str, Any] = {
-            "name": name,
-            "release_level": release_level,
-            "source_date": source_date,
-        }
+        """Full update (PUT) of a session. ``name`` is required.
+
+        Optional fields are omitted from the request body when ``None`` so the
+        server can retain existing values instead of receiving JSON ``null``.
+        """
+        body: dict[str, Any] = {"name": require_nonempty_stripped(name, field="name")}
+        if release_level is not None:
+            body["release_level"] = release_level
+        if source_date is not None:
+            body["source_date"] = source_date
         data = self._put_json(f"/volumes/{volume_id}/sessions/{session_id}/", json=body)
         return Session.model_validate(data)
 
@@ -267,7 +272,7 @@ class SessionsResource(BaseResource):
         """Partial update (PATCH) of a session. Only provided fields are sent."""
         body: dict[str, Any] = {}
         if name is not None:
-            body["name"] = name
+            body["name"] = require_nonempty_stripped(name, field="name")
         if release_level is not None:
             body["release_level"] = release_level
         if source_date is not None:
@@ -308,13 +313,18 @@ class SessionsResource(BaseResource):
         volume_id: int,
         session_id: int,
         filenames: List[str],
-    ) -> List[dict[str, Any]]:
-        """Return ``[{"filename": str, "exists": bool}, ...]`` for each filename."""
+    ) -> List[SessionDuplicateFileCheckItem]:
+        """Return one row per filename with duplicate presence flags."""
         data = self._post_json(
             f"/volumes/{volume_id}/sessions/{session_id}/check-duplicate-files/",
             json={"filenames": filenames},
         )
-        return data if isinstance(data, list) else []
+        if not isinstance(data, list):
+            raise ValueError(
+                "check_duplicate_files expected a JSON array from the server; "
+                f"got {type(data).__name__}"
+            )
+        return [SessionDuplicateFileCheckItem.model_validate(item) for item in data]
 
     # ---------------------------
     # File metadata (PUT/PATCH/DELETE on nested files)

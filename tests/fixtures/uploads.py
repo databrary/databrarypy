@@ -56,6 +56,14 @@ def handle_status_completed(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, json={"status": "completed"})
 
 
+def handle_status_scanning(_request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, json={"status": "scanning"})
+
+
+def handle_status_infected(_request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, json={"status": "infected"})
+
+
 def handle_s3_single_put(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, headers={"ETag": '"single-etag"'})
 
@@ -88,10 +96,14 @@ def handle_abort_multipart(request: httpx.Request) -> httpx.Response:
     return httpx.Response(204)
 
 
-def build_uploads_transport(*, multipart_parts: int = 2):
+def build_uploads_transport(
+    *,
+    multipart_parts: int = 2,
+    status_handler=handle_status_completed,
+):
     routes = [
         ("POST", "/uploads/initiate/", handle_initiate_single),
-        ("GET", STATUS_URL_PATH, handle_status_completed),
+        ("GET", STATUS_URL_PATH, status_handler),
         ("PUT", SIGNED_PUT_PATH, handle_s3_single_put),
         ("POST", "/uploads/complete-multipart/", handle_complete_multipart),
         ("POST", "/uploads/presign-parts/", handle_presign_parts),
@@ -102,9 +114,12 @@ def build_uploads_transport(*, multipart_parts: int = 2):
     return build_transport(*routes)
 
 
-def build_composite_transport(*, multipart_parts: int = 2):
+def build_composite_transport(*, multipart_parts: int = 2, status_handler=handle_status_completed):
     client_transport = build_client_transport()
-    uploads_transport = build_uploads_transport(multipart_parts=multipart_parts)
+    uploads_transport = build_uploads_transport(
+        multipart_parts=multipart_parts,
+        status_handler=status_handler,
+    )
 
     def router(request: httpx.Request) -> httpx.Response:
         key = (request.method, request.url.path)

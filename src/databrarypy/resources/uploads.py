@@ -12,6 +12,7 @@ from pydantic import TypeAdapter
 
 from ..errors import ApiError
 from ..models.uploads import (
+    TERMINAL_FAILURE_STATUSES,
     InitiateMultipartResponse,
     InitiateResponse,
     InitiateSingleResponse,
@@ -108,7 +109,9 @@ class UploadsResource(BaseResource):
                 "parts": normalised,
             },
         )
-        return data if isinstance(data, dict) else {}
+        if not isinstance(data, dict):
+            raise ApiError("Unexpected response shape from complete-multipart endpoint")
+        return data
 
     def presign_parts(
         self,
@@ -125,17 +128,21 @@ class UploadsResource(BaseResource):
                 "part_numbers": part_numbers,
             },
         )
-        urls = data.get("part_urls", []) if isinstance(data, dict) else []
+        if not isinstance(data, dict):
+            raise ApiError("Unexpected response shape from presign-parts endpoint")
+        urls = data.get("part_urls", [])
         return [PartUrl.model_validate(u) for u in urls]
 
-    def abort_multipart(self, upload_guid: str, s3_upload_id: str) -> bool:
-        """Abort an in-progress multipart upload and mark it failed server-side."""
+    def abort_multipart(self, upload_guid: str, s3_upload_id: str) -> None:
+        """Abort an in-progress multipart upload and mark it failed server-side.
+
+        Raises on HTTP error; returns ``None`` on success.
+        """
         self._send_request(
             "POST",
             path="/uploads/abort-multipart/",
             json={"upload_guid": upload_guid, "s3_upload_id": s3_upload_id},
         )
-        return True
 
     # ---------------------------
     # High-level orchestration
@@ -156,6 +163,16 @@ class UploadsResource(BaseResource):
         Works for both sessions (``destination_type="session"``) and folders
         (``destination_type="folder"``). Branches automatically on the server's
         ``upload_type`` response (single vs multipart).
+
+        Args:
+            path: Local file path to upload.
+            destination_type: ``"session"`` or ``"folder"`` (API convention).
+            object_id: Destination session or folder id.
+            content_type: Optional override; when omitted, guessed from the filename.
+            poll_status: When True, poll ``status_url`` until a terminal status or timeout.
+            poll_interval: Seconds between status polls. Use ``0.0`` only in tests;
+                production callers should use at least ``1.0`` to avoid hammering the API.
+            poll_timeout: Maximum seconds to wait before returning the last-known status.
         """
         file_path = Path(path)
         if not file_path.is_file():
@@ -201,13 +218,12 @@ class UploadsResource(BaseResource):
     # ---------------------------
     def _upload_single(self, file_path: Path, response: InitiateSingleResponse) -> None:
         with file_path.open("rb") as fh:
-            data = fh.read()
-        resp = self._http.put(
-            response.signed_upload_url,
-            content=data,
-            headers=response.required_headers or {},
-        )
-        resp.raise_for_status()
+            resp = self._http.put(
+                response.signed_upload_url,
+                content=fh,
+                headers=response.required_headers or {},
+            )
+            resp.raise_for_status()
 
     def _upload_multipart(self, file_path: Path, response: InitiateMultipartResponse) -> None:
         parts: list[Part] = []
@@ -220,6 +236,12 @@ class UploadsResource(BaseResource):
                 put_resp.raise_for_status()
                 etag = put_resp.headers.get("ETag") or put_resp.headers.get("etag", "")
                 parts.append(Part(part_number=part_url.part_number, etag=etag.strip('"')))
+
+            if fh.read(1):
+                raise ValueError(
+                    "File has more data than the server-provided part URLs can cover; "
+                    "the upload was aborted to avoid incomplete data."
+                )
 
         self.complete(
             response.upload_guid,
@@ -241,11 +263,10 @@ class UploadsResource(BaseResource):
             resp.raise_for_status()
             payload = resp.json() if resp.content else {}
             last_status = str(payload.get("status", "")) if isinstance(payload, dict) else ""
-            if last_status == UploadStatus.COMPLETED.value or last_status in {
-                UploadStatus.INFECTED.value,
-                UploadStatus.UPLOAD_FAILED.value,
-                UploadStatus.PROCESSING_FAILED.value,
-            }:
+            if (
+                last_status == UploadStatus.COMPLETED.value
+                or last_status in TERMINAL_FAILURE_STATUSES
+            ):
                 return last_status
             if time.monotonic() >= deadline:
                 logger.warning(

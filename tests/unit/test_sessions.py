@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from databrarypy.client import DatabraryClient
+from databrarypy.models import SessionDuplicateFileCheckItem
 from tests.fixtures.data_constants import TASK_STATUS_PROCESSING, VOLUME_ID_PRIMARY
 from tests.fixtures.sessions import (
     DEFAULT_RECORD_ID,
@@ -144,6 +145,13 @@ def test_sessions_create_minimal() -> None:
     assert session.name == "Minimal"
 
 
+def test_sessions_create_rejects_blank_name() -> None:
+    client = _make_client()
+
+    with pytest.raises(ValueError, match="non-empty"):
+        client.sessions.create(VOLUME_ID_PRIMARY, name="   ")
+
+
 # ------------------------------------------------------------------
 # Update (PUT)
 # ------------------------------------------------------------------
@@ -162,6 +170,22 @@ def test_sessions_update_put() -> None:
     assert session.id == SESSION_ID_1
     assert session.name == "Renamed Session"
     assert session.source_date == "2026-04-01"
+
+
+def test_sessions_update_put_name_only() -> None:
+    client = _make_client()
+
+    session = client.sessions.update(VOLUME_ID_PRIMARY, SESSION_ID_1, name="Renamed in place")
+    assert session.id == SESSION_ID_1
+    assert session.name == "Renamed in place"
+    assert session.release_level == _get_mock_session_1()["release_level"]
+
+
+def test_sessions_update_rejects_blank_name() -> None:
+    client = _make_client()
+
+    with pytest.raises(ValueError, match="non-empty"):
+        client.sessions.update(VOLUME_ID_PRIMARY, SESSION_ID_1, name="  \n")
 
 
 # ------------------------------------------------------------------
@@ -183,6 +207,13 @@ def test_sessions_patch_requires_fields() -> None:
 
     with pytest.raises(ValueError, match="At least one"):
         client.sessions.patch(VOLUME_ID_PRIMARY, SESSION_ID_1)
+
+
+def test_sessions_patch_rejects_blank_name() -> None:
+    client = _make_client()
+
+    with pytest.raises(ValueError, match="non-empty"):
+        client.sessions.patch(VOLUME_ID_PRIMARY, SESSION_ID_1, name="  \t")
 
 
 # ------------------------------------------------------------------
@@ -233,8 +264,8 @@ def test_sessions_check_duplicate_files() -> None:
         filenames=[SESSION_DUPLICATE_FILENAME, "new_video.mp4"],
     )
     assert result == [
-        {"filename": SESSION_DUPLICATE_FILENAME, "exists": True},
-        {"filename": "new_video.mp4", "exists": False},
+        SessionDuplicateFileCheckItem(filename=SESSION_DUPLICATE_FILENAME, exists=True),
+        SessionDuplicateFileCheckItem(filename="new_video.mp4", exists=False),
     ]
 
 
@@ -290,3 +321,12 @@ def test_sessions_delete_file() -> None:
     client = _make_client()
 
     assert client.sessions.delete_file(VOLUME_ID_PRIMARY, SESSION_ID_1, SESSION_FILE_ID_1) is True
+
+
+def test_sessions_check_duplicate_files_rejects_non_list(monkeypatch: pytest.MonkeyPatch) -> None:
+    client = _make_client()
+
+    monkeypatch.setattr(client.sessions, "_post_json", lambda *args, **kwargs: {})
+
+    with pytest.raises(ValueError, match="expected a JSON array"):
+        client.sessions.check_duplicate_files(VOLUME_ID_PRIMARY, SESSION_ID_1, filenames=["a.mp4"])

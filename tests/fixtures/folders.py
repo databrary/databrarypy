@@ -145,14 +145,14 @@ def handle_folder_put(request: httpx.Request) -> httpx.Response:
     import json as _json
 
     body = _json.loads(request.content or b"{}")
-    return httpx.Response(
-        200,
-        json=_folder_response_with(
-            name=body.get("name", "Folder A"),
-            release_level=body.get("release_level") or "public",
-            source_date=body.get("source_date"),
-        ),
-    )
+    base = dict(_get_mock_folder_1())
+    if "name" in body:
+        base["name"] = body["name"]
+    if "release_level" in body:
+        base["release_level"] = body["release_level"]
+    if "source_date" in body:
+        base["source_date"] = body["source_date"]
+    return httpx.Response(200, json=base)
 
 
 def handle_folder_patch(request: httpx.Request) -> httpx.Response:
