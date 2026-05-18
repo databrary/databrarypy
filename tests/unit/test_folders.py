@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from databrarypy.client import DatabraryClient
+from databrarypy.models import FolderDuplicateFileCheckItem
 from tests.fixtures.data_constants import TASK_STATUS_PROCESSING, VOLUME_ID_PRIMARY
 from tests.fixtures.folders import (
     DUPLICATE_FILENAME,
@@ -130,6 +131,13 @@ def test_folders_create_minimal() -> None:
     assert folder.name == "Minimal"
 
 
+def test_folders_create_rejects_blank_name() -> None:
+    client = _make_client()
+
+    with pytest.raises(ValueError, match="non-empty"):
+        client.folders.create(VOLUME_ID_PRIMARY, name="   ")
+
+
 def test_folders_update_put() -> None:
     client = _make_client()
 
@@ -145,6 +153,15 @@ def test_folders_update_put() -> None:
     assert folder.source_date == "2026-02-01"
 
 
+def test_folders_update_put_name_only() -> None:
+    client = _make_client()
+
+    folder = client.folders.update(VOLUME_ID_PRIMARY, FOLDER_ID_1, name="Renamed in place")
+    assert folder.id == FOLDER_ID_1
+    assert folder.name == "Renamed in place"
+    assert folder.release_level == _get_mock_folder_1()["release_level"]
+
+
 def test_folders_patch_name_only() -> None:
     client = _make_client()
 
@@ -153,6 +170,13 @@ def test_folders_patch_name_only() -> None:
     assert folder.name == "Just renamed"
     # Other fields preserved from base mock folder
     assert folder.release_level == _get_mock_folder_1()["release_level"]
+
+
+def test_folders_patch_rejects_blank_name() -> None:
+    client = _make_client()
+
+    with pytest.raises(ValueError, match="non-empty"):
+        client.folders.patch(VOLUME_ID_PRIMARY, FOLDER_ID_1, name="  \t")
 
 
 def test_folders_patch_requires_fields() -> None:
@@ -177,8 +201,8 @@ def test_folders_check_duplicate_files() -> None:
         filenames=[DUPLICATE_FILENAME, "new_file.jpg"],
     )
     assert result == [
-        {"filename": DUPLICATE_FILENAME, "exists": True},
-        {"filename": "new_file.jpg", "exists": False},
+        FolderDuplicateFileCheckItem(filename=DUPLICATE_FILENAME, exists=True),
+        FolderDuplicateFileCheckItem(filename="new_file.jpg", exists=False),
     ]
 
 

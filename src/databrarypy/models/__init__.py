@@ -3,7 +3,7 @@
 from .affiliate_requests import AffiliateAccessRequest
 from .categories import Category, Metric
 from .files import File
-from .folders import Folder
+from .folders import Folder, FolderDuplicateFileCheckItem
 from .formats import Format, GroupedFormats
 from .funders import Funder
 from .history import HistoryUser, UserActivityItem, VolumeActivityItem
@@ -46,6 +46,7 @@ __all__ = [
     "Category",
     "File",
     "Folder",
+    "FolderDuplicateFileCheckItem",
     "Format",
     "Funder",
     "GroupedFormats",

@@ -48,6 +48,7 @@ class VolumeListItem(BaseModel):
     owner_institution: Institution | None = None
     access_level: str | None = None
     thumbnail: File | None = None
+    is_custom_collection: bool = False
 
     model_config = {"populate_by_name": True, "extra": "forbid"}
 
