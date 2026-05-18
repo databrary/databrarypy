@@ -1,8 +1,8 @@
-"""Folders resource for Databrary API (read-only)."""
+"""Folders resource for Databrary API."""
 
 from __future__ import annotations
 
-from typing import Iterator
+from typing import Any, Iterator, List
 
 from ..models import Page
 from ..models.downloads import FileDownloadLink, ProcessingTask
@@ -12,7 +12,7 @@ from ._base import BaseResource
 
 
 class FoldersResource(BaseResource):
-    """Read-only operations for folders and their files."""
+    """CRUD operations for folders, plus folder file listings and downloads."""
 
     def page(
         self,
@@ -162,3 +162,80 @@ class FoldersResource(BaseResource):
         """Request async ZIP generation for a folder."""
         payload = self._get_json(f"/volumes/{volume_id}/folders/{folder_id}/download-link/")
         return ProcessingTask.model_validate(payload)
+
+    # ---------------------------
+    # Write (CRUD)
+    # ---------------------------
+    def create(
+        self,
+        volume_id: int,
+        *,
+        name: str,
+        release_level: str | None = None,
+        source_date: str | None = None,
+    ) -> Folder:
+        """Create a folder in a volume. ``name`` is required and non-empty."""
+        body: dict[str, Any] = {"name": name}
+        if release_level is not None:
+            body["release_level"] = release_level
+        if source_date is not None:
+            body["source_date"] = source_date
+        data = self._post_json(f"/volumes/{volume_id}/folders/", json=body)
+        return Folder.model_validate(data)
+
+    def update(
+        self,
+        volume_id: int,
+        folder_id: int,
+        *,
+        name: str,
+        release_level: str | None = None,
+        source_date: str | None = None,
+    ) -> Folder:
+        """Full update (PUT) of a folder. ``name`` is required."""
+        body: dict[str, Any] = {
+            "name": name,
+            "release_level": release_level,
+            "source_date": source_date,
+        }
+        data = self._put_json(f"/volumes/{volume_id}/folders/{folder_id}/", json=body)
+        return Folder.model_validate(data)
+
+    def patch(
+        self,
+        volume_id: int,
+        folder_id: int,
+        *,
+        name: str | None = None,
+        release_level: str | None = None,
+        source_date: str | None = None,
+    ) -> Folder:
+        """Partial update (PATCH) of a folder. Only provided fields are sent."""
+        body: dict[str, Any] = {}
+        if name is not None:
+            body["name"] = name
+        if release_level is not None:
+            body["release_level"] = release_level
+        if source_date is not None:
+            body["source_date"] = source_date
+        if not body:
+            raise ValueError("At least one of name, release_level, or source_date must be provided")
+        data = self._patch_json(f"/volumes/{volume_id}/folders/{folder_id}/", json=body)
+        return Folder.model_validate(data)
+
+    def delete(self, volume_id: int, folder_id: int) -> bool:
+        """Soft-delete a folder."""
+        return self._delete_request(f"/volumes/{volume_id}/folders/{folder_id}/")
+
+    def check_duplicate_files(
+        self,
+        volume_id: int,
+        folder_id: int,
+        filenames: List[str],
+    ) -> List[dict[str, Any]]:
+        """Return ``[{"filename": str, "exists": bool}, ...]`` for each filename."""
+        data = self._post_json(
+            f"/volumes/{volume_id}/folders/{folder_id}/check-duplicate-files/",
+            json={"filenames": filenames},
+        )
+        return data if isinstance(data, list) else []

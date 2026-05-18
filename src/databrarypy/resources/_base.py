@@ -203,6 +203,15 @@ class BaseResource:
             return {}
         return self._normalize(data) if self._normalize else data
 
+    def _put_json(self, path: str, *, json: Any | None = None) -> Any:
+        """PUT JSON and return the normalised response body."""
+        resp = self._send_request("PUT", path=path, json=json)
+        try:
+            data = resp.json()
+        except Exception:
+            return {}
+        return self._normalize(data) if self._normalize else data
+
     def _patch_json(self, path: str, *, json: Any | None = None) -> Any:
         """PATCH JSON and return the normalised response body."""
         resp = self._send_request("PATCH", path=path, json=json)
