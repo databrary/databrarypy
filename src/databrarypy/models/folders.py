@@ -7,6 +7,15 @@ from typing import Any
 from pydantic import BaseModel
 
 
+class FolderDuplicateFileCheckItem(BaseModel):
+    """One entry from the folder check-duplicate-files endpoint."""
+
+    filename: str
+    exists: bool
+
+    model_config = {"extra": "forbid"}
+
+
 class Folder(BaseModel):
     """Folder list/detail fields (FolderSerializer)."""
 

@@ -3,7 +3,7 @@
 from .affiliate_requests import AffiliateAccessRequest
 from .categories import Category, Metric
 from .files import File
-from .folders import Folder
+from .folders import Folder, FolderDuplicateFileCheckItem
 from .formats import Format, GroupedFormats
 from .funders import Funder
 from .history import HistoryUser, UserActivityItem, VolumeActivityItem
@@ -13,7 +13,7 @@ from .institutions import Institution
 from .levels import PermissionLevels, ReleaseLevels
 from .paginated import Page
 from .records import AgeInput, BirthdayInput, DateMeasureValue, ParticipantInput, Record
-from .sessions import Session
+from .sessions import Session, SessionDuplicateFileCheckItem
 from .sponsorships import Sponsorship
 from .statistics import InstitutionStatistics, UserStatistics
 from .stats import Stats
@@ -32,6 +32,7 @@ from .whoami import WhoAmI
 # Rebuild models to resolve forward references
 File.model_rebuild()
 Folder.model_rebuild()
+Session.model_rebuild()
 InstitutionSponsorship.model_rebuild()
 UserSlim.model_rebuild()
 UserPublic.model_rebuild()
@@ -46,6 +47,7 @@ __all__ = [
     "Category",
     "File",
     "Folder",
+    "FolderDuplicateFileCheckItem",
     "Format",
     "Funder",
     "GroupedFormats",
@@ -62,6 +64,7 @@ __all__ = [
     "Record",
     "ReleaseLevels",
     "Session",
+    "SessionDuplicateFileCheckItem",
     "Sponsorship",
     "Stats",
     "SupportedFileType",

@@ -9,6 +9,15 @@ from pydantic import BaseModel, Field
 from .records import Record
 
 
+class SessionDuplicateFileCheckItem(BaseModel):
+    """One entry from the session check-duplicate-files endpoint."""
+
+    filename: str
+    exists: bool
+
+    model_config = {"extra": "forbid"}
+
+
 class SessionDate(BaseModel):
     """Structured date for a session (snake_case; see :class:`~databrarypy.models.records.Age`)."""
 
