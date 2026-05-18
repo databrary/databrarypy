@@ -182,6 +182,38 @@ def handle_check_duplicate_files(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, json=result)
 
 
+# ---- File metadata handlers ----
+def _folder_file_response_with(**overrides) -> dict:
+    base = _get_mock_folder_1_file()
+    base.update(overrides)
+    return base
+
+
+def handle_folder_file_put(request: httpx.Request) -> httpx.Response:
+    import json as _json
+
+    body = _json.loads(request.content or b"{}")
+    return httpx.Response(
+        200,
+        json=_folder_file_response_with(
+            name=body.get("name") or "Image 1.jpg",
+            release_level=body.get("release_level") or "public",
+        ),
+    )
+
+
+def handle_folder_file_patch(request: httpx.Request) -> httpx.Response:
+    import json as _json
+
+    body = _json.loads(request.content or b"{}")
+    overrides = {k: v for k, v in body.items() if k in {"name", "release_level"}}
+    return httpx.Response(200, json=_folder_file_response_with(**overrides))
+
+
+def handle_folder_file_delete(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(204)
+
+
 def build_folders_transport():
     return build_transport(
         ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/folders/", handle_folders_list),
@@ -204,6 +236,21 @@ def build_folders_transport():
             "GET",
             f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/files/{FOLDER_FILE_ID_1}/",
             handle_folder_file_detail,
+        ),
+        (
+            "PUT",
+            f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/files/{FOLDER_FILE_ID_1}/",
+            handle_folder_file_put,
+        ),
+        (
+            "PATCH",
+            f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/files/{FOLDER_FILE_ID_1}/",
+            handle_folder_file_patch,
+        ),
+        (
+            "DELETE",
+            f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/files/{FOLDER_FILE_ID_1}/",
+            handle_folder_file_delete,
         ),
         (
             "GET",

@@ -7,6 +7,7 @@ from typing import Any, Iterator, List
 from ..models import Page
 from ..models.downloads import FileDownloadLink, ProcessingTask
 from ..models.files import File as FileModel
+from ..models.files import FileWrite
 from ..models.folders import Folder, FolderDuplicateFileCheckItem
 from ..utils.strings import require_nonempty_stripped
 from ._base import BaseResource
@@ -249,3 +250,73 @@ class FoldersResource(BaseResource):
                 f"got {type(data).__name__}"
             )
         return [FolderDuplicateFileCheckItem.model_validate(item) for item in data]
+
+    # ---------------------------
+    # File metadata (PUT/PATCH/DELETE on nested files)
+    # ---------------------------
+    def update_file(
+        self,
+        volume_id: int,
+        folder_id: int,
+        file_id: int,
+        *,
+        name: str,
+        release_level: str | None = None,
+        source_date: str | None = None,
+        date: dict[str, Any] | None = None,
+        date_precision: str | None = None,
+        is_estimated: bool | None = None,
+    ) -> FileModel:
+        """Full PUT update of a folder file. ``name`` is required.
+
+        Note: the folder view uses ``FileSerializer`` for writes, so only
+        ``name`` and ``release_level`` are honored server-side; other fields
+        are accepted but ignored.
+        """
+        payload = FileWrite(
+            name=name,
+            release_level=release_level,
+            source_date=source_date,
+            date=date,
+            date_precision=date_precision,
+            is_estimated=is_estimated,
+        ).to_payload(drop_none=False)
+        data = self._put_json(
+            f"/volumes/{volume_id}/folders/{folder_id}/files/{file_id}/",
+            json=payload,
+        )
+        return FileModel.model_validate(data)
+
+    def patch_file(
+        self,
+        volume_id: int,
+        folder_id: int,
+        file_id: int,
+        *,
+        name: str | None = None,
+        release_level: str | None = None,
+        source_date: str | None = None,
+        date: dict[str, Any] | None = None,
+        date_precision: str | None = None,
+        is_estimated: bool | None = None,
+    ) -> FileModel:
+        """Partial PATCH update of a folder file. Only provided fields are sent."""
+        payload = FileWrite(
+            name=name,
+            release_level=release_level,
+            source_date=source_date,
+            date=date,
+            date_precision=date_precision,
+            is_estimated=is_estimated,
+        ).to_payload(drop_none=True)
+        if not payload:
+            raise ValueError("At least one writable field must be provided")
+        data = self._patch_json(
+            f"/volumes/{volume_id}/folders/{folder_id}/files/{file_id}/",
+            json=payload,
+        )
+        return FileModel.model_validate(data)
+
+    def delete_file(self, volume_id: int, folder_id: int, file_id: int) -> bool:
+        """Soft-delete a file from a folder."""
+        return self._delete_request(f"/volumes/{volume_id}/folders/{folder_id}/files/{file_id}/")

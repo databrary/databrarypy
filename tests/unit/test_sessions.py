@@ -276,6 +276,53 @@ def test_sessions_check_duplicate_files_empty() -> None:
     assert result == []
 
 
+# ------------------------------------------------------------------
+# File metadata (update_file / patch_file / delete_file)
+# ------------------------------------------------------------------
+
+
+def test_sessions_update_file_put() -> None:
+    client = _make_client()
+
+    file_obj = client.sessions.update_file(
+        VOLUME_ID_PRIMARY,
+        SESSION_ID_1,
+        SESSION_FILE_ID_1,
+        name="Renamed Video",
+        release_level="private",
+        source_date="2026-05-01",
+    )
+    assert file_obj.id == SESSION_FILE_ID_1
+    assert file_obj.name == "Renamed Video"
+    assert file_obj.release_level == "private"
+    assert file_obj.source_date == "2026-05-01"
+
+
+def test_sessions_patch_file_name_only() -> None:
+    client = _make_client()
+
+    file_obj = client.sessions.patch_file(
+        VOLUME_ID_PRIMARY,
+        SESSION_ID_1,
+        SESSION_FILE_ID_1,
+        name="Patched Name",
+    )
+    assert file_obj.name == "Patched Name"
+
+
+def test_sessions_patch_file_requires_fields() -> None:
+    client = _make_client()
+
+    with pytest.raises(ValueError, match="At least one"):
+        client.sessions.patch_file(VOLUME_ID_PRIMARY, SESSION_ID_1, SESSION_FILE_ID_1)
+
+
+def test_sessions_delete_file() -> None:
+    client = _make_client()
+
+    assert client.sessions.delete_file(VOLUME_ID_PRIMARY, SESSION_ID_1, SESSION_FILE_ID_1) is True
+
+
 def test_sessions_check_duplicate_files_rejects_non_list(monkeypatch: pytest.MonkeyPatch) -> None:
     client = _make_client()
 
