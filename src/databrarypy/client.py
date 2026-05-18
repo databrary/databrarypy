@@ -23,6 +23,7 @@ from .resources import (
     SessionsResource,
     SystemResource,
     TagsResource,
+    UploadsResource,
     UsersResource,
 )
 from .resources.volumes import VolumesResource
@@ -101,6 +102,7 @@ class DatabraryClient:
         self.categories: CategoriesResource = CategoriesResource(
             self._http, self._headers, self._normalize
         )
+        self.uploads: UploadsResource = UploadsResource(self._http, self._headers, self._normalize)
 
         # Apply retry configuration to all resources (attributes exist on BaseResource)
         for res in (
@@ -115,6 +117,7 @@ class DatabraryClient:
             self.funders,
             self.tags,
             self.categories,
+            self.uploads,
         ):
             res._max_retries = max(0, int(max_retries))
             res._respect_retry_after = bool(respect_retry_after)

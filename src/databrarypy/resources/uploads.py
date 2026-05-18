@@ -1,0 +1,278 @@
+"""Uploads resource: three-step upload pipeline (initiate / PUT bytes / complete)."""
+
+from __future__ import annotations
+
+import logging
+import mimetypes
+import time
+from pathlib import Path
+from typing import Any, Literal
+
+from pydantic import TypeAdapter
+
+from ..errors import ApiError
+from ..models.uploads import (
+    TERMINAL_FAILURE_STATUSES,
+    InitiateMultipartResponse,
+    InitiateResponse,
+    InitiateSingleResponse,
+    Part,
+    PartUrl,
+    UploadResult,
+    UploadStatus,
+)
+from ._base import BaseResource
+
+logger = logging.getLogger(__name__)
+
+_INITIATE_ADAPTER: TypeAdapter[InitiateResponse] = TypeAdapter(InitiateResponse)
+
+
+class UploadsResource(BaseResource):
+    """Upload pipeline operations for sessions and folders.
+
+    Three-step flow:
+      1. :meth:`initiate` — register the upload, receive presigned URL(s).
+      2. PUT bytes directly to S3 using the presigned URL(s).
+      3. :meth:`complete` — finalize multipart uploads (no-op for single).
+
+    Use :meth:`upload_file` for the full orchestrated flow.
+    """
+
+    # Mirrored from server (databrary-ai UploadToAWSService).
+    MULTIPART_THRESHOLD_BYTES = 100 * 1024 * 1024
+    MULTIPART_PART_SIZE_BYTES = 10 * 1024 * 1024
+
+    # ---------------------------
+    # Low-level pipeline
+    # ---------------------------
+    def initiate(
+        self,
+        *,
+        filename: str,
+        destination_type: str,
+        object_id: int,
+        file_size: int | None = None,
+        content_type: str | None = None,
+        source_session_id: int | None = None,
+        source_folder_id: int | None = None,
+    ) -> InitiateResponse:
+        """Register an upload and obtain presigned URL(s)."""
+        body: dict[str, Any] = {
+            "filename": filename,
+            "destination_type": destination_type,
+            "object_id": object_id,
+        }
+        if file_size is not None:
+            body["file_size"] = file_size
+        if content_type is not None:
+            body["content_type"] = content_type
+        if source_session_id is not None:
+            body["source_session_id"] = source_session_id
+        if source_folder_id is not None:
+            body["source_folder_id"] = source_folder_id
+
+        data = self._post_json("/uploads/initiate/", json=body)
+        if isinstance(data, dict) and "upload_type" not in data:
+            # Plain databrary-core returns {signed_upload_url, status_url} with no
+            # upload_type; treat as single so the discriminated union resolves.
+            data["upload_type"] = "single"
+        return _INITIATE_ADAPTER.validate_python(data)
+
+    def status(self, upload_guid: str) -> str:
+        """Poll the upload status. Returns the raw status string from the server."""
+        data = self._get_json(f"/uploads/{upload_guid}/status/")
+        if not isinstance(data, dict):
+            raise ApiError("Unexpected status response shape")
+        return str(data.get("status", ""))
+
+    def complete(
+        self,
+        upload_guid: str,
+        *,
+        s3_upload_id: str,
+        parts: list[Part] | list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Complete a multipart upload (AI / multipart-only endpoint).
+
+        Only call for multipart uploads. Single uploads do not have a
+        completion step — the server reacts to the S3 ``ObjectCreated`` event.
+        """
+        normalised: list[dict[str, Any]] = [
+            p.model_dump() if isinstance(p, Part) else dict(p) for p in parts
+        ]
+        data = self._post_json(
+            "/uploads/complete-multipart/",
+            json={
+                "upload_guid": upload_guid,
+                "s3_upload_id": s3_upload_id,
+                "parts": normalised,
+            },
+        )
+        if not isinstance(data, dict):
+            raise ApiError("Unexpected response shape from complete-multipart endpoint")
+        return data
+
+    def presign_parts(
+        self,
+        upload_guid: str,
+        s3_upload_id: str,
+        part_numbers: list[int],
+    ) -> list[PartUrl]:
+        """Generate fresh presigned URLs for specific multipart parts."""
+        data = self._post_json(
+            "/uploads/presign-parts/",
+            json={
+                "upload_guid": upload_guid,
+                "s3_upload_id": s3_upload_id,
+                "part_numbers": part_numbers,
+            },
+        )
+        if not isinstance(data, dict):
+            raise ApiError("Unexpected response shape from presign-parts endpoint")
+        urls = data.get("part_urls", [])
+        return [PartUrl.model_validate(u) for u in urls]
+
+    def abort_multipart(self, upload_guid: str, s3_upload_id: str) -> None:
+        """Abort an in-progress multipart upload and mark it failed server-side.
+
+        Raises on HTTP error; returns ``None`` on success.
+        """
+        self._send_request(
+            "POST",
+            path="/uploads/abort-multipart/",
+            json={"upload_guid": upload_guid, "s3_upload_id": s3_upload_id},
+        )
+
+    # ---------------------------
+    # High-level orchestration
+    # ---------------------------
+    def upload_file(
+        self,
+        path: str | Path,
+        *,
+        destination_type: str,
+        object_id: int,
+        content_type: str | None = None,
+        poll_status: bool = True,
+        poll_interval: float = 2.0,
+        poll_timeout: float = 600.0,
+    ) -> UploadResult:
+        """End-to-end upload: initiate → PUT bytes → (multipart only) complete → poll.
+
+        Works for both sessions (``destination_type="session"``) and folders
+        (``destination_type="folder"``). Branches automatically on the server's
+        ``upload_type`` response (single vs multipart).
+
+        Args:
+            path: Local file path to upload.
+            destination_type: ``"session"`` or ``"folder"`` (API convention).
+            object_id: Destination session or folder id.
+            content_type: Optional override; when omitted, guessed from the filename.
+            poll_status: When True, poll ``status_url`` until a terminal status or timeout.
+            poll_interval: Seconds between status polls. Use ``0.0`` only in tests;
+                production callers should use at least ``1.0`` to avoid hammering the API.
+            poll_timeout: Maximum seconds to wait before returning the last-known status.
+        """
+        file_path = Path(path)
+        if not file_path.is_file():
+            raise FileNotFoundError(f"Upload source not found: {file_path}")
+
+        file_size = file_path.stat().st_size
+        resolved_ct = content_type or mimetypes.guess_type(file_path.name)[0]
+
+        response = self.initiate(
+            filename=file_path.name,
+            destination_type=destination_type,
+            object_id=object_id,
+            file_size=file_size,
+            content_type=resolved_ct,
+        )
+
+        upload_type: Literal["single", "multipart"]
+        if isinstance(response, InitiateMultipartResponse):
+            self._upload_multipart(file_path, response)
+            upload_guid: str | None = response.upload_guid
+            upload_type = "multipart"
+        else:
+            assert isinstance(response, InitiateSingleResponse)
+            self._upload_single(file_path, response)
+            upload_guid = response.upload_guid
+            upload_type = "single"
+
+        final_status = (
+            self._poll_until_terminal(response.status_url, poll_interval, poll_timeout)
+            if poll_status
+            else ""
+        )
+
+        return UploadResult(
+            upload_guid=upload_guid,
+            upload_type=upload_type,
+            final_status=final_status,
+            status_url=response.status_url,
+        )
+
+    # ---------------------------
+    # Internals
+    # ---------------------------
+    def _upload_single(self, file_path: Path, response: InitiateSingleResponse) -> None:
+        with file_path.open("rb") as fh:
+            resp = self._http.put(
+                response.signed_upload_url,
+                content=fh,
+                headers=response.required_headers or {},
+            )
+            resp.raise_for_status()
+
+    def _upload_multipart(self, file_path: Path, response: InitiateMultipartResponse) -> None:
+        parts: list[Part] = []
+        with file_path.open("rb") as fh:
+            for part_url in sorted(response.part_urls, key=lambda p: p.part_number):
+                chunk = fh.read(response.part_size)
+                if not chunk:
+                    break
+                put_resp = self._http.put(part_url.url, content=chunk)
+                put_resp.raise_for_status()
+                etag = put_resp.headers.get("ETag") or put_resp.headers.get("etag", "")
+                parts.append(Part(part_number=part_url.part_number, etag=etag.strip('"')))
+
+            if fh.read(1):
+                raise ValueError(
+                    "File has more data than the server-provided part URLs can cover; "
+                    "the upload was aborted to avoid incomplete data."
+                )
+
+        self.complete(
+            response.upload_guid,
+            s3_upload_id=response.s3_upload_id,
+            parts=parts,
+        )
+
+    def _poll_until_terminal(
+        self,
+        status_url: str,
+        poll_interval: float,
+        poll_timeout: float,
+    ) -> str:
+        """Poll ``status_url`` until a terminal status is reached or timeout."""
+        deadline = time.monotonic() + poll_timeout
+        last_status = ""
+        while True:
+            resp = self._http.get(status_url, headers=self._headers())
+            resp.raise_for_status()
+            payload = resp.json() if resp.content else {}
+            last_status = str(payload.get("status", "")) if isinstance(payload, dict) else ""
+            if (
+                last_status == UploadStatus.COMPLETED.value
+                or last_status in TERMINAL_FAILURE_STATUSES
+            ):
+                return last_status
+            if time.monotonic() >= deadline:
+                logger.warning(
+                    "Upload status polling timed out after %.0fs (last status: %r)",
+                    poll_timeout,
+                    last_status,
+                )
+                return last_status
+            time.sleep(poll_interval)
