@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "databrarypy"
-version = "0.1.0-rc.1"
+version = "1.0.0-rc.1"
 description = "Python client library for the Databrary API"
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
