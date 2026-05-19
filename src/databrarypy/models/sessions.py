@@ -2,16 +2,24 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 from .records import Record
 
 
-class SessionDate(BaseModel):
-    """Structured date for a session.
+class SessionDuplicateFileCheckItem(BaseModel):
+    """One entry from the session check-duplicate-files endpoint."""
 
-    In staging fixtures this appears as separate year/month/day fields.
-    """
+    filename: str
+    exists: bool
+
+    model_config = {"extra": "forbid"}
+
+
+class SessionDate(BaseModel):
+    """Structured date for a session (snake_case; see :class:`~databrarypy.models.records.Age`)."""
 
     year: int | None = None
     month: int | None = None
@@ -34,10 +42,7 @@ class Session(BaseModel):
     # The date of the session. Backend may return a structured dict or a blurred string constant.
     date: SessionDate | str | None = None
 
-    # The total number of files directly in this session.
-    file_count: int
-    # The number of files the current user can access.
-    accessible_file_count: int
+    file_counts: dict[str, Any]
 
     # Whether the current user has full access to the session. (some can have blurred names and metadata)
 
@@ -49,5 +54,21 @@ class Session(BaseModel):
     default_records: list[Record] = Field(default_factory=list)
     # The records for the session.
     file_records: list[Record] = Field(default_factory=list)
+    source_info: dict[str, Any] | None = None
 
     model_config = {"populate_by_name": True, "extra": "forbid"}
+
+
+class SessionMutation(BaseModel):
+    """Fields returned when creating or updating a session (``SessionWriteSerializer``).
+
+    Narrower than :class:`Session`, which list/detail GET responses populate with
+    ``volume``, ``file_counts``, ``has_full_access``, etc.
+    """
+
+    id: int
+    name: str
+    release_level: str | None = None
+    source_date: str | None = None
+
+    model_config = {"populate_by_name": True, "extra": "ignore"}

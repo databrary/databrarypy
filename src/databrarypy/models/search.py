@@ -54,7 +54,6 @@ class VolumeSearchResult(BaseModel):
     owner: VolumeOwner
     tags: list[str] = Field(default_factory=list)
     file_types: list[str] = Field(default_factory=list)
-    has_session: bool | None = None
     sharing_level: str
     score: float
 

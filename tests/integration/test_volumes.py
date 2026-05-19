@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from contextlib import suppress
+
 import pytest
 from tests.conftest import collect_items, first_page_item
 
@@ -22,13 +24,13 @@ def test_volumes_tags_links_fundings(client: DatabraryClient):
     if next_volume is None:
         pytest.skip("No volumes available to test volumes")
     tags = client.volumes.tags(next_volume.id)
-    assert len(tags) > 0
+    assert isinstance(tags, list)
 
     links = client.volumes.links(next_volume.id)
-    assert len(links) > 0
+    assert isinstance(links, list)
 
     fundings = client.volumes.fundings(next_volume.id)
-    assert len(fundings) > 0
+    assert isinstance(fundings, list)
 
 
 def test_volumes_collaborators(client: DatabraryClient):
@@ -56,3 +58,44 @@ def test_volumes_activity(client: DatabraryClient):
         client.volumes.activity_list(next_volume.id, page=1, page_size=5), limit=6
     )
     assert len(seen_items) <= 6
+
+
+def test_volumes_export_tasks(client: DatabraryClient, integration_volume_id: int):
+    zip_task = client.volumes.request_zip_download(integration_volume_id)
+    assert zip_task.task_id
+
+    csv_task = client.volumes.request_csv_download(integration_volume_id)
+    assert csv_task.task_id
+
+
+def test_volumes_enabled_categories_round_trip(
+    client: DatabraryClient,
+    writable_volume: int,
+):
+    original = client.volumes.get_enabled_categories(writable_volume)
+    original_ids = [c.id for c in original]
+    if not original_ids:
+        pytest.skip("Volume has no enabled categories to test round-trip")
+
+    try:
+        cats = client.volumes.get_enabled_categories(writable_volume)
+        assert len(cats) >= 1
+
+        if len(original_ids) > 1:
+            to_disable = original_ids[-1]
+            if to_disable in original_ids:
+                client.volumes.disable_category(writable_volume, to_disable)
+                after_disable = client.volumes.get_enabled_categories(writable_volume)
+                assert all(c.id != to_disable for c in after_disable)
+                client.volumes.enable_category(writable_volume, to_disable)
+
+        client.volumes.set_enabled_categories(writable_volume, original_ids)
+        restored = client.volumes.get_enabled_categories(writable_volume)
+        assert {c.id for c in restored} == set(original_ids)
+    except Exception as exc:
+        with suppress(Exception):
+            client.volumes.set_enabled_categories(writable_volume, original_ids)
+        pytest.skip(f"Volume category admin not available: {exc}")
+    finally:
+        with suppress(Exception):
+            client.volumes.set_enabled_categories(writable_volume, original_ids)

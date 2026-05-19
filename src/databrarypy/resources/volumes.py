@@ -6,6 +6,7 @@ import builtins
 from typing import Iterator
 
 from ..models import (
+    Category,
     Page,
     VolumeActivityItem,
     VolumeCollaborator,
@@ -106,6 +107,49 @@ class VolumesResource(BaseResource):
             params=params,
             parser=VolumeActivityItem.model_validate,
         )
+
+    # ---------------------------
+    # Volume categories
+    # ---------------------------
+
+    def get_enabled_categories(self, volume_id: int) -> builtins.list[Category]:
+        """List categories currently enabled for a volume."""
+        data = self._get_json(f"/volumes/{volume_id}/")
+        items = data.get("enabled_categories") or [] if isinstance(data, dict) else []
+        return [Category.model_validate(c) for c in items]
+
+    def set_enabled_categories(
+        self,
+        volume_id: int,
+        category_ids: builtins.list[int],
+    ) -> None:
+        """Replace the volume's enabled categories with the given list.
+
+        This is a full replacement -- categories not in *category_ids* will be
+        disabled.  Pass an empty list to disable all categories.
+        """
+        self._post_json(f"/volumes/{volume_id}/categories/", json=category_ids)
+
+    def enable_category(self, volume_id: int, category_id: int) -> None:
+        """Add a single category to the volume's enabled set (additive).
+
+        No-op if the category is already enabled.
+        """
+        current = self.get_enabled_categories(volume_id)
+        current_ids = [c.id for c in current]
+        if category_id not in current_ids:
+            current_ids.append(category_id)
+            self.set_enabled_categories(volume_id, current_ids)
+
+    def disable_category(self, volume_id: int, category_id: int) -> None:
+        """Remove a single category from the volume's enabled set.
+
+        No-op if the category is not currently enabled.
+        """
+        current = self.get_enabled_categories(volume_id)
+        updated_ids = [c.id for c in current if c.id != category_id]
+        if len(updated_ids) != len(current):
+            self.set_enabled_categories(volume_id, updated_ids)
 
     # ---------------------------
     # Downloads (ZIP/CSV)

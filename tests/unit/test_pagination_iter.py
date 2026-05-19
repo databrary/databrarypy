@@ -7,7 +7,12 @@ from databrarypy.resources._base import BaseResource
 
 def test_paginate_items_next_url_chain():
     pages = [
-        {"count": 3, "next": "https://api.example/pg2", "previous": None, "results": [1]},
+        {
+            "count": 3,
+            "next": "https://api.example/pg2",
+            "previous": None,
+            "results": [1],
+        },
         {"count": 3, "next": "/pg3", "previous": None, "results": [2]},
         {"count": 3, "next": None, "previous": None, "results": [3]},
     ]

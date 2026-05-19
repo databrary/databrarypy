@@ -9,6 +9,7 @@ from .search import SearchResource
 from .sessions import SessionsResource
 from .system import SystemResource
 from .tags import TagsResource
+from .uploads import UploadsResource
 from .users import UsersResource
 from .volumes import VolumesResource
 
@@ -24,4 +25,5 @@ __all__ = [
     "SessionsResource",
     "FoldersResource",
     "RecordsResource",
+    "UploadsResource",
 ]

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from tests.conftest import collect_items, first_list_item, first_page_item
 
 from databrarypy.client import DatabraryClient
+from databrarypy.models import UserStatistics
 
 
 def _resolve_current_user(client: DatabraryClient) -> tuple[str, int | None]:
@@ -81,3 +84,22 @@ def test_users_volumes_list_iterator(client: DatabraryClient):
         pytest.skip("Authenticated user id unavailable in search results")
     seen_items = collect_items(client.users.volumes_list(uid, page=1, page_size=5), limit=6)
     assert len(seen_items) <= 6
+
+
+def test_users_statistics(client: DatabraryClient):
+    _, uid = _resolve_current_user(client)
+    if uid is None:
+        pytest.skip("Authenticated user id unavailable in search results")
+
+    stats = client.users.statistics(uid)
+    assert stats is None or isinstance(stats, UserStatistics)
+
+
+def test_users_avatar_dest_path(client: DatabraryClient, tmp_path: Path):
+    _, uid = _resolve_current_user(client)
+    if uid is None:
+        pytest.skip("Authenticated user id unavailable in search results")
+
+    dest = tmp_path / "avatar.jpg"
+    saved = client.users.avatar(uid, dest_path=str(dest))
+    assert Path(saved).exists() or dest.exists() or saved == str(dest)

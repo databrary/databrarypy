@@ -8,7 +8,7 @@ help:
 	@echo "  make test-integration      - Run only staging integration tests"
 	@echo "  make integration-coverage - Run staging tests with coverage"
 	@echo "  make lint         - Run ruff checks"
-	@echo "  make format       - Format code with ruff and black"
+	@echo "  make format       - Format code with ruff"
 	@echo "  make type-check   - Run mypy type checking"
 	@echo "  make clean        - Remove cache and build files"
 	@echo "  make all          - Run pre-commit on all files, then tests"
@@ -49,7 +49,6 @@ lint:
 format:
 	poetry run ruff check --fix src/ tests/
 	poetry run ruff format src/ tests/
-	poetry run black src/ tests/
 
 type-check:
 	poetry run mypy src/

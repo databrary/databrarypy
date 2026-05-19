@@ -13,7 +13,11 @@ from .institutions import MOCK_INSTITUTION_1_DETAILED
 from .sessions import SESSION_ID_1
 from .sponsorships import _get_mock_institution_sponsorship_1
 from .volume_coauthors import MOCK_VOLUME_COAUTHORS_LIST
-from .volume_metrics import MOCK_VOLUME_CATEGORIES, MOCK_VOLUME_CITATION, MOCK_VOLUME_METRICS
+from .volume_metrics import (
+    MOCK_VOLUME_CATEGORIES,
+    MOCK_VOLUME_CITATION,
+    MOCK_VOLUME_METRICS,
+)
 from .volume_tags_links_fundings import MOCK_VOLUME_LINKS_1
 
 
@@ -57,7 +61,12 @@ def _get_mock_volume_detailed():
                 "learning_audiences": 0,
                 "public": 121,
             },
-            "folder": {"private": 0, "authorized_users": 0, "learning_audiences": 0, "public": 18},
+            "folder": {
+                "private": 0,
+                "authorized_users": 0,
+                "learning_audiences": 0,
+                "public": 18,
+            },
         },
         "thumbnail": None,
     }
@@ -115,13 +124,15 @@ def handle_volume_history(request: httpx.Request) -> httpx.Response:
 
 def handle_volume_zip_download_link(request: httpx.Request) -> httpx.Response:
     return httpx.Response(
-        200, json={"status": TASK_STATUS_PROCESSING, "message": None, "task_id": "zip-1"}
+        200,
+        json={"status": TASK_STATUS_PROCESSING, "message": None, "task_id": "zip-1"},
     )
 
 
 def handle_volume_csv_download_link(request: httpx.Request) -> httpx.Response:
     return httpx.Response(
-        200, json={"status": TASK_STATUS_PROCESSING, "message": None, "task_id": "csv-1"}
+        200,
+        json={"status": TASK_STATUS_PROCESSING, "message": None, "task_id": "csv-1"},
     )
 
 

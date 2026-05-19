@@ -1,12 +1,35 @@
 """UsersResource tests."""
 
+import pytest
+
 from databrarypy.client import DatabraryClient
-from tests.fixtures.data_constants import USER_ID_PRIMARY
+from databrarypy.errors import NotFoundError
+from tests.fixtures.data_constants import (
+    USER_ID_1,
+    USER_ID_2,
+    USER_ID_NOT_FOUND,
+    USER_ID_PRIMARY,
+)
 from tests.fixtures.users import (
     MOCK_USER_1,
     MOCK_USER_6_AFFILIATE_ACTIVE,
+    MOCK_USER_STATISTICS,
     build_composite_transport,
 )
+
+
+def _make_client():
+    transport = build_composite_transport()
+    client = DatabraryClient(
+        base_url="https://api.example",
+        client_id="cid",
+        client_secret="sec",
+        username="user@example.org",
+        password="pw",
+        transport=transport,
+    )
+    client.auth.login()
+    return client
 
 
 def test_users_list_and_retrieve():
@@ -138,3 +161,30 @@ def test_users_iterators():
 
     acts = list(client.users.activity_list(6))
     assert acts and all(item.timestamp for item in acts)
+
+
+def test_user_statistics_ok():
+    client = _make_client()
+
+    stats = client.users.statistics(USER_ID_1)
+
+    assert stats is not None
+    assert stats.user_id == USER_ID_1
+    assert stats.volumes_number == MOCK_USER_STATISTICS["volumes_number"]
+    assert stats.files_number == MOCK_USER_STATISTICS["files_number"]
+    assert stats.uploaded_data_footprint == MOCK_USER_STATISTICS["uploaded_data_footprint"]
+
+
+def test_user_statistics_no_content():
+    client = _make_client()
+
+    stats = client.users.statistics(USER_ID_2)
+
+    assert stats is None
+
+
+def test_user_statistics_not_found():
+    client = _make_client()
+
+    with pytest.raises(NotFoundError):
+        client.users.statistics(USER_ID_NOT_FOUND)

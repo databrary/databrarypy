@@ -26,10 +26,10 @@ def _get_mock_folder_1():
         "created_at": "2025-06-02T10:00:00Z",
         "updated_at": "2025-06-02T10:10:00Z",
         "source_date": "2025-06-01",
-        "file_count": 1,
-        "accessible_file_count": 1,
+        "file_counts": {"native_total": 1, "linked_total": 0},
         "has_full_access": True,
         "contains_different_release_levels": False,
+        "source_info": None,
     }
 
 
@@ -113,10 +113,138 @@ def handle_folder_zip_download_link(request: httpx.Request) -> httpx.Response:
     )
 
 
+# ---- Write handlers (CRUD) ----
+FOLDER_ID_CREATED = 302
+DUPLICATE_FILENAME = "existing.jpg"
+
+
+def _folder_response_with(
+    name: str = "Folder A",
+    release_level: str = "public",
+    source_date: str | None = "2025-06-01",
+) -> dict:
+    folder = _get_mock_folder_1()
+    folder["name"] = name
+    folder["release_level"] = release_level
+    folder["source_date"] = source_date
+    return folder
+
+
+def handle_folder_create(request: httpx.Request) -> httpx.Response:
+    import json as _json
+
+    body = _json.loads(request.content or b"{}")
+    response = _folder_response_with(
+        name=body.get("name", "Folder A"),
+        release_level=body.get("release_level", "public"),
+        source_date=body.get("source_date"),
+    )
+    response["id"] = FOLDER_ID_CREATED
+    return httpx.Response(201, json=response)
+
+
+def handle_folder_put(request: httpx.Request) -> httpx.Response:
+    import json as _json
+
+    body = _json.loads(request.content or b"{}")
+    base = dict(_get_mock_folder_1())
+    if "name" in body:
+        base["name"] = body["name"]
+    if "release_level" in body:
+        base["release_level"] = body["release_level"]
+    if "source_date" in body:
+        base["source_date"] = body["source_date"]
+    return httpx.Response(200, json=base)
+
+
+def handle_folder_patch(request: httpx.Request) -> httpx.Response:
+    import json as _json
+
+    body = _json.loads(request.content or b"{}")
+    base = _get_mock_folder_1()
+    if "name" in body:
+        base["name"] = body["name"]
+    if "release_level" in body:
+        base["release_level"] = body["release_level"]
+    if "source_date" in body:
+        base["source_date"] = body["source_date"]
+    return httpx.Response(200, json=base)
+
+
+def handle_folder_delete(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(204)
+
+
+def handle_check_duplicate_files(request: httpx.Request) -> httpx.Response:
+    import json as _json
+
+    body = _json.loads(request.content or b"{}")
+    filenames = body.get("filenames", [])
+    result = [{"filename": fn, "exists": fn == DUPLICATE_FILENAME} for fn in filenames]
+    return httpx.Response(200, json=result)
+
+
+# ---- File metadata handlers ----
+def _folder_file_response_with(**overrides) -> dict:
+    base = _get_mock_folder_1_file()
+    base.update(overrides)
+    return base
+
+
+def handle_folder_file_put(request: httpx.Request) -> httpx.Response:
+    import json as _json
+
+    body = _json.loads(request.content or b"{}")
+    return httpx.Response(
+        200,
+        json=_folder_file_response_with(
+            name=body.get("name") or "Image 1.jpg",
+            release_level=body.get("release_level") or "public",
+        ),
+    )
+
+
+def handle_folder_file_patch(request: httpx.Request) -> httpx.Response:
+    import json as _json
+
+    body = _json.loads(request.content or b"{}")
+    overrides = {k: v for k, v in body.items() if k in {"name", "release_level"}}
+    return httpx.Response(200, json=_folder_file_response_with(**overrides))
+
+
+def handle_folder_file_delete(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(204)
+
+
 def build_folders_transport():
     return build_transport(
         ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/folders/", handle_folders_list),
-        ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/", handle_folder_detail),
+        ("POST", f"/volumes/{VOLUME_ID_PRIMARY}/folders/", handle_folder_create),
+        (
+            "GET",
+            f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/",
+            handle_folder_detail,
+        ),
+        (
+            "PUT",
+            f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/",
+            handle_folder_put,
+        ),
+        (
+            "PATCH",
+            f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/",
+            handle_folder_patch,
+        ),
+        (
+            "DELETE",
+            f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/",
+            handle_folder_delete,
+        ),
+        (
+            "POST",
+            f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/check-duplicate-files/",
+            handle_check_duplicate_files,
+        ),
         (
             "GET",
             f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/files/",
@@ -126,6 +254,21 @@ def build_folders_transport():
             "GET",
             f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/files/{FOLDER_FILE_ID_1}/",
             handle_folder_file_detail,
+        ),
+        (
+            "PUT",
+            f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/files/{FOLDER_FILE_ID_1}/",
+            handle_folder_file_put,
+        ),
+        (
+            "PATCH",
+            f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/files/{FOLDER_FILE_ID_1}/",
+            handle_folder_file_patch,
+        ),
+        (
+            "DELETE",
+            f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/files/{FOLDER_FILE_ID_1}/",
+            handle_folder_file_delete,
         ),
         (
             "GET",
