@@ -59,7 +59,7 @@ dmypy.json
 .pytest_tmp/
 
 # Environment variables
-.env
+.env*
 
 # Documentation
 docs/

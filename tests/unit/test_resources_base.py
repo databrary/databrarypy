@@ -218,6 +218,32 @@ def test_request_json_429_with_non_numeric_retry_after_is_ignored_then_success()
     assert data == {"ok": True}
 
 
+def test_put_json_empty_body_returns_empty_dict():
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "PUT":
+            return httpx.Response(204, content=b"")
+        return httpx.Response(404)
+
+    br = _br_with_transport(httpx.MockTransport(handler))
+    data = br._put_json("/resource/1/", json={"name": "x"})
+    assert data == {}
+
+
+def test_get_json_or_none_parse_error_on_non_204_returns_none():
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, content=b"not-json")
+
+    br = _br_with_transport(httpx.MockTransport(handler))
+    assert br._get_json_or_none("/stats/") is None
+
+
+def test_compute_delay_with_jitter_is_non_negative():
+    br = _br_with_transport(httpx.MockTransport(lambda r: httpx.Response(404)))
+    br._backoff_jitter = 0.5
+    delay = br._compute_delay(attempt=2)
+    assert delay >= br._backoff_base * (2**2)
+
+
 def test_get_page_normalizes_missing_count():
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/p1":
