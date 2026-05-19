@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Any, Iterator
 
 from ..errors import ApiError, NotFoundError
 from ..models import Page
+from ..models.bulk import BulkResult
 from ..models.records import Record
+from ..utils.strings import require_nonempty_stripped
 from ._base import BaseResource
+from .bulk import _bulk_apply
 
 _PRIORITY_METRIC_NAMES = ("name", "id", "description")
 
@@ -185,6 +189,75 @@ class RecordsResource(BaseResource):
     def delete(self, volume_id: int, record_id: int) -> bool:
         """Soft-delete a record from a volume."""
         return self._delete_request(f"/volumes/{volume_id}/records/{record_id}/")
+
+    # ------------------------------------------------------------------
+    # Bulk operations
+    # ------------------------------------------------------------------
+
+    def bulk_create(
+        self,
+        volume_id: int,
+        category_id: int,
+        items: Iterable[dict[str, Any]],
+    ) -> BulkResult:
+        """Create multiple records in one volume/category.
+
+        Each mapping must include ``name`` (mapped to the category priority metric).
+        Optional keys: ``measures``, ``participant`` (same semantics as :meth:`create`).
+
+        Resolves the priority metric id once for the whole batch (one volume GET).
+        """
+        metric_id = self._get_priority_metric_id(volume_id, category_id)
+        if metric_id is None:
+            raise ValueError(
+                f"Cannot resolve name metric for category {category_id} in volume {volume_id}"
+            )
+
+        def _create(item: dict[str, Any]) -> Record:
+            name = require_nonempty_stripped(item["name"], field="name")
+            merged_measures = dict(item.get("measures") or {})
+            merged_measures[str(metric_id)] = name
+            body: dict[str, Any] = {
+                "category_id": category_id,
+                "measures": merged_measures,
+            }
+            if item.get("participant") is not None:
+                body["participant"] = item["participant"]
+            data = self._post_json(f"/volumes/{volume_id}/records/", json=body)
+            return Record.model_validate(data)
+
+        return _bulk_apply(inputs=list(items), fn=_create)
+
+    def bulk_rename(
+        self,
+        volume_id: int,
+        category_id: int,
+        renames: Iterable[tuple[int, str]],
+    ) -> BulkResult:
+        """Rename records by updating the category priority measure only.
+
+        ``renames`` are ``(record_id, new_name)`` pairs. Resolves the priority metric
+        id once for the batch.
+        """
+        metric_id = self._get_priority_metric_id(volume_id, category_id)
+        if metric_id is None:
+            raise ValueError(
+                f"Cannot resolve name metric for category {category_id} in volume {volume_id}"
+            )
+
+        def _rename(pair: tuple[int, str]) -> Record:
+            record_id, name = pair
+            return self.update(volume_id, record_id, measures={str(metric_id): name})
+
+        return _bulk_apply(inputs=list(renames), fn=_rename)
+
+    def bulk_delete(self, volume_id: int, record_ids: Iterable[int]) -> BulkResult:
+        """Soft-delete multiple records sequentially. Fast-fails with partial state."""
+        return _bulk_apply(
+            inputs=list(record_ids),
+            fn=lambda rid: self.delete(volume_id, rid),
+            is_failure=lambda res: res is not True,
+        )
 
     # ------------------------------------------------------------------
     # Measures

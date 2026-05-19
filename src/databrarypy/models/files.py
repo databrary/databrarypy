@@ -48,9 +48,14 @@ class FileWrite(BaseModel):
 
     model_config = {"populate_by_name": True, "extra": "forbid"}
 
-    def to_payload(self, *, drop_none: bool) -> dict[str, Any]:
-        """Serialize for the wire. ``drop_none=True`` for PATCH; False for PUT."""
-        return self.model_dump(exclude_none=drop_none)
+    def to_patch_payload(self) -> dict[str, Any]:
+        """Serialize for PATCH: only keys with non-None values.
+
+        Session file PUT builds its body explicitly (omit unset fields); do not
+        use ``model_dump(exclude_none=False)`` for PUT or the API may interpret
+        JSON ``null`` as clearing nullable metadata.
+        """
+        return self.model_dump(exclude_none=True)
 
 
 class File(BaseModel):

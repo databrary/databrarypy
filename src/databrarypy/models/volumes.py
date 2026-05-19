@@ -12,7 +12,14 @@ from .institutions import Institution
 from .sponsorships import Sponsorship
 from .users import UserSlim
 from .volume_coauthors import VolumeCoauthor
-from .volume_shared import Category, Citation, FileCounts, Metric, VolumeFundingRead, VolumeLink
+from .volume_shared import (
+    Category,
+    Citation,
+    FileCounts,
+    Metric,
+    VolumeFundingRead,
+    VolumeLink,
+)
 
 
 class VolumePreview(BaseModel):

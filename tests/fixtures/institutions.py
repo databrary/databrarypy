@@ -148,7 +148,11 @@ def build_institutions_transport():
             handle_institutions_affiliates,
         ),
         ("GET", f"/institutions/{INSTITUTION_ID_1}/avatar/", handle_institution_avatar),
-        ("GET", f"/institutions/{INSTITUTION_ID_NOT_FOUND}/avatar/", handle_institution_avatar_404),
+        (
+            "GET",
+            f"/institutions/{INSTITUTION_ID_NOT_FOUND}/avatar/",
+            handle_institution_avatar_404,
+        ),
         (
             "GET",
             f"/institutions/{INSTITUTION_ID_1}/statistics/",

@@ -175,11 +175,23 @@ _UNASSIGN_PATH = (
 def build_records_transport():
     return build_transport(
         ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/records/", handle_records_list),
-        ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/records/{RECORD_ID_1}/", handle_record_detail),
+        (
+            "GET",
+            f"/volumes/{VOLUME_ID_PRIMARY}/records/{RECORD_ID_1}/",
+            handle_record_detail,
+        ),
         ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/", handle_volume_detail),
         ("POST", f"/volumes/{VOLUME_ID_PRIMARY}/records/", handle_record_create),
-        ("PATCH", f"/volumes/{VOLUME_ID_PRIMARY}/records/{RECORD_ID_1}/", handle_record_update),
-        ("DELETE", f"/volumes/{VOLUME_ID_PRIMARY}/records/{RECORD_ID_1}/", handle_record_delete),
+        (
+            "PATCH",
+            f"/volumes/{VOLUME_ID_PRIMARY}/records/{RECORD_ID_1}/",
+            handle_record_update,
+        ),
+        (
+            "DELETE",
+            f"/volumes/{VOLUME_ID_PRIMARY}/records/{RECORD_ID_1}/",
+            handle_record_delete,
+        ),
         ("POST", _MEASURE_PATH, handle_set_measure),
         ("DELETE", _MEASURE_PATH, handle_delete_measure),
         ("POST", _ASSIGN_PATH, handle_assign_record),

@@ -3,7 +3,7 @@
 from .affiliate_requests import AffiliateAccessRequest
 from .categories import Category, Metric
 from .files import File
-from .folders import Folder, FolderDuplicateFileCheckItem
+from .folders import Folder, FolderDuplicateFileCheckItem, FolderMutation
 from .formats import Format, GroupedFormats
 from .funders import Funder
 from .history import HistoryUser, UserActivityItem, VolumeActivityItem
@@ -13,12 +13,22 @@ from .institutions import Institution
 from .levels import PermissionLevels, ReleaseLevels
 from .paginated import Page
 from .records import AgeInput, BirthdayInput, DateMeasureValue, ParticipantInput, Record
-from .sessions import Session, SessionDuplicateFileCheckItem
+from .sessions import Session, SessionDuplicateFileCheckItem, SessionMutation
 from .sponsorships import Sponsorship
 from .statistics import InstitutionStatistics, UserStatistics
 from .stats import Stats
 from .supported_types import SupportedFileType, SupportedFileTypes
 from .tags import Tag
+from .uploads import (
+    TERMINAL_FAILURE_STATUSES,
+    InitiateMultipartResponse,
+    InitiateResponse,
+    InitiateSingleResponse,
+    Part,
+    PartUrl,
+    UploadResult,
+    UploadStatus,
+)
 from .users import SuspendedBy, UserPublic, UserSelf, UserSlim
 from .volume_shared import VolumeFundingRead, VolumeLink
 from .volumes import (
@@ -48,10 +58,14 @@ __all__ = [
     "File",
     "Folder",
     "FolderDuplicateFileCheckItem",
+    "FolderMutation",
     "Format",
     "Funder",
     "GroupedFormats",
     "HistoryUser",
+    "InitiateMultipartResponse",
+    "InitiateResponse",
+    "InitiateSingleResponse",
     "Institution",
     "InstitutionAccessRequest",
     "InstitutionSponsorship",
@@ -59,18 +73,24 @@ __all__ = [
     "Metric",
     "DateMeasureValue",
     "Page",
+    "Part",
+    "PartUrl",
     "ParticipantInput",
     "PermissionLevels",
     "Record",
     "ReleaseLevels",
     "Session",
     "SessionDuplicateFileCheckItem",
+    "SessionMutation",
     "Sponsorship",
     "Stats",
     "SupportedFileType",
     "SupportedFileTypes",
     "SuspendedBy",
+    "TERMINAL_FAILURE_STATUSES",
     "Tag",
+    "UploadResult",
+    "UploadStatus",
     "UserActivityItem",
     "UserPublic",
     "UserSelf",

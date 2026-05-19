@@ -323,7 +323,9 @@ def test_sessions_delete_file() -> None:
     assert client.sessions.delete_file(VOLUME_ID_PRIMARY, SESSION_ID_1, SESSION_FILE_ID_1) is True
 
 
-def test_sessions_check_duplicate_files_rejects_non_list(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_sessions_check_duplicate_files_rejects_non_list(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     client = _make_client()
 
     monkeypatch.setattr(client.sessions, "_post_json", lambda *args, **kwargs: {})

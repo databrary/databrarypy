@@ -67,7 +67,12 @@ def test_search_list_variants():
     # users list
     users = list(
         client.search.users_list(
-            q="alex", filter="active", page=1, page_size=5, sort_by="name", sort_order="asc"
+            q="alex",
+            filter="active",
+            page=1,
+            page_size=5,
+            sort_by="name",
+            sort_order="asc",
         )
     )
     assert users and users[0].full_name == _get_mock_user_hit()["full_name"]
@@ -79,7 +84,11 @@ def test_search_list_variants():
     # volumes list basic
     vols = list(
         client.search.volumes_list(
-            q="lang", files_release_levels=["public"], tag="science", page=1, page_size=2
+            q="lang",
+            files_release_levels=["public"],
+            tag="science",
+            page=1,
+            page_size=2,
         )
     )
     assert vols and vols[0].id == _get_mock_volume_hit()["id"]

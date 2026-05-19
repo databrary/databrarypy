@@ -9,24 +9,38 @@ from pydantic import BaseModel, Field
 
 
 class UploadStatus(StrEnum):
-    """Frontend-facing upload status values returned by the status endpoint.
+    """Upload status values returned by the status endpoint.
 
-    ``SCANNING`` and any unknown intermediate string are non-terminal.
-    The remaining values are terminal (success or failure).
+    On-prem (databrary-core / backend_2.0): ``initiated``, ``processing``, ``completed``,
+    ``failed``.  AI (databrary-ai): ``scanning``, ``completed``, ``infected``,
+    ``upload_failed``, ``processing_failed``.
+
+    ``INITIATED``, ``PROCESSING``, and ``SCANNING`` are non-terminal during polling.
+    ``COMPLETED`` and strings in ``TERMINAL_FAILURE_STATUSES`` end polling when matched.
     """
 
-    SCANNING = "scanning"
+    # on-prem (databrary-core / backend_2.0) statuses
+    INITIATED = "initiated"
+    PROCESSING = "processing"
+    FAILED = "failed"
+    # shared terminal success
     COMPLETED = "completed"
+    # AI (databrary-ai) statuses
+    SCANNING = "scanning"
     INFECTED = "infected"
     UPLOAD_FAILED = "upload_failed"
     PROCESSING_FAILED = "processing_failed"
 
 
+# Failure strings that stop upload status polling immediately (besides ``completed``).
+# When the API adds a new terminal failure value, extend UploadStatus and add its
+# ``.value`` here; otherwise ``UploadsResource.upload_file`` polls until timeout.
 TERMINAL_FAILURE_STATUSES = frozenset(
     {
-        UploadStatus.INFECTED.value,
-        UploadStatus.UPLOAD_FAILED.value,
-        UploadStatus.PROCESSING_FAILED.value,
+        UploadStatus.FAILED.value,  # on-prem
+        UploadStatus.INFECTED.value,  # AI
+        UploadStatus.UPLOAD_FAILED.value,  # AI
+        UploadStatus.PROCESSING_FAILED.value,  # AI
     }
 )
 

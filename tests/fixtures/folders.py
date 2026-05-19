@@ -119,7 +119,9 @@ DUPLICATE_FILENAME = "existing.jpg"
 
 
 def _folder_response_with(
-    name: str = "Folder A", release_level: str = "public", source_date: str | None = "2025-06-01"
+    name: str = "Folder A",
+    release_level: str = "public",
+    source_date: str | None = "2025-06-01",
 ) -> dict:
     folder = _get_mock_folder_1()
     folder["name"] = name
@@ -218,10 +220,26 @@ def build_folders_transport():
     return build_transport(
         ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/folders/", handle_folders_list),
         ("POST", f"/volumes/{VOLUME_ID_PRIMARY}/folders/", handle_folder_create),
-        ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/", handle_folder_detail),
-        ("PUT", f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/", handle_folder_put),
-        ("PATCH", f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/", handle_folder_patch),
-        ("DELETE", f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/", handle_folder_delete),
+        (
+            "GET",
+            f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/",
+            handle_folder_detail,
+        ),
+        (
+            "PUT",
+            f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/",
+            handle_folder_put,
+        ),
+        (
+            "PATCH",
+            f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/",
+            handle_folder_patch,
+        ),
+        (
+            "DELETE",
+            f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/",
+            handle_folder_delete,
+        ),
         (
             "POST",
             f"/volumes/{VOLUME_ID_PRIMARY}/folders/{FOLDER_ID_1}/check-duplicate-files/",

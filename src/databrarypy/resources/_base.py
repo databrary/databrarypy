@@ -137,7 +137,8 @@ class BaseResource:
 
             if 400 <= resp.status_code < 500:
                 raise ApiError(
-                    f"Client error {resp.status_code}: {resp.text}", status_code=resp.status_code
+                    f"Client error {resp.status_code}: {resp.text}",
+                    status_code=resp.status_code,
                 )
 
             if attempt < self._max_retries:
@@ -237,7 +238,12 @@ class BaseResource:
         if not isinstance(data, dict) or "count" not in data:
             # Normalize to an empty page structure if server returns empty body
             results = [] if not isinstance(data, dict) else data.get("results", [])
-            data = {"count": len(results), "next": None, "previous": None, "results": results}
+            data = {
+                "count": len(results),
+                "next": None,
+                "previous": None,
+                "results": results,
+            }
         if parser is not None:
             data["results"] = [parser(item) for item in data.get("results", [])]
         return Page[T].model_validate(data)

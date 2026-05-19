@@ -57,3 +57,18 @@ class Session(BaseModel):
     source_info: dict[str, Any] | None = None
 
     model_config = {"populate_by_name": True, "extra": "forbid"}
+
+
+class SessionMutation(BaseModel):
+    """Fields returned when creating or updating a session (``SessionWriteSerializer``).
+
+    Narrower than :class:`Session`, which list/detail GET responses populate with
+    ``volume``, ``file_counts``, ``has_full_access``, etc.
+    """
+
+    id: int
+    name: str
+    release_level: str | None = None
+    source_date: str | None = None
+
+    model_config = {"populate_by_name": True, "extra": "ignore"}

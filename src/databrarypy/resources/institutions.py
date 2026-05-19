@@ -70,7 +70,11 @@ class InstitutionsResource(BaseResource):
         return InstitutionStatistics.model_validate(data)
 
     def authorized_investigators(
-        self, institution_id: int, *, page: int | None = None, page_size: int | None = None
+        self,
+        institution_id: int,
+        *,
+        page: int | None = None,
+        page_size: int | None = None,
     ) -> builtins.list[UserSlim]:
         """Return current investigators (role == 'investigator') for an institution.
 

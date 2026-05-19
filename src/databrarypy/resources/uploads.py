@@ -5,12 +5,14 @@ from __future__ import annotations
 import logging
 import mimetypes
 import time
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any, Literal
 
 from pydantic import TypeAdapter
 
 from ..errors import ApiError
+from ..models.bulk import BulkItemStatus, BulkResult
 from ..models.uploads import (
     TERMINAL_FAILURE_STATUSES,
     InitiateMultipartResponse,
@@ -22,6 +24,7 @@ from ..models.uploads import (
     UploadStatus,
 )
 from ._base import BaseResource
+from .bulk import _bulk_apply
 
 logger = logging.getLogger(__name__)
 
@@ -32,14 +35,21 @@ class UploadsResource(BaseResource):
     """Upload pipeline operations for sessions and folders.
 
     Three-step flow:
-      1. :meth:`initiate` — register the upload, receive presigned URL(s).
-      2. PUT bytes directly to S3 using the presigned URL(s).
-      3. :meth:`complete` — finalize multipart uploads (no-op for single).
+      1. :meth:`initiate` — register the upload, receive a signed upload URL.
+      2. PUT bytes directly to the storage backend (Nginx on on-prem, S3 on cloud).
+      3. :meth:`complete` — finalize multipart uploads on cloud only (no-op for single).
 
     Use :meth:`upload_file` for the full orchestrated flow.
+
+    Presigned PUT requests use the raw HTTP client and do **not** use the client's
+    authenticated-API retry/backoff. Callers may retry at a higher level if needed.
+
+    Multipart uploads that fail before a successful :meth:`complete` trigger a best-effort
+    :meth:`abort_multipart` to reduce orphaned MPU state on the server (cloud only).
     """
 
-    # Mirrored from server (databrary-ai UploadToAWSService).
+    # Reference values matching databrary-ai (UploadToAWSService); not used for branching —
+    # the API decides single vs multipart from ``file_size`` in :meth:`initiate`.
     MULTIPART_THRESHOLD_BYTES = 100 * 1024 * 1024
     MULTIPART_PART_SIZE_BYTES = 10 * 1024 * 1024
 
@@ -80,7 +90,12 @@ class UploadsResource(BaseResource):
         return _INITIATE_ADAPTER.validate_python(data)
 
     def status(self, upload_guid: str) -> str:
-        """Poll the upload status. Returns the raw status string from the server."""
+        """Return the raw ``status`` string from ``/uploads/{upload_guid}/status/``.
+
+        Unlike :meth:`upload_file`'s internal polling, this method is strict: a non-object
+        JSON body raises :exc:`~databrarypy.errors.ApiError` instead of being treated as
+        an empty status.
+        """
         data = self._get_json(f"/uploads/{upload_guid}/status/")
         if not isinstance(data, dict):
             raise ApiError("Unexpected status response shape")
@@ -119,7 +134,12 @@ class UploadsResource(BaseResource):
         s3_upload_id: str,
         part_numbers: list[int],
     ) -> list[PartUrl]:
-        """Generate fresh presigned URLs for specific multipart parts."""
+        """Generate fresh presigned URLs for specific multipart parts (AI / cloud-only).
+
+        Not available on on-prem (``backend_2.0``).  :meth:`upload_file` does not refresh
+        expired URLs; for very long uploads or custom flows, obtain new URLs here and PUT
+        parts yourself.
+        """
         data = self._post_json(
             "/uploads/presign-parts/",
             json={
@@ -134,9 +154,10 @@ class UploadsResource(BaseResource):
         return [PartUrl.model_validate(u) for u in urls]
 
     def abort_multipart(self, upload_guid: str, s3_upload_id: str) -> None:
-        """Abort an in-progress multipart upload and mark it failed server-side.
+        """Abort an in-progress multipart upload and mark it failed server-side (AI / cloud-only).
 
-        Raises on HTTP error; returns ``None`` on success.
+        Not available on on-prem (``backend_2.0``).  Raises on HTTP error; returns ``None``
+        on success.
         """
         self._send_request(
             "POST",
@@ -154,6 +175,8 @@ class UploadsResource(BaseResource):
         destination_type: str,
         object_id: int,
         content_type: str | None = None,
+        source_session_id: int | None = None,
+        source_folder_id: int | None = None,
         poll_status: bool = True,
         poll_interval: float = 2.0,
         poll_timeout: float = 600.0,
@@ -169,10 +192,23 @@ class UploadsResource(BaseResource):
             destination_type: ``"session"`` or ``"folder"`` (API convention).
             object_id: Destination session or folder id.
             content_type: Optional override; when omitted, guessed from the filename.
+            source_session_id: Required when ``destination_type`` is
+                ``"linked_volume_session"``.
+            source_folder_id: Required when ``destination_type`` is
+                ``"linked_volume_folder"``.
             poll_status: When True, poll ``status_url`` until a terminal status or timeout.
             poll_interval: Seconds between status polls. Use ``0.0`` only in tests;
                 production callers should use at least ``1.0`` to avoid hammering the API.
             poll_timeout: Maximum seconds to wait before returning the last-known status.
+
+        Note:
+            Polling stops on ``completed`` or on strings in ``TERMINAL_FAILURE_STATUSES``
+            (see ``databrarypy.models.uploads``). Add new terminal failure values there when
+            the API introduces them, or polling continues until ``poll_timeout``.
+
+            Single/multipart PUTs to presigned S3 URLs do not use the client's API retry
+            policy (see class docstring). Multipart failures invoke :meth:`abort_multipart`
+            before propagating the error when finalize was not reached.
         """
         file_path = Path(path)
         if not file_path.is_file():
@@ -187,6 +223,8 @@ class UploadsResource(BaseResource):
             object_id=object_id,
             file_size=file_size,
             content_type=resolved_ct,
+            source_session_id=source_session_id,
+            source_folder_id=source_folder_id,
         )
 
         upload_type: Literal["single", "multipart"]
@@ -225,29 +263,129 @@ class UploadsResource(BaseResource):
             )
             resp.raise_for_status()
 
+    def _try_abort_multipart(self, upload_guid: str, s3_upload_id: str) -> None:
+        try:
+            self.abort_multipart(upload_guid, s3_upload_id)
+        except Exception:
+            logger.warning(
+                "abort_multipart failed for upload_guid=%r (cleanup may be needed)",
+                upload_guid,
+                exc_info=True,
+            )
+
     def _upload_multipart(self, file_path: Path, response: InitiateMultipartResponse) -> None:
-        parts: list[Part] = []
-        with file_path.open("rb") as fh:
-            for part_url in sorted(response.part_urls, key=lambda p: p.part_number):
-                chunk = fh.read(response.part_size)
-                if not chunk:
-                    break
-                put_resp = self._http.put(part_url.url, content=chunk)
-                put_resp.raise_for_status()
-                etag = put_resp.headers.get("ETag") or put_resp.headers.get("etag", "")
-                parts.append(Part(part_number=part_url.part_number, etag=etag.strip('"')))
+        finalized = False
+        try:
+            parts: list[Part] = []
+            with file_path.open("rb") as fh:
+                for part_url in sorted(response.part_urls, key=lambda p: p.part_number):
+                    chunk = fh.read(response.part_size)
+                    if not chunk:
+                        break
+                    put_resp = self._http.put(part_url.url, content=chunk)
+                    put_resp.raise_for_status()
+                    etag = put_resp.headers.get("ETag") or put_resp.headers.get("etag", "")
+                    parts.append(Part(part_number=part_url.part_number, etag=etag.strip('"')))
 
-            if fh.read(1):
-                raise ValueError(
-                    "File has more data than the server-provided part URLs can cover; "
-                    "the upload was aborted to avoid incomplete data."
-                )
+                if fh.read(1):
+                    raise ValueError(
+                        "File has more data than the server-provided part URLs can cover; "
+                        "the upload was aborted to avoid incomplete data."
+                    )
 
-        self.complete(
-            response.upload_guid,
-            s3_upload_id=response.s3_upload_id,
-            parts=parts,
+            self.complete(
+                response.upload_guid,
+                s3_upload_id=response.s3_upload_id,
+                parts=parts,
+            )
+            finalized = True
+        except BaseException:
+            if not finalized:
+                self._try_abort_multipart(response.upload_guid, response.s3_upload_id)
+            raise
+
+    # ---------------------------
+    # Bulk upload
+    # ---------------------------
+    def bulk_upload_files(
+        self,
+        file_paths: Iterable[str | Path],
+        *,
+        destination_type: str,
+        object_id: int,
+        volume_id: int,
+        preflight: bool = True,
+        content_type: str | None = None,
+        poll_status: bool = True,
+        poll_interval: float = 2.0,
+        poll_timeout: float = 600.0,
+    ) -> BulkResult:
+        """Upload many files to a single session or folder, fast-failing on the first error.
+
+        With ``preflight=True`` (default), the matching ``check_duplicate_files``
+        endpoint is called first; any file whose basename already exists in the
+        target container is marked ``skipped`` with ``reason="duplicate"`` and
+        not uploaded.
+
+        ``destination_type`` must be ``"session"`` or ``"folder"``.
+        """
+        if destination_type not in {"session", "folder"}:
+            raise ValueError(
+                f"destination_type must be 'session' or 'folder', got {destination_type!r}"
+            )
+
+        paths = [Path(p) for p in file_paths]
+
+        preflight_fn = (
+            self._make_duplicate_preflight(volume_id, destination_type, object_id)
+            if preflight
+            else None
         )
+
+        def _upload_one(path: Path) -> UploadResult:
+            return self.upload_file(
+                path,
+                destination_type=destination_type,
+                object_id=object_id,
+                content_type=content_type,
+                poll_status=poll_status,
+                poll_interval=poll_interval,
+                poll_timeout=poll_timeout,
+            )
+
+        return _bulk_apply(inputs=paths, fn=_upload_one, preflight=preflight_fn)
+
+    def _make_duplicate_preflight(
+        self,
+        volume_id: int,
+        destination_type: str,
+        object_id: int,
+    ) -> Callable[[BulkResult], BulkResult]:
+        """Build a preflight that marks duplicate-filename inputs as skipped."""
+        if destination_type == "session":
+            endpoint = f"/volumes/{volume_id}/sessions/{object_id}/check-duplicate-files/"
+        else:
+            endpoint = f"/volumes/{volume_id}/folders/{object_id}/check-duplicate-files/"
+
+        def _preflight(state: BulkResult) -> BulkResult:
+            filenames = [Path(item.input).name for item in state.items]
+            data = self._post_json(endpoint, json={"filenames": filenames})
+            if not isinstance(data, list):
+                return state
+            exists_by_name: dict[str, bool] = {}
+            for row in data:
+                if not isinstance(row, dict):
+                    continue
+                fname = row.get("filename")
+                if isinstance(fname, str):
+                    exists_by_name[fname] = bool(row.get("exists"))
+            for item, name in zip(state.items, filenames, strict=True):
+                if exists_by_name.get(name):
+                    item.status = BulkItemStatus.SKIPPED
+                    item.reason = "duplicate"
+            return state
+
+        return _preflight
 
     def _poll_until_terminal(
         self,

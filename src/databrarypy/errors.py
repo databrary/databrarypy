@@ -35,7 +35,11 @@ class RateLimitError(ApiError):
     retry_after: float | None = None
 
     def __init__(
-        self, message: str, *, status_code: int | None = 429, retry_after: float | None = None
+        self,
+        message: str,
+        *,
+        status_code: int | None = 429,
+        retry_after: float | None = None,
     ) -> None:  # noqa: D401 - message docs inherited
         super().__init__(message, status_code=status_code)
         self.retry_after = retry_after

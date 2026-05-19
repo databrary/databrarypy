@@ -120,13 +120,23 @@ def handle_session_file_binary(request: httpx.Request) -> httpx.Response:
 
 def handle_session_zip_download_link(request: httpx.Request) -> httpx.Response:
     return httpx.Response(
-        200, json={"status": TASK_STATUS_PROCESSING, "message": None, "task_id": "zip-session-1"}
+        200,
+        json={
+            "status": TASK_STATUS_PROCESSING,
+            "message": None,
+            "task_id": "zip-session-1",
+        },
     )
 
 
 def handle_session_csv_download_link(request: httpx.Request) -> httpx.Response:
     return httpx.Response(
-        200, json={"status": TASK_STATUS_PROCESSING, "message": None, "task_id": "csv-session-1"}
+        200,
+        json={
+            "status": TASK_STATUS_PROCESSING,
+            "message": None,
+            "task_id": "csv-session-1",
+        },
     )
 
 
@@ -137,7 +147,9 @@ SESSION_DUPLICATE_FILENAME = "existing.mp4"
 
 
 def _session_response_with(
-    name: str = "Session A", release_level: str = "public", source_date: str | None = "2025-05-31"
+    name: str = "Session A",
+    release_level: str = "public",
+    source_date: str | None = "2025-05-31",
 ) -> dict:
     session = _get_mock_session_1()
     session["name"] = name

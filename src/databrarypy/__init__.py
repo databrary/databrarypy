@@ -20,6 +20,7 @@ from .resources import (
     SessionsResource,
     SystemResource,
     TagsResource,
+    UploadsResource,
     UsersResource,
     VolumesResource,
 )
@@ -35,6 +36,7 @@ __all__ = [
     "SessionsResource",
     "SystemResource",
     "TagsResource",
+    "UploadsResource",
     "UsersResource",
     "VolumesResource",
 ]
