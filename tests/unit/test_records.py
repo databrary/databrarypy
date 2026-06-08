@@ -6,6 +6,13 @@ import httpx
 import pytest
 
 from databrarypy.client import DatabraryClient
+from tests.fixtures.constants import (
+    TEST_BASE_URL,
+    TEST_CLIENT_ID,
+    TEST_CLIENT_SECRET,
+    TEST_PASSWORD,
+    TEST_USERNAME,
+)
 from tests.fixtures.data_constants import VOLUME_ID_PRIMARY
 from tests.fixtures.records import (
     FILE_ID_1,
@@ -25,11 +32,11 @@ from tests.fixtures.records import (
 def _make_client() -> DatabraryClient:
     transport = build_composite_transport()
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="user@example.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
     client.auth.login()
@@ -203,11 +210,11 @@ def test_records_set_measure_raises_friendly_error_on_not_found() -> None:
         return httpx.Response(404)
 
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="u@e.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=httpx.MockTransport(_router),
     )
     client.auth.login()
@@ -247,11 +254,11 @@ def test_records_set_measure_raises_friendly_error_on_400_record_volume() -> Non
         return httpx.Response(404)
 
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="u@e.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=httpx.MockTransport(_router),
     )
     client.auth.login()
@@ -315,11 +322,11 @@ def test_assign_record_to_file_warns_on_duplicate(caplog) -> None:
         return httpx.Response(404)
 
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="u@e.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=httpx.MockTransport(_router),
     )
     client.auth.login()
@@ -382,11 +389,11 @@ def _client_with_volume(volume_payload: dict) -> DatabraryClient:
         return httpx.Response(404)
 
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="u@e.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=httpx.MockTransport(_router),
     )
     client.auth.login()
@@ -472,11 +479,11 @@ def test_priority_metric_non_dict_volume_response() -> None:
         return httpx.Response(404)
 
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="u@e.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=httpx.MockTransport(_router),
     )
     client.auth.login()
@@ -533,11 +540,11 @@ def test_post_json_empty_body_returns_empty_dict() -> None:
         return httpx.Response(404)
 
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="u@e.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=httpx.MockTransport(_router),
     )
     client.auth.login()
@@ -563,11 +570,11 @@ def test_patch_json_empty_body_returns_empty_dict() -> None:
         return httpx.Response(404)
 
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="u@e.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=httpx.MockTransport(_router),
     )
     client.auth.login()

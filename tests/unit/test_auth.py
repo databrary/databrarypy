@@ -6,6 +6,13 @@ from databrarypy.auth import OAuth2Client
 
 from ..fixtures import (
     MOCK_AUTH_RESPONSES,
+    TEST_BAD_CLIENT_ID,
+    TEST_BAD_CLIENT_SECRET,
+    TEST_BASE_URL,
+    TEST_CLIENT_ID,
+    TEST_CLIENT_SECRET,
+    TEST_PASSWORD,
+    TEST_USERNAME,
     build_auth_transport,
     handle_token_error,
 )
@@ -16,11 +23,11 @@ def test_oauth2_password_and_refresh_flow():
     transport = build_auth_transport()
 
     oauth = OAuth2Client(
-        base_url="https://api.example.org",
-        client_id="cid",
-        client_secret="secret",
-        username="user@example.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         user_agent="test",
         transport=transport,
     )
@@ -42,11 +49,11 @@ def test_token_request_failure():
     transport = build_auth_transport(token_handler=handle_token_error)
 
     oauth = OAuth2Client(
-        base_url="https://api.example.org",
-        client_id="bad_client",
-        client_secret="bad_secret",
-        username="user@example.org",
-        password="password",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_BAD_CLIENT_ID,
+        client_secret=TEST_BAD_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         user_agent="test",
         transport=transport,
     )
@@ -60,11 +67,11 @@ def test_refresh_without_token():
     transport = build_auth_transport()
 
     oauth = OAuth2Client(
-        base_url="https://api.example.org",
-        client_id="cid",
-        client_secret="secret",
-        username="user@example.org",
-        password="password",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         user_agent="test",
         transport=transport,
     )
@@ -78,11 +85,11 @@ def test_get_valid_token_without_authentication():
     transport = build_auth_transport()
 
     oauth = OAuth2Client(
-        base_url="https://api.example.org",
-        client_id="cid",
-        client_secret="secret",
-        username="user@example.org",
-        password="password",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         user_agent="test",
         transport=transport,
     )
@@ -101,11 +108,11 @@ def test_expired_token_without_refresh_token():
     transport = build_auth_transport(token_handler=handle_token_no_refresh)
 
     oauth = OAuth2Client(
-        base_url="https://api.example.org",
-        client_id="cid",
-        client_secret="secret",
-        username="user@example.org",
-        password="password",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         user_agent="test",
         transport=transport,
     )
@@ -125,11 +132,11 @@ def test_automatic_token_refresh():
     transport = build_auth_transport()
 
     oauth = OAuth2Client(
-        base_url="https://api.example.org",
-        client_id="cid",
-        client_secret="secret",
-        username="user@example.org",
-        password="password",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         user_agent="test",
         transport=transport,
     )
@@ -152,11 +159,11 @@ def test_automatic_token_refresh():
 
 def test_oauth2_client_context_manager() -> None:
     oauth = OAuth2Client(
-        base_url="https://api.example.org",
-        client_id="cid",
-        client_secret="secret",
-        username="user@example.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         user_agent="test",
         transport=build_auth_transport(),
     )
@@ -167,11 +174,11 @@ def test_oauth2_client_context_manager() -> None:
 
 def test_oauth2_client_close_idempotent() -> None:
     oauth = OAuth2Client(
-        base_url="https://api.example.org",
-        client_id="cid",
-        client_secret="secret",
-        username="user@example.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         user_agent="test",
         transport=build_auth_transport(),
     )
@@ -183,11 +190,11 @@ def test_oauth2_client_close_idempotent() -> None:
 
 def test_oauth2_client_rejects_usage_after_close() -> None:
     oauth = OAuth2Client(
-        base_url="https://api.example.org",
-        client_id="cid",
-        client_secret="secret",
-        username="user@example.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         user_agent="test",
         transport=build_auth_transport(),
     )

@@ -295,6 +295,10 @@ class BaseResource:
         1) content-disposition filename
         2) URL path basename
         3) "downloaded_file"
+
+        Server-supplied filenames are sanitized: only the final path component is
+        kept (no directory traversal), and the resolved path is verified to remain
+        within the caller-supplied directory.
         """
         path = Path(dest_path)
         if path.is_dir():
@@ -302,7 +306,11 @@ class BaseResource:
             cd = resp.headers.get("content-disposition", "")
             if "filename=" in cd:
                 with suppress(Exception):
-                    filename = cd.split("filename=")[-1].strip().strip('"')
+                    raw = cd.split("filename=")[-1].strip().strip('"')
+                    # Strip any directory components from the server-supplied name
+                    safe = Path(raw).name.strip()
+                    if safe:
+                        filename = safe
             elif resp.request is not None:
                 with suppress(Exception):
                     # Try to derive a sensible filename from the request URL path
@@ -311,6 +319,15 @@ class BaseResource:
                     if candidate:
                         filename = candidate
             path = path / filename
+
+            # Guard: ensure the resolved path stays within the intended directory
+            base_resolved = Path(dest_path).resolve()
+            final_resolved = path.resolve()
+            if base_resolved not in final_resolved.parents and final_resolved != base_resolved:
+                raise ValueError(
+                    f"Path traversal detected: resolved path {final_resolved!r} "
+                    f"escapes base directory {base_resolved!r}"
+                )
         return path
 
     def _download_to_path(self, url: str, dest_path: str | Path) -> str:

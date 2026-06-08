@@ -9,6 +9,13 @@ import httpx
 from databrarypy.client import DatabraryClient
 
 from ..fixtures.client import build_client_transport
+from ..fixtures.constants import (
+    TEST_BASE_URL,
+    TEST_CLIENT_ID,
+    TEST_CLIENT_SECRET,
+    TEST_PASSWORD,
+    TEST_USERNAME,
+)
 from ..fixtures.data_constants import (
     TASK_STATUS_PROCESSING,
     VOLUME_COLLABORATOR_ID_1,
@@ -70,11 +77,11 @@ def build_transport():
 def test_volumes_read_endpoints() -> None:
     transport = build_transport()
     client = DatabraryClient(
-        base_url="https://example.org",
-        client_id="id",
-        client_secret="secret",
-        username="user@example.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
     client.auth.login()
@@ -124,11 +131,11 @@ def test_volumes_read_endpoints() -> None:
 def test_volumes_list_iterators() -> None:
     transport = build_transport()
     client = DatabraryClient(
-        base_url="https://example.org",
-        client_id="id",
-        client_secret="secret",
-        username="user@example.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
     client.auth.login()
@@ -175,11 +182,11 @@ def _build_categories_transport():
 
 def _make_categories_client(transport):
     client = DatabraryClient(
-        base_url="https://example.org",
-        client_id="id",
-        client_secret="secret",
-        username="user@example.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
     client.auth.login()

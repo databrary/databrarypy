@@ -12,6 +12,15 @@ from .client import (
     handle_whoami,
 )
 from .common import build_transport, handle_not_found
+from .constants import (
+    TEST_BAD_CLIENT_ID,
+    TEST_BAD_CLIENT_SECRET,
+    TEST_BASE_URL,
+    TEST_CLIENT_ID,
+    TEST_CLIENT_SECRET,
+    TEST_PASSWORD,
+    TEST_USERNAME,
+)
 from .data_constants import (
     INSTITUTION_ID_1,
     INSTITUTION_ID_2,
@@ -39,6 +48,14 @@ from .system import (
 )
 
 __all__ = [
+    # Credential constants
+    "TEST_BASE_URL",
+    "TEST_CLIENT_ID",
+    "TEST_CLIENT_SECRET",
+    "TEST_USERNAME",
+    "TEST_PASSWORD",
+    "TEST_BAD_CLIENT_ID",
+    "TEST_BAD_CLIENT_SECRET",
     # Common fixtures
     "build_transport",
     "handle_not_found",
