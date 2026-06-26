@@ -89,6 +89,12 @@ def test_volumes_read_endpoints() -> None:
     assert detail.id == VOLUME_ID_PRIMARY
     assert detail.sharing_level == MOCK_VOLUME_DETAILED["sharing_level"]
     assert detail.coauthors and detail.coauthors[0].user is not None
+    assert detail.file_sizes is not None
+    assert (
+        detail.file_sizes.session.public == MOCK_VOLUME_DETAILED["file_sizes"]["session"]["public"]
+    )
+    assert detail.file_sizes.folder.private is None
+    assert detail.doi is None
 
     # tags
     tags = client.volumes.tags(VOLUME_ID_PRIMARY)
