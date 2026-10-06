@@ -6,7 +6,7 @@ authors = ["Montrose Software Databrary <databrary@montrosesoftware.com>"]
 readme = "README.md"
 packages = [{ include = "databrarypy", from = "src" }]
 homepage = "https://databrary.org"
-repository = "https://github.com/NYU-Databrary/databrarypy"
+repository = "https://github.com/databrary/databrarypy"
 
 [tool.poetry.dependencies]
 python = "^3.12"

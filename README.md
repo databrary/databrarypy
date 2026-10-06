@@ -3,7 +3,7 @@
 A typed Python client for the Databrary API, built on httpx and pydantic. It provides access to users, volumes, sessions, folders, records, search, and system metadata, with robust retry/backoff, pagination, and binary downloads.
 
 - Python: 3.12+
-- Repo: `https://github.com/NYU-Databrary/databrarypy`
+- Repo: `https://github.com/databrary/databrarypy`
 
 ## Onboarding & requirements
 
