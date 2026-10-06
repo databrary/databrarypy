@@ -50,6 +50,7 @@ def _get_mock_volume_detailed():
         "enabled_metrics": MOCK_VOLUME_METRICS,
         "has_admin_access": True,
         "citation": MOCK_VOLUME_CITATION,
+        "doi": None,
         "session_count": 24,
         "session_count_shared": 23,
         "participant_count": 0,
@@ -68,6 +69,22 @@ def _get_mock_volume_detailed():
                 "public": 18,
             },
         },
+        "file_sizes": {
+            "session": {
+                "private": None,
+                "authorized_users": None,
+                "learning_audiences": None,
+                "public": 12345678,
+            },
+            "folder": {
+                "private": None,
+                "authorized_users": None,
+                "learning_audiences": None,
+                "public": 4321000,
+            },
+        },
+        "linked_file_counts": None,
+        "linked_file_sizes": None,
         "thumbnail": None,
     }
 

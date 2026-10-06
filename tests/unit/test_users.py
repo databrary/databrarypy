@@ -4,6 +4,13 @@ import pytest
 
 from databrarypy.client import DatabraryClient
 from databrarypy.errors import NotFoundError
+from tests.fixtures.constants import (
+    TEST_BASE_URL,
+    TEST_CLIENT_ID,
+    TEST_CLIENT_SECRET,
+    TEST_PASSWORD,
+    TEST_USERNAME,
+)
 from tests.fixtures.data_constants import (
     USER_ID_1,
     USER_ID_2,
@@ -21,11 +28,11 @@ from tests.fixtures.users import (
 def _make_client():
     transport = build_composite_transport()
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="user@example.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
     client.auth.login()
@@ -35,11 +42,11 @@ def _make_client():
 def test_users_list_and_retrieve():
     transport = build_composite_transport()
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="user@example.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
     client.auth.login()
@@ -81,11 +88,11 @@ def test_users_list_and_retrieve():
 def test_users_affiliates_with_params():
     transport = build_composite_transport()
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="user@example.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
     client.auth.login()
@@ -99,11 +106,11 @@ def test_users_affiliates_with_params():
 def test_users_list_with_filters_and_volumes():
     transport = build_composite_transport()
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="user@example.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
     client.auth.login()
@@ -125,11 +132,11 @@ def test_users_list_with_filters_and_volumes():
 def test_users_activity_list():
     transport = build_composite_transport()
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="user@example.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
     client.auth.login()
@@ -144,11 +151,11 @@ def test_users_activity_list():
 def test_users_iterators():
     transport = build_composite_transport()
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="user@example.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
     client.auth.login()

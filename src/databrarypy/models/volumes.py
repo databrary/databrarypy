@@ -16,6 +16,7 @@ from .volume_shared import (
     Category,
     Citation,
     FileCounts,
+    FileSizes,
     Metric,
     VolumeFundingRead,
     VolumeLink,
@@ -73,16 +74,19 @@ class VolumeDetail(VolumePreview):
     access_level: str | None = None
     has_admin_access: bool | None = None
     citation: Citation | str | None = None
+    doi: str | None = None
     session_count: int | None = None
     session_count_shared: int | None = None
     participant_count: int | None = None
     participant_gender_counts: dict[str, int] | None = None
     file_counts: FileCounts | None = None
+    file_sizes: FileSizes | None = None
     folder_count: int | None = None
     linked_session_count: int | None = None
     linked_folder_count: int | None = None
     linked_volume_count: int | None = None
     linked_file_counts: dict[str, Any] | None = None
+    linked_file_sizes: dict[str, Any] | None = None
     source_volumes: list[dict[str, Any]] = Field(default_factory=list)
     thumbnail: File | None = None
 

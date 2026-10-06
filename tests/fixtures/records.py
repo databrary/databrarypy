@@ -99,11 +99,15 @@ def _get_mock_volume_detail():
         "access_level": "admin",
         "has_admin_access": True,
         "citation": None,
+        "doi": None,
         "session_count": 0,
         "session_count_shared": 0,
         "participant_count": 0,
         "participant_gender_counts": None,
         "file_counts": None,
+        "file_sizes": None,
+        "linked_file_counts": None,
+        "linked_file_sizes": None,
         "thumbnail": None,
     }
 
