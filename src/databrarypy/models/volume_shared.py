@@ -68,6 +68,22 @@ class FileCounts(BaseModel):
     folder: FileCountsBreakdown
 
 
+class FileSizesBreakdown(BaseModel):
+    """Breakdown of file sizes (bytes) by release level for a type (session/folder)."""
+
+    private: int | None = None
+    authorized_users: int | None = None
+    learning_audiences: int | None = None
+    public: int | None = None
+
+
+class FileSizes(BaseModel):
+    """Aggregated file sizes for a volume by entity type."""
+
+    session: FileSizesBreakdown
+    folder: FileSizesBreakdown
+
+
 class Citation(BaseModel):
     """Structured citation object returned by the backend."""
 

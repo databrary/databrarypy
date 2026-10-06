@@ -47,7 +47,6 @@ def _get_mock_volume_hit() -> dict:
         },
         "tags": ["language", "development"],
         "file_types": ["audio", "video"],
-        "has_session": True,
         "sharing_level": "public",
         "score": 0.95,
     }

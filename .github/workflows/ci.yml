@@ -2,36 +2,41 @@ name: CI
 
 on:
   push:
-    branches: [main, staging, development]
+    branches:
+      - main
+      - staging
   pull_request:
-    # Run on all pull requests
+    branches:
+      - main
+      - staging
+      - development
 
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.12"]
+        python-version: ["3.12", "3.13"]
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
-          version: 1.8.3
+          version: 2.2.1
           virtualenvs-create: true
           virtualenvs-in-project: true
 
       - name: Load cached venv
         id: cached-poetry-dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
@@ -48,9 +53,6 @@ jobs:
 
       - name: Run Ruff formatting check
         run: poetry run ruff format --check src/ tests/
-
-      - name: Run Black formatting check
-        run: poetry run black --check src/ tests/
 
       - name: Run Mypy type checking
         run: poetry run mypy src/
@@ -70,3 +72,53 @@ jobs:
           else
             echo "✅ Coverage is above 90% (${COVERAGE}%)"
           fi
+
+  release:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    # Only run on push (not PRs), and skip release commits
+    if: >
+      github.event_name == 'push' &&
+      !contains(github.event.head_commit.message, '[skip ci]')
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 2.2.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v5
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-3.12-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      - name: Install project
+        run: poetry install --no-interaction
+
+      - name: Python Semantic Release
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          poetry run semantic-release version
+          poetry run semantic-release publish

@@ -3,17 +3,23 @@
 from databrarypy.client import DatabraryClient
 
 from ..fixtures.categories import _get_mock_category, build_composite_transport
+from ..fixtures.constants import (
+    TEST_BASE_URL,
+    TEST_CLIENT_ID,
+    TEST_CLIENT_SECRET,
+    TEST_PASSWORD,
+    TEST_USERNAME,
+)
 
 
 def test_categories_list_and_retrieve():
     transport = build_composite_transport()
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="user@example.org",
-        password="pw",
-        user_agent="dbpy-tests",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
     client.auth.login()

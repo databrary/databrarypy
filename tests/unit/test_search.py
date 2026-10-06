@@ -2,6 +2,13 @@
 
 from databrarypy.client import DatabraryClient
 
+from ..fixtures.constants import (
+    TEST_BASE_URL,
+    TEST_CLIENT_ID,
+    TEST_CLIENT_SECRET,
+    TEST_PASSWORD,
+    TEST_USERNAME,
+)
 from ..fixtures.search import (
     _get_mock_institution_hit,
     _get_mock_user_hit,
@@ -13,12 +20,11 @@ from ..fixtures.search import (
 def _make_client():
     transport = build_composite_transport()
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="user@example.org",
-        password="pw",
-        user_agent="dbpy-tests",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
     client.auth.login()
@@ -68,7 +74,12 @@ def test_search_list_variants():
     # users list
     users = list(
         client.search.users_list(
-            q="alex", filter="active", page=1, page_size=5, sort_by="name", sort_order="asc"
+            q="alex",
+            filter="active",
+            page=1,
+            page_size=5,
+            sort_by="name",
+            sort_order="asc",
         )
     )
     assert users and users[0].full_name == _get_mock_user_hit()["full_name"]
@@ -80,7 +91,11 @@ def test_search_list_variants():
     # volumes list basic
     vols = list(
         client.search.volumes_list(
-            q="lang", files_release_levels=["public"], tag="science", page=1, page_size=2
+            q="lang",
+            files_release_levels=["public"],
+            tag="science",
+            page=1,
+            page_size=2,
         )
     )
     assert vols and vols[0].id == _get_mock_volume_hit()["id"]

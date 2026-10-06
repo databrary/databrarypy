@@ -8,9 +8,8 @@ A typed Python client for the Databrary API, built on httpx and pydantic. It pro
 ## Onboarding & requirements
 
 - Request API access for your account from an admin.
-- Obtain your secret User-Agent string from an admin
 - Create an OAuth2 client in your web profile to get `client_id` and `client_secret` (store the secret safely).
-- The token endpoint (`/o/token/`) follows OAuth2 with a password grant and returns snake_case fields; application endpoints mostly return camelCase keys. This client normalizes response keys to snake_case by default (`snake_case=True`).
+- The token endpoint (`/o/token/`) follows OAuth2 with a password grant and returns snake_case fields; application endpoints mostly return camelCase keys. This client normalizes response keys to snake_case by default (`snake_case=True`). Pydantic models in this package expect **snake_case** payloads—the same shape you get from the client under that default. If you set `snake_case=False`, normalize manually with `databrarypy.utils.case.snake_keys` before calling `model_validate` on those models.
 
 ## Installation
 
@@ -25,14 +24,12 @@ poetry install
 ```python
 from databrarypy import DatabraryClient
 
-# user_agent must be your secret UA string provided by an admin
 client = DatabraryClient(
     base_url="https://api.databrary.org",
     client_id="<client-id>",
     client_secret="<client-secret>",
     username="<username>",
     password="<password>",
-    user_agent="<SECRET_USER_AGENT>",
 )
 client.auth.login()
 
@@ -62,8 +59,9 @@ CLIENT_ID=<client-id>
 CLIENT_SECRET=<client-secret>
 USERNAME=<username>
 PASSWORD=<password>
-USER_AGENT=<secret-user-agent>
 ```
+
+The User-Agent is set automatically to `databrarypy/<version>`.
 
 If your `.env` file lives elsewhere, pass its path explicitly:
 
@@ -98,6 +96,38 @@ path = client.users.avatar(user_id=123, dest_path="/tmp/avatar.jpg")
 - Use a single `DatabraryClient` instance for the lifetime of your process and call `client.auth.login()` once at startup.
 - The client will transparently refresh the access token during requests when needed. You do not need to schedule periodic refreshes yourself.
 
+
+## Example script
+
+The `example/example.py` script demonstrates records management (create, update,
+delete records and measures, assign records to files). It runs interactively,
+prompting for a volume ID and then a menu of operations.
+
+### Prepare .env
+
+Create `example/.env` with your Databrary API credentials (this file is
+gitignored and must not be committed):
+
+```bash
+BASE_URL=https://api.databrary.org
+CLIENT_ID=<your-client-id>
+CLIENT_SECRET=<your-client-secret>
+USERNAME=<your-email>
+PASSWORD=<your-password>
+```
+
+Obtain `CLIENT_ID` and `CLIENT_SECRET` from your Databrary web profile
+(OAuth2 client). Request API access from an admin if needed.
+
+### Build and run
+
+```bash
+# Install dependencies (if not already done)
+poetry install
+
+# Run the example
+poetry run python example/example.py
+```
 
 ## Development
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import builtins
 from typing import Iterator
 
-from ..models import Institution, Page, UserSlim
+from ..models import Institution, InstitutionStatistics, Page, UserSlim
 from ._base import BaseResource
 
 
@@ -57,8 +57,24 @@ class InstitutionsResource(BaseResource):
             return self._download_bytes(url)
         return self._download_to_path(url, dest_path)
 
+    def statistics(self, institution_id: int) -> InstitutionStatistics | None:
+        """Retrieve statistics for an institution.
+
+        Returns ``None`` when the backend responds with 204 No Content
+        (statistics have not been computed yet). Raises ``NotFoundError``
+        when the institution itself does not exist.
+        """
+        data = self._get_json_or_none(f"/institutions/{institution_id}/statistics/")
+        if data is None:
+            return None
+        return InstitutionStatistics.model_validate(data)
+
     def authorized_investigators(
-        self, institution_id: int, *, page: int | None = None, page_size: int | None = None
+        self,
+        institution_id: int,
+        *,
+        page: int | None = None,
+        page_size: int | None = None,
     ) -> builtins.list[UserSlim]:
         """Return current investigators (role == 'investigator') for an institution.
 

@@ -6,6 +6,13 @@ from databrarypy.client import DatabraryClient
 
 from ..fixtures.client import build_client_transport
 from ..fixtures.common import build_transport
+from ..fixtures.constants import (
+    TEST_BASE_URL,
+    TEST_CLIENT_ID,
+    TEST_CLIENT_SECRET,
+    TEST_PASSWORD,
+    TEST_USERNAME,
+)
 
 
 def handle_health_ok(request: httpx.Request) -> httpx.Response:
@@ -33,12 +40,11 @@ def build_health_transport(ok: bool = True) -> httpx.MockTransport:
 
 def test_health_true():
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="user@example.org",
-        password="pw",
-        user_agent="dbpy-tests",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=build_health_transport(ok=True),
     )
     client.auth.login()
@@ -47,12 +53,11 @@ def test_health_true():
 
 def test_health_false():
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="user@example.org",
-        password="pw",
-        user_agent="dbpy-tests",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=build_health_transport(ok=False),
     )
     client.auth.login()

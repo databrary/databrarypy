@@ -41,7 +41,11 @@ def handle_volume_coauthor_retrieve(request: httpx.Request) -> httpx.Response:
 
 def build_volume_coauthors_transport():
     return build_transport(
-        ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/coauthors/", handle_volume_coauthors_list),
+        (
+            "GET",
+            f"/volumes/{VOLUME_ID_PRIMARY}/coauthors/",
+            handle_volume_coauthors_list,
+        ),
         (
             "GET",
             f"/volumes/{VOLUME_ID_PRIMARY}/coauthors/{VOLUME_COAUTHOR_ID_1}/",

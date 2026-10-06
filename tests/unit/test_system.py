@@ -2,7 +2,15 @@
 
 from databrarypy.client import DatabraryClient
 
-from ..fixtures import MOCK_SYSTEM_RESPONSES, build_system_transport
+from ..fixtures import (
+    MOCK_SYSTEM_RESPONSES,
+    TEST_BASE_URL,
+    TEST_CLIENT_ID,
+    TEST_CLIENT_SECRET,
+    TEST_PASSWORD,
+    TEST_USERNAME,
+    build_system_transport,
+)
 
 
 def test_get_db_stats():
@@ -10,12 +18,11 @@ def test_get_db_stats():
     transport = build_system_transport()
 
     client = DatabraryClient(
-        base_url="https://api.example.org",
-        client_id="cid",
-        client_secret="secret",
-        username="user@example.org",
-        password="pw",
-        user_agent="test",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
 
@@ -35,12 +42,11 @@ def test_list_asset_formats():
     transport = build_system_transport()
 
     client = DatabraryClient(
-        base_url="https://api.example.org",
-        client_id="cid",
-        client_secret="secret",
-        username="user@example.org",
-        password="pw",
-        user_agent="test",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
 
@@ -80,12 +86,11 @@ def test_get_supported_file_types():
     transport = build_system_transport()
 
     client = DatabraryClient(
-        base_url="https://api.example.org",
-        client_id="cid",
-        client_secret="secret",
-        username="user@example.org",
-        password="pw",
-        user_agent="test",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
 
@@ -112,12 +117,11 @@ def test_get_permission_and_release_levels():
     transport = build_system_transport()
 
     client = DatabraryClient(
-        base_url="https://api.example.org",
-        client_id="cid",
-        client_secret="secret",
-        username="user@example.org",
-        password="pw",
-        user_agent="test",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
 
@@ -136,12 +140,11 @@ def test_is_healthy_true_and_false():
     transport = build_system_transport()
 
     client = DatabraryClient(
-        base_url="https://api.example.org",
-        client_id="cid",
-        client_secret="secret",
-        username="user@example.org",
-        password="pw",
-        user_agent="test",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
 
@@ -159,12 +162,11 @@ def test_is_healthy_true_and_false():
     )
 
     client_fail = DatabraryClient(
-        base_url="https://api.example.org",
-        client_id="cid",
-        client_secret="secret",
-        username="user@example.org",
-        password="pw",
-        user_agent="test",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=failing_transport,
     )
     client_fail.auth.login()
@@ -178,12 +180,11 @@ def test_is_healthy_true_and_false():
         ("POST", "/o/token/", handle_token_success), ("GET", "/health/", raise_exc)
     )
     client_exc = DatabraryClient(
-        base_url="https://api.example.org",
-        client_id="cid",
-        client_secret="secret",
-        username="user@example.org",
-        password="pw",
-        user_agent="test",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=exc_transport,
     )
     client_exc.auth.login()

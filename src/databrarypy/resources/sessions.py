@@ -1,17 +1,25 @@
-"""Sessions resource for Databrary API (read-only)."""
+"""Sessions resource for Databrary API."""
 
 from __future__ import annotations
 
-from typing import Iterator
+import logging
+from collections.abc import Iterable
+from typing import Any, Iterator, List
 
-from ..models import Page, Session
+from ..models import Page, Session, SessionDuplicateFileCheckItem, SessionMutation
+from ..models.bulk import BulkResult
 from ..models.downloads import FileDownloadLink, ProcessingTask
 from ..models.files import File as FileModel
+from ..models.files import FileWrite
+from ..utils.strings import require_nonempty_stripped
 from ._base import BaseResource
+from .bulk import _bulk_apply
+
+logger = logging.getLogger(__name__)
 
 
 class SessionsResource(BaseResource):
-    """Read-only operations for sessions and their files."""
+    """Operations for sessions, their files, and record-file associations."""
 
     def page(
         self,
@@ -169,3 +177,330 @@ class SessionsResource(BaseResource):
         """Request async CSV generation for a session."""
         payload = self._get_json(f"/volumes/{volume_id}/sessions/{session_id}/csv-download-link/")
         return ProcessingTask.model_validate(payload)
+
+    # ---------------------------
+    # Record-file associations
+    # ---------------------------
+    def assign_record_to_file(
+        self,
+        volume_id: int,
+        session_id: int,
+        file_id: int,
+        record_id: int,
+    ) -> dict[str, Any]:
+        """Assign a record to a session file.
+
+        Returns the assignment data.  Logs a warning if the record was
+        already assigned to the file (server returns 200 instead of 201).
+        """
+        path = f"/volumes/{volume_id}/sessions/{session_id}/files/{file_id}/assign-record/"
+        resp = self._send_request("POST", path=path, json={"record_id": record_id})
+        if resp.status_code == 200:
+            logger.warning(
+                "Record %d is already assigned to file %d in session %d of volume %d",
+                record_id,
+                file_id,
+                session_id,
+                volume_id,
+            )
+        try:
+            data = resp.json()
+        except Exception:
+            return {}
+        return self._normalize(data) if self._normalize else data  # type: ignore[return-value]
+
+    def unassign_record_from_file(
+        self,
+        volume_id: int,
+        session_id: int,
+        file_id: int,
+        record_id: int,
+    ) -> dict[str, Any]:
+        """Remove the association between a record and a session file."""
+        path = f"/volumes/{volume_id}/sessions/{session_id}/files/{file_id}/unassign-record/"
+        data = self._post_json(path, json={"record_id": record_id})
+        return data  # type: ignore[no-any-return]
+
+    # ---------------------------
+    # Write (CRUD)
+    # ---------------------------
+    def create(
+        self,
+        volume_id: int,
+        *,
+        name: str,
+        release_level: str | None = None,
+        source_date: str | None = None,
+    ) -> SessionMutation:
+        """Create a session in a volume. ``name`` is required and non-empty."""
+        body: dict[str, Any] = {"name": require_nonempty_stripped(name, field="name")}
+        if release_level is not None:
+            body["release_level"] = release_level
+        if source_date is not None:
+            body["source_date"] = source_date
+        data = self._post_json(f"/volumes/{volume_id}/sessions/", json=body)
+        return SessionMutation.model_validate(data)
+
+    def update(
+        self,
+        volume_id: int,
+        session_id: int,
+        *,
+        name: str,
+        release_level: str | None = None,
+        source_date: str | None = None,
+    ) -> SessionMutation:
+        """Full update (PUT) of a session. ``name`` is required.
+
+        Optional fields are omitted from the request body when ``None`` so the
+        server can retain existing values instead of receiving JSON ``null``.
+        """
+        body: dict[str, Any] = {"name": require_nonempty_stripped(name, field="name")}
+        if release_level is not None:
+            body["release_level"] = release_level
+        if source_date is not None:
+            body["source_date"] = source_date
+        data = self._put_json(f"/volumes/{volume_id}/sessions/{session_id}/", json=body)
+        return SessionMutation.model_validate(data)
+
+    def patch(
+        self,
+        volume_id: int,
+        session_id: int,
+        *,
+        name: str | None = None,
+        release_level: str | None = None,
+        source_date: str | None = None,
+    ) -> SessionMutation:
+        """Partial update (PATCH) of a session. Only provided fields are sent."""
+        body: dict[str, Any] = {}
+        if name is not None:
+            body["name"] = require_nonempty_stripped(name, field="name")
+        if release_level is not None:
+            body["release_level"] = release_level
+        if source_date is not None:
+            body["source_date"] = source_date
+        if not body:
+            raise ValueError("At least one of name, release_level, or source_date must be provided")
+        data = self._patch_json(f"/volumes/{volume_id}/sessions/{session_id}/", json=body)
+        return SessionMutation.model_validate(data)
+
+    def delete(self, volume_id: int, session_id: int) -> bool:
+        """Soft-delete a session."""
+        return self._delete_request(f"/volumes/{volume_id}/sessions/{session_id}/")
+
+    # ---------------------------
+    # Default records
+    # ---------------------------
+    def add_default_record(self, volume_id: int, session_id: int, record_id: int) -> bool:
+        """Attach a record as a session default. Returns True on success."""
+        self._post_json(
+            f"/volumes/{volume_id}/sessions/{session_id}/add-default-record/",
+            json={"record_id": record_id},
+        )
+        return True
+
+    def remove_default_record(self, volume_id: int, session_id: int, record_id: int) -> bool:
+        """Detach a record from session defaults. Returns True on success."""
+        self._post_json(
+            f"/volumes/{volume_id}/sessions/{session_id}/remove-default-record/",
+            json={"record_id": record_id},
+        )
+        return True
+
+    # ---------------------------
+    # Duplicate file check
+    # ---------------------------
+    def check_duplicate_files(
+        self,
+        volume_id: int,
+        session_id: int,
+        filenames: List[str],
+    ) -> List[SessionDuplicateFileCheckItem]:
+        """Return one row per filename with duplicate presence flags."""
+        data = self._post_json(
+            f"/volumes/{volume_id}/sessions/{session_id}/check-duplicate-files/",
+            json={"filenames": filenames},
+        )
+        if not isinstance(data, list):
+            raise ValueError(
+                "check_duplicate_files expected a JSON array from the server; "
+                f"got {type(data).__name__}"
+            )
+        return [SessionDuplicateFileCheckItem.model_validate(item) for item in data]
+
+    # ---------------------------
+    # File metadata (PUT/PATCH/DELETE on nested files)
+    # ---------------------------
+    def update_file(
+        self,
+        volume_id: int,
+        session_id: int,
+        file_id: int,
+        *,
+        name: str,
+        release_level: str | None = None,
+        source_date: str | None = None,
+        date: dict[str, Any] | None = None,
+        date_precision: str | None = None,
+        is_estimated: bool | None = None,
+    ) -> FileModel:
+        """Full PUT update of a session file. ``name`` is required.
+
+        Optional fields are omitted from the request body when ``None`` so the
+        server can retain existing values instead of receiving JSON ``null``.
+        """
+        payload: dict[str, Any] = {"name": require_nonempty_stripped(name, field="name")}
+        if release_level is not None:
+            payload["release_level"] = release_level
+        if source_date is not None:
+            payload["source_date"] = source_date
+        if date is not None:
+            payload["date"] = date
+        if date_precision is not None:
+            payload["date_precision"] = date_precision
+        if is_estimated is not None:
+            payload["is_estimated"] = is_estimated
+        data = self._put_json(
+            f"/volumes/{volume_id}/sessions/{session_id}/files/{file_id}/",
+            json=payload,
+        )
+        return FileModel.model_validate(data)
+
+    def patch_file(
+        self,
+        volume_id: int,
+        session_id: int,
+        file_id: int,
+        *,
+        name: str | None = None,
+        release_level: str | None = None,
+        source_date: str | None = None,
+        date: dict[str, Any] | None = None,
+        date_precision: str | None = None,
+        is_estimated: bool | None = None,
+    ) -> FileModel:
+        """Partial PATCH update of a session file. Only provided fields are sent."""
+        payload = FileWrite(
+            name=(require_nonempty_stripped(name, field="name") if name is not None else None),
+            release_level=release_level,
+            source_date=source_date,
+            date=date,
+            date_precision=date_precision,
+            is_estimated=is_estimated,
+        ).to_patch_payload()
+        if not payload:
+            raise ValueError("At least one writable field must be provided")
+        data = self._patch_json(
+            f"/volumes/{volume_id}/sessions/{session_id}/files/{file_id}/",
+            json=payload,
+        )
+        return FileModel.model_validate(data)
+
+    def delete_file(self, volume_id: int, session_id: int, file_id: int) -> bool:
+        """Soft-delete a file from a session."""
+        return self._delete_request(f"/volumes/{volume_id}/sessions/{session_id}/files/{file_id}/")
+
+    # ---------------------------
+    # Bulk operations
+    # ---------------------------
+    def bulk_delete(self, volume_id: int, session_ids: Iterable[int]) -> BulkResult:
+        """Soft-delete multiple sessions sequentially. Fast-fails with partial state."""
+        return _bulk_apply(
+            inputs=list(session_ids),
+            fn=lambda sid: self.delete(volume_id, sid),
+            is_failure=lambda res: res is not True,
+        )
+
+    def bulk_delete_files(
+        self,
+        volume_id: int,
+        session_id: int,
+        file_ids: Iterable[int],
+    ) -> BulkResult:
+        """Soft-delete multiple files within a session. Fast-fails with partial state."""
+        return _bulk_apply(
+            inputs=list(file_ids),
+            fn=lambda fid: self.delete_file(volume_id, session_id, fid),
+            is_failure=lambda res: res is not True,
+        )
+
+    def bulk_create(self, volume_id: int, items: Iterable[dict[str, Any]]) -> BulkResult:
+        """Create multiple sessions.
+
+        Each mapping is passed as keyword arguments to :meth:`create` (e.g.
+        ``{"name": "...", "release_level": "..."}``). ``name`` is required per item.
+        """
+        return _bulk_apply(
+            inputs=list(items),
+            fn=lambda item: self.create(volume_id, **item),
+        )
+
+    def bulk_rename(
+        self,
+        volume_id: int,
+        renames: Iterable[tuple[int, str]],
+    ) -> BulkResult:
+        """Rename sessions via PATCH (``name`` only).
+
+        ``renames`` are ``(session_id, new_name)`` pairs. Fast-fails with partial state.
+        """
+        return _bulk_apply(
+            inputs=list(renames),
+            fn=lambda pair: self.patch(volume_id, pair[0], name=pair[1]),
+        )
+
+    def bulk_rename_files(
+        self,
+        volume_id: int,
+        session_id: int,
+        renames: Iterable[tuple[int, str]],
+    ) -> BulkResult:
+        """Rename multiple files in a session via PATCH (``name`` only).
+
+        ``renames`` are ``(file_id, new_name)`` pairs.
+        """
+        return _bulk_apply(
+            inputs=list(renames),
+            fn=lambda pair: self.patch_file(volume_id, session_id, pair[0], name=pair[1]),
+        )
+
+    def bulk_assign_records(
+        self,
+        volume_id: int,
+        session_id: int,
+        assignments: Iterable[tuple[int, int]],
+    ) -> BulkResult:
+        """Assign records to session files.
+
+        ``assignments`` are ``(file_id, record_id)`` pairs.
+        """
+        return _bulk_apply(
+            inputs=list(assignments),
+            fn=lambda pair: self.assign_record_to_file(
+                volume_id,
+                session_id,
+                pair[0],
+                pair[1],
+            ),
+        )
+
+    def bulk_unassign_records(
+        self,
+        volume_id: int,
+        session_id: int,
+        assignments: Iterable[tuple[int, int]],
+    ) -> BulkResult:
+        """Unassign records from session files.
+
+        ``assignments`` are ``(file_id, record_id)`` pairs.
+        """
+        return _bulk_apply(
+            inputs=list(assignments),
+            fn=lambda pair: self.unassign_record_from_file(
+                volume_id,
+                session_id,
+                pair[0],
+                pair[1],
+            ),
+        )

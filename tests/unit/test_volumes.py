@@ -2,11 +2,20 @@
 
 from __future__ import annotations
 
+import json
+
 import httpx
 
 from databrarypy.client import DatabraryClient
 
 from ..fixtures.client import build_client_transport
+from ..fixtures.constants import (
+    TEST_BASE_URL,
+    TEST_CLIENT_ID,
+    TEST_CLIENT_SECRET,
+    TEST_PASSWORD,
+    TEST_USERNAME,
+)
 from ..fixtures.data_constants import (
     TASK_STATUS_PROCESSING,
     VOLUME_COLLABORATOR_ID_1,
@@ -68,12 +77,11 @@ def build_transport():
 def test_volumes_read_endpoints() -> None:
     transport = build_transport()
     client = DatabraryClient(
-        base_url="https://example.org",
-        client_id="id",
-        client_secret="secret",
-        username="user@example.org",
-        password="pw",
-        user_agent="tests",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
     client.auth.login()
@@ -88,6 +96,12 @@ def test_volumes_read_endpoints() -> None:
     assert detail.id == VOLUME_ID_PRIMARY
     assert detail.sharing_level == MOCK_VOLUME_DETAILED["sharing_level"]
     assert detail.coauthors and detail.coauthors[0].user is not None
+    assert detail.file_sizes is not None
+    assert (
+        detail.file_sizes.session.public == MOCK_VOLUME_DETAILED["file_sizes"]["session"]["public"]
+    )
+    assert detail.file_sizes.folder.private is None
+    assert detail.doi is None
 
     # tags
     tags = client.volumes.tags(VOLUME_ID_PRIMARY)
@@ -123,12 +137,11 @@ def test_volumes_read_endpoints() -> None:
 def test_volumes_list_iterators() -> None:
     transport = build_transport()
     client = DatabraryClient(
-        base_url="https://example.org",
-        client_id="id",
-        client_secret="secret",
-        username="user@example.org",
-        password="pw",
-        user_agent="tests",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
     client.auth.login()
@@ -139,3 +152,107 @@ def test_volumes_list_iterators() -> None:
     # activity list variant
     activity_results = list(client.volumes.activity_list(1))
     assert activity_results and activity_results[0].timestamp
+
+
+# ------------------------------------------------------------------
+# Volume categories (enable / disable)
+# ------------------------------------------------------------------
+
+_CATEGORIES_PATH = f"/volumes/{VOLUME_ID_PRIMARY}/categories/"
+
+
+def _build_categories_transport():
+    """Transport that handles GET volume detail and POST categories."""
+    client_transport = build_client_transport()
+    volumes_transport = build_volumes_transport()
+
+    posted_ids: list[list[int]] = []
+
+    def handle_set_categories(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        posted_ids.append(body)
+        return httpx.Response(200, json={})
+
+    def router(request: httpx.Request) -> httpx.Response:
+        key = (request.method, request.url.path)
+        if key in {("POST", "/o/token/"), ("GET", "/oauth2/test/")}:
+            return client_transport.handle_request(request)
+        if key == ("GET", f"/volumes/{VOLUME_ID_PRIMARY}/"):
+            return volumes_transport.handle_request(request)
+        if key == ("POST", _CATEGORIES_PATH):
+            return handle_set_categories(request)
+        return httpx.Response(404, json={"detail": "Not found"})
+
+    return httpx.MockTransport(router), posted_ids
+
+
+def _make_categories_client(transport):
+    client = DatabraryClient(
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
+        transport=transport,
+    )
+    client.auth.login()
+    return client
+
+
+def test_get_enabled_categories() -> None:
+    transport, _ = _build_categories_transport()
+    client = _make_categories_client(transport)
+
+    cats = client.volumes.get_enabled_categories(VOLUME_ID_PRIMARY)
+    assert isinstance(cats, list)
+    assert len(cats) >= 1
+    assert cats[0].id == MOCK_VOLUME_DETAILED["enabled_categories"][0]["id"]
+    assert cats[0].name == "context"
+
+
+def test_set_enabled_categories() -> None:
+    transport, posted_ids = _build_categories_transport()
+    client = _make_categories_client(transport)
+
+    client.volumes.set_enabled_categories(VOLUME_ID_PRIMARY, [1, 6])
+    assert posted_ids == [[1, 6]]
+
+
+def test_enable_category_adds_new() -> None:
+    transport, posted_ids = _build_categories_transport()
+    client = _make_categories_client(transport)
+
+    # Volume already has category 7 (context) enabled.
+    # Enabling category 1 should POST [7, 1].
+    client.volumes.enable_category(VOLUME_ID_PRIMARY, 1)
+    assert len(posted_ids) == 1
+    assert 7 in posted_ids[0]
+    assert 1 in posted_ids[0]
+
+
+def test_enable_category_noop_if_already_enabled() -> None:
+    transport, posted_ids = _build_categories_transport()
+    client = _make_categories_client(transport)
+
+    # Category 7 is already enabled; should be a no-op.
+    client.volumes.enable_category(VOLUME_ID_PRIMARY, 7)
+    assert posted_ids == []
+
+
+def test_disable_category_removes() -> None:
+    transport, posted_ids = _build_categories_transport()
+    client = _make_categories_client(transport)
+
+    # Category 7 is enabled; disabling it should POST [].
+    client.volumes.disable_category(VOLUME_ID_PRIMARY, 7)
+    assert len(posted_ids) == 1
+    assert 7 not in posted_ids[0]
+
+
+def test_disable_category_noop_if_not_enabled() -> None:
+    transport, posted_ids = _build_categories_transport()
+    client = _make_categories_client(transport)
+
+    # Category 99 is not enabled; should be a no-op.
+    client.volumes.disable_category(VOLUME_ID_PRIMARY, 99)
+    assert posted_ids == []
