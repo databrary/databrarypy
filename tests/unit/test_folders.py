@@ -8,6 +8,13 @@ import pytest
 
 from databrarypy.client import DatabraryClient
 from databrarypy.models import FolderDuplicateFileCheckItem
+from tests.fixtures.constants import (
+    TEST_BASE_URL,
+    TEST_CLIENT_ID,
+    TEST_CLIENT_SECRET,
+    TEST_PASSWORD,
+    TEST_USERNAME,
+)
 from tests.fixtures.data_constants import TASK_STATUS_PROCESSING, VOLUME_ID_PRIMARY
 from tests.fixtures.folders import (
     DUPLICATE_FILENAME,
@@ -30,11 +37,11 @@ MOCK_FOLDER_1_FILES_PAGE = _get_mock_folder_1_files_page()
 def test_folders_list_retrieve_and_files() -> None:
     transport = build_composite_transport()
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="user@example.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
     client.auth.login()
@@ -79,11 +86,11 @@ def test_folders_list_retrieve_and_files() -> None:
 def test_folders_iterators() -> None:
     transport = build_composite_transport()
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="user@example.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
     client.auth.login()
@@ -97,11 +104,11 @@ def test_folders_iterators() -> None:
 def _make_client() -> DatabraryClient:
     transport = build_composite_transport()
     client = DatabraryClient(
-        base_url="https://api.example",
-        client_id="cid",
-        client_secret="sec",
-        username="user@example.org",
-        password="pw",
+        base_url=TEST_BASE_URL,
+        client_id=TEST_CLIENT_ID,
+        client_secret=TEST_CLIENT_SECRET,
+        username=TEST_USERNAME,
+        password=TEST_PASSWORD,
         transport=transport,
     )
     client.auth.login()
